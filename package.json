@@ -23,7 +23,7 @@
     "verificar": "npm run contenido && npm run lint && npm run tipos && npm run test && npm run licencias && npm run build"
   },
   "dependencies": {
-    "@ipn/comun": "file:../ipn-comun",
+    "@ipn/comun": "github:Silver-VS/ipn-comun#v0.1.0",
     "svelte": "^5.57.1"
   },
   "devDependencies": {

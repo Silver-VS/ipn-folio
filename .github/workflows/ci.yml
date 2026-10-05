@@ -16,8 +16,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      # Pendiente: mientras @ipn/comun sea «file:../ipn-comun» (carpeta local, sin remoto), `npm ci` solo
-      # funciona en el equipo del dueño. Al publicar ipn-comun, package.json pasa a «github:Silver-VS/ipn-comun#v0.1.0».
       - uses: actions/setup-node@v4
         with:
           node-version: 24

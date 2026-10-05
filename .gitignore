@@ -1,0 +1,5 @@
+plantillas-locales/
+node_modules/
+dist/
+.DS_Store
+pruebas/compilacion/public/

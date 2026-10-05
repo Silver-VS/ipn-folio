@@ -1,0 +1,14 @@
+{
+  "name": "ipn-folio-prueba-compilacion",
+  "private": true,
+  "type": "module",
+  "description": "Prueba técnica: compilar UpiiTeXis con BusyTeX en el navegador",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "activos": "texlyre-busytex download-assets ./public/core",
+    "servir": "node servidor.mjs"
+  },
+  "dependencies": {
+    "texlyre-busytex": "1.4.0"
+  }
+}

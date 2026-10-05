@@ -1,0 +1,41 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* Estilos base de la aplicación. Solo variables semánticas --ipn-* (ver @ipn/comun/dist/tokens.css). */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--ipn-fuente-texto);
+  font-size: 100%;
+  background: var(--ipn-fondo);
+  color: var(--ipn-texto);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-size: var(--ipn-tamano-m);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+a {
+  color: var(--ipn-acento);
+}
+
+a:focus-visible {
+  outline: 0.1875rem solid var(--ipn-acento);
+  outline-offset: 0.125rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

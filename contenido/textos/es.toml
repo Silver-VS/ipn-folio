@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: CC0-1.0
+# Textos de interfaz de IPN Folio (español de México, tuteo; la voz editorial está en ipn-comun/contenido/VOZ.md).
+# Reglas: claves a-z0-9_ con puntos; variables {nombre}; plurales {n, plural, one {# x} other {# xs}}.
+# Los textos que también necesita IPN-tools viven en ipn-comun (comun.es.toml), no aquí.
+# Al cambiar un texto: sube `version` y anota el cambio en contenido/CAMBIOS.md.
+version = "2026.10.1"
+
+[app]
+# Nombre del producto: <title> de la página y encabezado. Es un nombre propio.
+nombre = "IPN Folio"
+# Lema bajo el nombre del producto, en la pantalla inicial.
+lema = "Tus apuntes. Tus reglas."
+# <meta name="description"> de la página; lo ven los buscadores y al compartir el enlace.
+descripcion = "Editor LaTeX y cuadernos académicos en tu navegador, sin servidores."
+# Aviso dentro de <noscript>, para quien tiene JavaScript desactivado.
+sin_js = "IPN Folio necesita JavaScript para funcionar. Actívalo en tu navegador y vuelve a cargar la página."
+
+[inicio]
+# Nombre accesible de la región principal donde se mostrará el trabajo (aún vacía).
+espacio.aria = "Espacio de trabajo"

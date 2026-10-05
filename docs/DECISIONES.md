@@ -13,12 +13,11 @@ despliegue en `ARQUITECTURA.md`.
 | D6 | 2026-10-04 | **IA sin servidor:** «Copiar para IA» (todos), MCP por stdio en la app de escritorio, OpenRouter OAuth o clave propia, modelo local opcional (Qwen3 / SmolLM3 / Phi-4-mini; nunca Qwen2.5-3B), búsqueda semántica con multilingual-e5-small. Nunca usar sesiones de ChatGPT de terceros. | Mantiene la IA bajo control del alumno y sin costo de hospedaje; usar sesiones de terceros va contra los términos del proveedor. | Se estabiliza «Sign in with ChatGPT» o WebMCP. |
 | D7 | 2026-10-04 | **Colaboración local-first:** Yjs + y-indexeddb como base; OneDrive como canal (socketIo + delta, sondeo adaptativo); WebRTC como acelerador opcional. | Viable con latencia de segundos; tope de Graph por tenant (~50–260 editores simultáneos estimados). | Falla la prueba en el tenant del IPN. |
 | D8 | 2026-10-05 | **Paquetes TeX faltantes (español de babel, fuentes) desde un espejo de archivos estáticos:** hoy en GitHub Pages; después, réplica en un alojamiento del IPN junto con IPN-tools. | BusyTeX pide archivos con `GET <endpoint>/<formato>/<archivo>`, que se sirve con archivos estáticos, sin servidor de aplicación. | El IPN ofrece otro hospedaje. |
+| D9 | 2026-10-05 | **Usar solo los paquetes de TeXlyre** (BusyTeX, lenguaje de CodeMirror), no un fork del editor; orquestador de compilación propio. | Mantiene el código de Folio separable y deja opciones al IPN; la prueba mostró que hay que controlar la carga de paquetes y los pasos (nomenclatura, índices). | TeXlyre ofrece algo que costaría mucho rehacer. |
 
 ## Pendientes de decidir
 
 - **Java:** propuesta — solo en escritorio (javac nativo) salvo acuerdo educativo con CheerpJ.
 - **Prueba en el tenant del IPN con TI** (consentimiento, socketIo en carpetas compartidas, tope real). No bloquea hasta la capa D.
 - Materias prioritarias de la capa B; plantillas oficiales para pruebas.
-- ¿Partir de un fork de TeXlyre o usar solo sus paquetes (BusyTeX, lenguaje de CodeMirror)? La prueba técnica sugiere
-  usar solo los paquetes y escribir un orquestador de compilación propio.
 - Permiso de los autores de UpiiTeXis (LPPL + CC-BY-SA) para ofrecerla dentro de Folio.

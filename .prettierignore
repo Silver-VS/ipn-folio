@@ -1,0 +1,13 @@
+dist/
+node_modules/
+pruebas/
+docs/
+plantillas-locales/
+package-lock.json
+src/textos/es.gen.ts
+contenido/
+playwright-report/
+test-results/
+coverage/
+public/busytex/
+espejo-local/

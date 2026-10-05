@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Integración continua: comprueba, no publica.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  comprobar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      # Pendiente: mientras @ipn/comun sea «file:../ipn-comun» (carpeta local, sin remoto), `npm ci` solo
+      # funciona en el equipo del dueño. Al publicar ipn-comun, package.json pasa a «github:Silver-VS/ipn-comun#v0.1.0».
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run verificar
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run e2e

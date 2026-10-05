@@ -19,6 +19,11 @@ despliegue en `ARQUITECTURA.md`.
 | D12 | 2026-10-05 | **La app de escritorio complementa a la web, no la duplica:** lo que la web hace bien se queda en la web; el escritorio aporta solo lo que la web no puede o hace mal (Java/JShell, Octave nativo, compiladores, MCP). | Que tener dos apps tenga sentido. | — |
 | D13 | 2026-10-05 | **Plantillas por unidad académica:** se filtran por unidad (la del usuario por omisión); cada unidad puede tener las suyas. | La mayoría de las unidades tiene plantillas propias. | — |
 | D14 | 2026-10-05 | **La ayuda de IA depende del origen del documento:** en documentos propios (de alumno o docente) la decide el usuario; en actividades que un docente crea para su grupo, la configura el docente (modo tutor). | Respeta la autonomía del usuario y la integridad académica en actividades evaluadas. | — |
+| D15 | 2026-10-05 | **Descargas solo con Wi‑Fi como ajuste** (activado por omisión), como las tiendas de apps; si está apagado, se pregunta antes de usar datos móviles. | Cuida los datos móviles del alumnado sin bloquear a quien sí quiere descargar. | — |
+| D16 | 2026-10-05 | **Rol al primer uso:** estudiante o docente, con opción de iniciar sesión con la cuenta institucional de Microsoft para vincular OneDrive. | El rol define la interfaz (actividades, revisión) y la cuenta, el almacenamiento. | — |
+| D17 | 2026-10-05 | **Plantillas propuestas por la comunidad:** cada unidad puede proponer plantillas a un repositorio común (hospedado en un OneDrive institucional de IPN-tools); si una unidad no tiene, se muestra «Proponer una plantilla» y las generales del IPN. | Las plantillas las conocen mejor las propias unidades. | TI no otorga la cuenta institucional. |
+| D18 | 2026-10-05 | **Conversación con IA en modo tutor:** guardarla con la entrega viene apagado y lo decide el alumno; el docente puede exigirlo en una actividad, con aviso previo. | Privacidad del alumno; transparencia cuando se exige. | — |
+| D19 | 2026-10-05 | **Figuras de Octave:** dentro de Folio como meta y en ventana aparte como respaldo; se decide con una prueba técnica en la capa C. | No está verificado que Octave pueda dibujar dentro de otra app. | — |
 
 ## Pendientes de decidir
 

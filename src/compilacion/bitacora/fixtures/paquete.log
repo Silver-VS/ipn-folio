@@ -1,0 +1,4 @@
+(./principal.tex
+! LaTeX Error: File `ejemplo.sty' not found.
+l.5 \usepackage{ejemplo}
+)

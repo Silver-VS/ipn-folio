@@ -1,0 +1,4 @@
+(./principal.tex
+! LaTeX Error: \begin{itemize} on input line 13 ended by \end{enumerate}.
+l.15 \end{enumerate}
+)

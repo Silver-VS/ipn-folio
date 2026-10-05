@@ -1,0 +1,5 @@
+(./principal.tex
+Runaway argument?
+{texto
+! File ended while scanning use of \textbf.
+)

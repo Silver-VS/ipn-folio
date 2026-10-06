@@ -21,7 +21,10 @@
     "licencias": "node scripts/licencias.mjs",
     "activos": "node scripts/activos.mjs",
     "contenido": "node scripts/textos.mjs && node scripts/codificacion.mjs && node scripts/contenido.mjs",
-    "verificar": "npm run contenido && npm run lint && npm run tipos && npm run test && npm run licencias && npm run build"
+    "verificar": "npm run contenido && npm run lint && npm run tipos && npm run test && npm run licencias && npm run build",
+    "espejo:generar": "node scripts/espejo/generar.mjs",
+    "espejo:validar": "node scripts/espejo/validar.mjs",
+    "espejo:servir": "node scripts/espejo/servir.mjs"
   },
   "dependencies": {
     "@ipn/comun": "github:Silver-VS/ipn-comun#v0.1.0",

@@ -18,3 +18,11 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 ## 2026.10.4
 
 - 2026-10-05 · `errores.latex.paquete_error.*`, `bibliografia_vacia.*`, `desconocido_sin_linea.*` · (nuevas) error de paquete, bibliografía vacía y problema sin línea (sin «?») · Claude Sonnet.
+
+## 2026.10.5
+
+- 2026-10-05 · `almacen.*`, `almacen.error.*` · (nuevas) mensajes de error de la capa de almacenamiento local y nombre de proyecto importado · Claude Sonnet (almacén).
+
+## 2026.10.6
+
+- 2026-10-05 · `almacen.aviso.*` · (nuevas) avisos al importar un .zip: codificación convertida y entrada duplicada · Claude Sonnet (almacén).

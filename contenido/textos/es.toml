@@ -3,7 +3,7 @@
 # Reglas: claves a-z0-9_ con puntos; variables {nombre}; plurales {n, plural, one {# x} other {# xs}}.
 # Los textos que también necesita IPN-tools viven en ipn-comun (comun.es.toml), no aquí.
 # Al cambiar un texto: sube `version` y anota el cambio en contenido/CAMBIOS.md.
-version = "2026.10.4"
+version = "2026.10.6"
 
 [app]
 # Nombre del producto: <title> de la página y encabezado. Es un nombre propio.
@@ -139,3 +139,25 @@ ayuda = "Revisa el detalle del aviso y corrige la entrada indicada antes de volv
 [errores.latex.desconocido]
 titulo = "LaTeX encontró un problema en la línea {linea}"
 ayuda = "Revisa el detalle original y el código de la línea indicada. Si no aparece una línea, revisa el último comando del documento."
+
+[almacen]
+# Nombre que recibe un proyecto importado desde un .zip cuyo nombre de archivo queda vacío.
+proyecto_sin_nombre = "Proyecto importado"
+
+[almacen.error]
+desconocido = "No se pudo guardar tu trabajo. Inténtalo de nuevo; si sigue fallando, descarga una copia en .zip."
+ruta_invalida = "El nombre de archivo «{ruta}» no es válido. Usa un nombre relativo, sin «..» ni letras de unidad, por ejemplo capitulos/introduccion.tex."
+nombre_invalido = "El nombre del proyecto no puede estar vacío. Escribe un nombre para continuar."
+proyecto_inexistente = "No encontramos ese proyecto. Vuelve a la lista de proyectos y ábrelo de nuevo."
+proyecto_en_papelera = "Ese proyecto está en la papelera. Restáuralo para poder editarlo."
+archivo_inexistente = "No encontramos el archivo «{ruta}». Revisa el nombre o actualiza la lista de archivos."
+destino_ocupado = "Ya existe un archivo o una carpeta llamada «{ruta}». Elige otro nombre."
+movimiento_invalido = "No se puede mover una carpeta dentro de sí misma («{ruta}»). Elige otro destino."
+almacenamiento_lleno = "Tu navegador se quedó sin espacio para guardar. Descarga una copia en .zip y libera espacio borrando proyectos que ya no uses."
+almacen_no_disponible = "Tu navegador no permite guardar proyectos en este dispositivo, así que se perderán al cerrar la pestaña. Descarga una copia en .zip con frecuencia o abre IPN Folio en otra ventana que no sea privada."
+zip_invalido = "No pudimos leer ese archivo .zip. Comprueba que no esté dañado y vuelve a intentarlo."
+zip_demasiado_grande = "El contenido de ese .zip es demasiado grande para abrirlo en el navegador. Quita los archivos pesados que no necesites y vuelve a intentarlo."
+
+[almacen.aviso]
+codificacion_convertida = "El archivo «{ruta}» no estaba en UTF-8; lo convertimos desde Windows-1252 (Latin-1). Si usa inputenc con latin1, cambia esa opción a utf8 o revisa los acentos."
+entrada_duplicada = "El .zip trae «{ruta}» más de una vez. Conservamos la última copia."

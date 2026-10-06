@@ -1,0 +1,25 @@
+% SPDX-License-Identifier: CC0-1.0
+% Documento de prueba (propio, ficticio) con índice alfabético y una nomenclatura.
+% El paquete nomencl no viene en el paquete de datos «basic», así que la nomenclatura se simula
+% con las mismas piezas: un archivo .nlo que escribe el documento y la hoja de estilo nomencl.ist
+% (también propia), para comprobar que el motor ejecuta makeindex sobre el .nlo y produce el .nls.
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{makeidx}
+\makeindex
+
+\newwrite\archivonlo
+\immediate\openout\archivonlo=\jobname.nlo
+\newcommand{\nomenclatura}[2]{\index{#1}\immediate\write\archivonlo{\string\nomentrada{#1@#2}{\thepage}}}
+\newcommand{\imprimirnomenclatura}{\InputIfFileExists{\jobname.nls}{}{}}
+
+\begin{document}
+\section{Motor}
+El \index{motor}motor compila en un worker\nomenclatura{v}{velocidad}. Otra entrada:
+\index{worker}worker\nomenclatura{m}{masa}.
+
+\section{Nomenclatura}
+\imprimirnomenclatura
+
+\printindex
+\end{document}

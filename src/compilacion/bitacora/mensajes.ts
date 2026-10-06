@@ -231,6 +231,49 @@ export const CATALOGO = {
       accion: t('errores.latex.desconocido_sin_linea.ayuda'),
     }),
   },
+  'campos-por-llenar': {
+    codigo: 'campos-por-llenar',
+    variables: ['archivo', 'cita'],
+    titulo: 'errores.latex.campos_por_llenar.titulo',
+    ayuda: 'errores.latex.campos_por_llenar.ayuda',
+    resolver: (v: Record<string, string | number>) => ({
+      titulo: t('errores.latex.campos_por_llenar.titulo', { archivo: v.archivo ?? '?', cita: v.cita ?? '?' }),
+      accion: t('errores.latex.campos_por_llenar.ayuda', { cita: v.cita ?? '?' }),
+    }),
+  },
+  'campos-por-llenar-sin-entrada': {
+    codigo: 'campos-por-llenar',
+    variables: ['archivo', 'linea'],
+    titulo: 'errores.latex.campos_por_llenar_sin_entrada.titulo',
+    ayuda: 'errores.latex.campos_por_llenar_sin_entrada.ayuda',
+    resolver: (v: Record<string, string | number>) => ({
+      titulo: t('errores.latex.campos_por_llenar_sin_entrada.titulo', {
+        archivo: v.archivo ?? '?',
+        linea: v.linea ?? '?',
+      }),
+      accion: t('errores.latex.campos_por_llenar_sin_entrada.ayuda'),
+    }),
+  },
+  'biber-no-soportado': {
+    codigo: 'biber-no-soportado',
+    variables: [],
+    titulo: 'errores.latex.biber_no_soportado.titulo',
+    ayuda: 'errores.latex.biber_no_soportado.ayuda',
+    resolver: () => ({
+      titulo: t('errores.latex.biber_no_soportado.titulo'),
+      accion: t('errores.latex.biber_no_soportado.ayuda'),
+    }),
+  },
+  'motor-detenido': {
+    codigo: 'motor-detenido',
+    variables: [],
+    titulo: 'errores.latex.motor_detenido.titulo',
+    ayuda: 'errores.latex.motor_detenido.ayuda',
+    resolver: () => ({
+      titulo: t('errores.latex.motor_detenido.titulo'),
+      accion: t('errores.latex.motor_detenido.ayuda'),
+    }),
+  },
   'bibliografia-faltante': {
     codigo: 'bibliografia-faltante',
     variables: ['archivo'],
@@ -331,7 +374,8 @@ export function crearProblema(
   detalle: Omit<Problema, 'codigo' | 'variables' | 'titulo' | 'accion'>,
 ): Problema {
   // Sin ubicación conocida el título no debe mostrar un signo de interrogación.
-  const variante = c.codigo === 'desconocido' && c.variables.linea === '?' ? 'desconocido-sin-linea' : c.variante;
+  const variante =
+    c.codigo === 'desconocido' && c.variables.linea === '?' ? 'desconocido-sin-linea' : c.variante;
   const entrada = CATALOGO[(variante ?? c.codigo) as keyof typeof CATALOGO] ?? CATALOGO.desconocido;
   return {
     ...detalle,
@@ -383,11 +427,7 @@ export function clasificar(mensaje: string, contexto: string, linea?: number): C
   if (cita) return resultado('cita-indefinida', { cita: cita[1]! });
   if (/There were undefined (?:references|citations)/.test(mensaje))
     return resultado('referencias-indefinidas');
-  if (
-    /Rerun to get|Rerun LaTeX|Label\(s\) may have changed|Please (?:re)?run LaTeX/i.test(
-      mensaje,
-    )
-  )
+  if (/Rerun to get|Rerun LaTeX|Label\(s\) may have changed|Please (?:re)?run LaTeX/i.test(mensaje))
     return resultado('repetir-pasada');
   const desbordado = /Overfull \\hbox\s*\((\d+(?:\.\d+)?)pt too wide\)/.exec(mensaje);
   if (desbordado)

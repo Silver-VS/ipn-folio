@@ -36,17 +36,24 @@ test.describe('plantilla grande (manual)', () => {
     await pagina.setInputFiles('#carpeta', plantilla!);
 
     const inicio = await pagina.evaluate(() => window.banco.iniciar());
-    const compilar = () =>
+    const compilar = (clave = 'carpeta') =>
       pagina.evaluate(
-        ([p]) => window.banco.compilarCarpeta(p as string, ['Principal.nls', 'Principal.ind']),
-        [principal],
+        ([p, c]) => window.banco.compilarCarpeta(p as string, ['Principal.nls', 'Principal.ind'], c),
+        [principal, clave],
       ) as Promise<ResumenCompilacion>;
     const primera = await compilar();
     const segunda = await compilar();
+    // Sin caché (otra clave) pero con los archivos del espejo ya pedidos: separa el costo de las pasadas del de la red.
+    const sinCache = await compilar('sin-cache');
     const resumen = {
       inicioEnFrioMs: inicio.ms,
       primeraMs: Math.round(primera.msTotal),
       segundaMs: Math.round(segunda.msTotal),
+      segundaPasos: segunda.pasos,
+      segundaSaltadas: segunda.saltadas,
+      sinCacheMs: Math.round(sinCache.msTotal),
+      sinCacheMsPorPaso: sinCache.msPorPaso,
+      codigosDeProblemas: primera.problemas.map((p) => p.codigo),
       paginas: primera.paginas,
       pasos: primera.pasos,
       msPorPaso: primera.msPorPaso,

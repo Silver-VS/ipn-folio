@@ -37,4 +37,13 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 
 ## 2026.10.9
 
+- 2026-10-05 · `errores.latex.campos_por_llenar.*`, `campos_por_llenar_sin_entrada.*`, `biber_no_soportado.*`, `motor_detenido.*`, `compilacion.paso.*` · (nuevas) avisos de la revisión previa, de Biber y del motor, y nombres de los pasos del orquestador · Claude Sonnet.
+
+## 2026.10.10
+
+- 2026-10-05 · `compilacion.paso.pasada` · «pasada intermedia» → «nueva pasada», válida también para el último paso · Codex.
+- 2026-10-05 · `errores.latex.motor_detenido.ayuda` · frase recibida en `{mensaje}` → frase completa de respaldo; el orquestador usa `errores.motor.<codigo>` para la acción específica · Codex.
+
+## 2026.10.11
+
 - 2026-10-05 · `proyecto.*`, `guardado.*`, `paneles.*`, `distribucion.*`, `compacto.*`, `archivos.*`, `editor.*`, `editor.cm.*`, `pdf.*`, `problemas.*`, `salida.*`, `paleta.*`, `mensajes.*`, `inicio.*` · (nuevas) textos de la pantalla de proyecto: paneles, árbol de archivos, editor, visor de PDF, indicador de guardado, paleta (esqueleto), inicio mínimo y traducción de CodeMirror · Claude Sonnet (sesión 08).

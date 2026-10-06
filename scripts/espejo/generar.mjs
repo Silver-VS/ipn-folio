@@ -17,7 +17,7 @@ import {
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { NOMBRES_KPSE, formatoDeRuta, variantesDeNombre } from './formatos.mjs';
-import { analizarTlpdb, esLibre, resolver } from './tlpdb.mjs';
+import { analizarTlpdb, archivosDeLicencia, esLibre, licenciaEfectiva, resolver } from './tlpdb.mjs';
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const RAIZ = resolve(AQUI, '..', '..');
@@ -39,7 +39,12 @@ const norm = (/** @type {string} */ p) => p.replace(/\\/g, '/').toLowerCase();
 function kpsewhich(texlive, formato, nombre) {
   const bin = join(texlive, 'bin', 'windows');
   const exe = existsSync(join(bin, 'kpsewhich.exe')) ? join(bin, 'kpsewhich.exe') : 'kpsewhich';
-  const r = spawnSync(exe, [`-format=${NOMBRES_KPSE[formato]}`, nombre], { encoding: 'utf8' });
+  // pdfLaTeX es el único motor de la capa A (D23): sin -progname la ruta TEXINPUTS recorre también ConTeXt y LuaTeX.
+  const r = spawnSync(
+    exe,
+    ['-progname=pdflatex', '-engine=pdftex', `-format=${NOMBRES_KPSE[formato]}`, nombre],
+    { encoding: 'utf8' },
+  );
   const salida = (r.stdout ?? '').trim().split(/\r?\n/)[0];
   return salida ? norm(salida) : null;
 }
@@ -63,23 +68,28 @@ export function generar(opciones) {
   const excluidos = [];
   /** clave «formato/nombre» → candidatos @type {Map<string, { formato: number, nombre: string, ruta: string, paquete: string }[]>} */
   const candidatos = new Map();
-  /** @type {Map<string, string>} */
-  const licencias = new Map();
+  /** @type {Map<string, string[]>} */
+  const etiquetas = new Map();
+  /** @type {Map<string, string[]>} archivos de licencia (ruta en TeX Live) de cada paquete */
+  const licenciasPaquete = new Map();
   for (const nombre of paquetes) {
     const p = /** @type {import('./tlpdb.mjs').Paquete} */ (db.get(nombre));
-    if (!esLibre(p.licencia, libres)) {
-      excluidos.push({ paquete: nombre, licencia: p.licencia.join(' ') || '(sin dato)', motivo: 'licencia' });
+    const licencia = licenciaEfectiva(p, config.licenciasVerificadas);
+    if (!esLibre(licencia, libres)) {
+      excluidos.push({ paquete: nombre, licencia: licencia.join(' ') || '(sin dato)', motivo: 'licencia' });
       continue;
     }
+    etiquetas.set(nombre, licencia);
+    licenciasPaquete.set(nombre, archivosDeLicencia(p));
     for (const ruta of p.runfiles) {
       if (config.excluirCarpetas.some((c) => ruta.startsWith(c))) continue;
+      if ((config.excluirExtensiones ?? []).some((e) => ruta.toLowerCase().endsWith(e))) continue;
       const f = formatoDeRuta(ruta);
       if (!f) continue;
       const clave = `${f.formato}/${f.nombre}`;
       const lista = candidatos.get(clave) ?? [];
       lista.push({ ...f, ruta, paquete: nombre });
       candidatos.set(clave, lista);
-      licencias.set(nombre, p.licencia.join(' '));
     }
   }
 
@@ -87,23 +97,28 @@ export function generar(opciones) {
   /** @type {{ formato: number, nombre: string, ruta: string, paquete: string, bytes: number }[]} */
   const elegidos = [];
   let repetidos = 0;
+  let alfabetico = 0;
   for (const lista of candidatos.values()) {
     let c = lista[0];
     if (lista.length > 1) {
       repetidos++;
       const ganador = kpsewhich(texlive, c.formato, c.nombre);
-      c =
-        lista.find((x) => norm(join(texlive, x.ruta)) === ganador) ??
-        [...lista].sort((a, b) => a.ruta.localeCompare(b.ruta))[0];
+      const porKpse = lista.find((x) => norm(join(texlive, x.ruta)) === ganador);
+      if (!porKpse) alfabetico++;
+      c = porKpse ?? [...lista].sort((a, b) => a.ruta.localeCompare(b.ruta))[0];
     }
     const bytes = statSync(join(texlive, c.ruta)).size;
     elegidos.push({ ...c, bytes });
   }
   elegidos.sort((a, b) => a.formato - b.formato || a.nombre.localeCompare(b.nombre));
 
-  // Presupuesto (cada variante de nombre ocupa su propio archivo).
-  const peso = (/** @type {typeof elegidos[number]} */ e) =>
-    e.bytes * variantesDeNombre(e.formato, e.nombre).length;
+  // Nombres bajo los que se guarda cada archivo (cada variante ocupa su propio archivo).
+  const sinVariantes = new Set(config.sinVariantes ?? []);
+  const nombresDe = (/** @type {{ formato: number, nombre: string }} */ e) =>
+    sinVariantes.has(e.formato) ? [e.nombre] : variantesDeNombre(e.formato, e.nombre);
+
+  // Presupuesto.
+  const peso = (/** @type {typeof elegidos[number]} */ e) => e.bytes * nombresDe(e).length;
   const totalBytes = elegidos.reduce((s, e) => s + peso(e), 0);
   if (totalBytes > maxMB * 1048576) {
     const top = [...elegidos].sort((a, b) => peso(b) - peso(a)).slice(0, 20);
@@ -128,14 +143,26 @@ export function generar(opciones) {
   /** @type {{ formato: number, nombre: string, bytes: number, sha256: string, paquete: string }[]} */
   const manifiesto = [];
   const escritos = new Set();
+  // Claves en minúsculas: en un disco que no distingue mayúsculas dos nombres que solo difieren así chocan.
+  /** @type {Map<string, string>} */
+  const enMinusculas = new Map();
+  /** @type {string[]} */
+  const colisiones = [];
   for (const e of elegidos) {
     const origen = join(texlive, e.ruta);
     const sha256 = createHash('sha256').update(readFileSync(origen)).digest('hex');
-    for (const nombre of variantesDeNombre(e.formato, e.nombre)) {
+    for (const nombre of nombresDe(e)) {
       const clave = `${e.formato}/${nombre}`;
       // Un nombre exacto de otro archivo prevalece sobre una variante sin extensión.
       if (escritos.has(clave)) continue;
       if (nombre !== e.nombre && candidatos.has(clave)) continue;
+      const min = clave.toLowerCase();
+      const previo = enMinusculas.get(min);
+      if (previo !== undefined) {
+        colisiones.push(`${previo} ~ ${clave}`);
+        continue;
+      }
+      enMinusculas.set(min, clave);
       escritos.add(clave);
       mkdirSync(join(salida, String(e.formato)), { recursive: true });
       copyFileSync(origen, join(salida, String(e.formato), nombre));
@@ -143,12 +170,57 @@ export function generar(opciones) {
     }
   }
 
-  writeFileSync(join(salida, 'manifiesto.json'), JSON.stringify(manifiesto));
+  // Textos de licencia: los generales de `textosLicencia` (etiqueta → archivos de TeX Live) y los que
+  // cada paquete trae en su doc/. Se copian a LICENCIAS/ (el espejo no distribuye doc/ ni source/).
   const usados = [...new Set(manifiesto.map((m) => m.paquete))].sort();
+  const dirLic = join(salida, 'LICENCIAS');
+  /** @type {Map<string, string>} «origen|destino» → ruta relativa a la raíz del espejo */
+  const copiados = new Map();
+  let bytesLicencias = 0;
+  /** Copia un texto de licencia una sola vez. @returns {string | null} ruta relativa a la raíz del espejo */
+  const copiarLicencia = (/** @type {string} */ rutaTL, /** @type {string} */ destinoRel) => {
+    const origen = join(texlive, rutaTL);
+    if (!existsSync(origen)) return null;
+    const clave = `${origen}|${destinoRel}`;
+    const ya = copiados.get(clave);
+    if (ya) return ya;
+    mkdirSync(dirname(join(dirLic, destinoRel)), { recursive: true });
+    copyFileSync(origen, join(dirLic, destinoRel));
+    bytesLicencias += statSync(origen).size;
+    const rel = `LICENCIAS/${destinoRel}`;
+    copiados.set(clave, rel);
+    return rel;
+  };
+  /** @type {string[]} */
+  const lineasTsv = [];
+  /** @type {string[]} */
+  const sinTexto = [];
+  const copyleft = /** @type {Record<string, string[]>} */ ({ gpl: [], lgpl: [], agpl: [] });
+  for (const p of usados) {
+    const tags = etiquetas.get(p) ?? [];
+    /** @type {string[]} */
+    const archivos = [];
+    for (const tag of tags) {
+      for (const rutaTL of config.textosLicencia?.[tag] ?? []) {
+        const rel = copiarLicencia(rutaTL, `textos/${rutaTL.slice(rutaTL.lastIndexOf('/') + 1)}`);
+        if (rel && !archivos.includes(rel)) archivos.push(rel);
+      }
+    }
+    for (const rutaTL of licenciasPaquete.get(p) ?? []) {
+      const rel = copiarLicencia(rutaTL, `paquetes/${p}/${rutaTL.slice(rutaTL.lastIndexOf('/') + 1)}`);
+      if (rel) archivos.push(rel);
+    }
+    if (!archivos.length) sinTexto.push(p);
+    for (const familia of Object.keys(copyleft)) {
+      if (tags.some((t) => t.startsWith(familia))) copyleft[familia]?.push(p);
+    }
+    lineasTsv.push(`${p}\t${tags.join(' ')}\t${archivos.join(';')}`);
+  }
+  writeFileSync(join(salida, 'manifiesto.json'), JSON.stringify(manifiesto));
   writeFileSync(
     join(salida, 'LICENCIAS.tsv'),
-    'paquete\tlicencia (catálogo de TeX Live)\n' +
-      usados.map((p) => `${p}\t${licencias.get(p) ?? ''}`).join('\n') +
+    'paquete\tlicencia (catálogo de TeX Live o verificada a mano)\ttextos de licencia (ruta desde la raíz del espejo)\n' +
+      lineasTsv.join('\n') +
       '\n',
   );
   writeFileSync(
@@ -168,12 +240,18 @@ export function generar(opciones) {
       'trae de serie (español de babel, fuentes, etc.). Algunos formatos se piden sin extensión, por eso hay',
       'dos copias del mismo archivo (con y sin extensión).',
       '',
+      'Nombres: cada archivo se sirve con el nombre exacto que pide LaTeX (mayúsculas incluidas, porque',
+      'GitHub Pages las distingue). LaTeX pide en minúsculas los archivos `.fd` de fuentes, así que',
+      '`T1Montserrat-TLF.fd` está como `26/t1montserrat-tlf.fd`.',
+      '',
       '- `manifiesto.json`: formato, nombre, tamaño, SHA-256 y paquete de cada archivo.',
-      '- `LICENCIAS.tsv`: licencia de cada paquete según el catálogo de TeX Live.',
-      '- `EXCLUIDOS.tsv`: paquetes omitidos por licencia no libre o desconocida.',
+      '- `LICENCIAS.tsv`: licencia de cada paquete y dónde está su texto en `LICENCIAS/`.',
+      '- `LICENCIAS/`: textos de licencia (`textos/` los generales; `paquetes/<paquete>/` los que trae cada paquete).',
+      '- `EXCLUIDOS.tsv`: paquetes omitidos por licencia no libre, dudosa o desconocida.',
       '',
       'Cada archivo conserva la licencia de su paquete (LPPL, GPL, OFL, etc.); se distribuyen como datos aparte',
-      'de la aplicación. Generado por `scripts/espejo/generar.mjs` de IPN Folio.',
+      'de la aplicación. Código fuente de los paquetes GPL/LGPL/AGPL: pendiente de decidir cómo ofrecerlo',
+      '(ver el HANDOFF de la sesión 04 de IPN Folio). Generado por `scripts/espejo/generar.mjs`.',
       '',
     ].join('\n'),
   );
@@ -185,7 +263,13 @@ export function generar(opciones) {
     bytes: totalBytes,
     paquetes: usados.length,
     repetidos,
+    alfabetico,
     excluidos,
+    colisiones,
+    sinTexto,
+    copyleft,
+    licenciasCopiadas: copiados.size,
+    bytesLicencias,
     grandes,
   };
 }
@@ -203,7 +287,21 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
     console.log(
       `Espejo: ${r.archivos} archivos (${r.unicos} únicos), ${mb(r.bytes)} MB, ${r.paquetes} paquetes.`,
     );
-    console.log(`Nombres repetidos resueltos con kpsewhich: ${r.repetidos}.`);
+    console.log(
+      `Nombres repetidos resueltos con kpsewhich: ${r.repetidos} (${r.alfabetico} por orden alfabético, porque kpsewhich no eligió ninguno de los candidatos).`,
+    );
+    console.log(
+      `Textos de licencia: ${r.licenciasCopiadas} archivos (${mb(r.bytesLicencias)} MB). Paquetes sin texto de licencia: ${r.sinTexto.length}.`,
+    );
+    console.log(
+      `Copyleft (código fuente por ofrecer): GPL ${r.copyleft.gpl?.length}, LGPL ${r.copyleft.lgpl?.length}, AGPL ${r.copyleft.agpl?.length} paquetes.`,
+    );
+    if (r.colisiones.length) {
+      console.warn(
+        `AVISO: ${r.colisiones.length} nombres chocan al ignorar mayúsculas (se omitió el segundo):`,
+      );
+      for (const c of r.colisiones.slice(0, 10)) console.warn(`  ${c}`);
+    }
     if (r.excluidos.length) {
       console.log(
         `Excluidos por licencia (${r.excluidos.length}): ${r.excluidos.map((x) => `${x.paquete} [${x.licencia}]`).join(', ')}`,

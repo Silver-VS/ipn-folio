@@ -62,6 +62,18 @@ const EXTENSIONES = /** @type {Record<number, string[]>} */ ({
 });
 
 /**
+ * Regla de mayúsculas: el espejo sirve cada archivo con el nombre EXACTO que pide LaTeX/BusyTeX, porque
+ * GitHub Pages distingue mayúsculas y el disco de Windows no. LaTeX pasa a minúsculas el nombre de los
+ * archivos de definición de fuentes (ltfssbas.dtx: «lowercase» sobre «InputIfFileExists» de codificación + familia + .fd), así que
+ * `T1Montserrat-TLF.fd` se pide como `t1montserrat-tlf.fd` y se guarda ASÍ (solo ese nombre: en NTFS las dos
+ * grafías serían el mismo archivo). Todo lo demás (kpathsea lo pide tal cual) conserva el nombre original.
+ * @param {number} formato @param {string} nombre
+ */
+export function nombreServido(formato, nombre) {
+  return formato === 26 && /\.fd$/i.test(nombre) ? nombre.toLowerCase() : nombre;
+}
+
+/**
  * Formato kpathsea de un archivo de TeX Live a partir de su ruta relativa a la raíz (`texmf-dist/...`).
  * Devuelve null si no es un archivo que el espejo deba servir.
  * @param {string} ruta @returns {{ formato: number, nombre: string } | null}
@@ -75,7 +87,7 @@ export function formatoDeRuta(ruta) {
     if (!rel.startsWith(prefijo)) continue;
     const exts = EXTENSIONES[formato];
     if (exts && !exts.some((e) => nombre.toLowerCase().endsWith(e))) return null;
-    return { formato, nombre };
+    return { formato, nombre: nombreServido(formato, nombre) };
   }
   return null;
 }

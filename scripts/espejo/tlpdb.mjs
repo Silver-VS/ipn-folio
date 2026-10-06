@@ -4,7 +4,7 @@
 // `catalogue-license` lleva varias etiquetas; `runfiles size=N` va seguido de una línea por archivo, con sangría.
 
 /**
- * @typedef {{ nombre: string, categoria: string, depend: string[], runfiles: string[], licencia: string[] }} Paquete
+ * @typedef {{ nombre: string, categoria: string, depend: string[], runfiles: string[], docfiles: string[], licencia: string[] }} Paquete
  */
 
 /** @param {string} texto contenido del tlpdb @returns {Map<string, Paquete>} */
@@ -15,29 +15,34 @@ export function analizarTlpdb(texto) {
     if (!bloque.trim()) continue;
     /** @type {Paquete | null} */
     let paquete = null;
-    let enRunfiles = false;
+    /** @type {"runfiles" | "docfiles" | null} */
+    let seccion = null;
     for (const linea of bloque.split(/\r?\n/)) {
       if (/^\s/.test(linea)) {
         // Línea de archivo: «ruta [details=… | language=… …]».
-        if (paquete && enRunfiles) {
-          const ruta = linea.trim().split(/\s+(?=\w+=)/)[0];
-          if (ruta) paquete.runfiles.push(ruta);
+        if (paquete && seccion) {
+          const ruta = linea
+            .trim()
+            .split(/\s+(?=\w+=)/)[0]
+            ?.replace(/\\/g, '/');
+          if (ruta) paquete[seccion].push(ruta);
         }
         continue;
       }
-      enRunfiles = false;
+      seccion = null;
       const espacio = linea.indexOf(' ');
       const campo = espacio < 0 ? linea : linea.slice(0, espacio);
       const valor = espacio < 0 ? '' : linea.slice(espacio + 1).trim();
       if (campo === 'name') {
-        paquete = { nombre: valor, categoria: '', depend: [], runfiles: [], licencia: [] };
+        paquete = { nombre: valor, categoria: '', depend: [], runfiles: [], docfiles: [], licencia: [] };
         paquetes.set(valor, paquete);
       } else if (!paquete) {
         continue;
       } else if (campo === 'category') paquete.categoria = valor;
       else if (campo === 'depend') paquete.depend.push(valor);
       else if (campo === 'catalogue-license') paquete.licencia = valor.split(/\s+/).filter(Boolean);
-      else if (campo === 'runfiles') enRunfiles = true;
+      else if (campo === 'runfiles') seccion = 'runfiles';
+      else if (campo === 'docfiles') seccion = 'docfiles';
     }
   }
   return paquetes;
@@ -84,4 +89,30 @@ export function resolver(db, raices, excluir = []) {
  */
 export function esLibre(licencia, libres) {
   return licencia.length > 0 && licencia.every((l) => libres.has(l));
+}
+
+/**
+ * Etiquetas de licencia efectivas de un paquete: la verificada a mano (`verificadas`, con su fuente en
+ * paquetes.json) si existe; si no, las del catálogo. La etiqueta «collection» del catálogo no es una
+ * licencia (significa «cada archivo trae la suya»), así que nunca basta por sí sola.
+ * @param {Paquete} p @param {Record<string, string[]>} [verificadas] @returns {string[]}
+ */
+export function licenciaEfectiva(p, verificadas = {}) {
+  return verificadas[p.nombre] ?? p.licencia;
+}
+
+/** Nombres de archivo que son textos de licencia (para copiarlos del `doc/` del paquete). */
+const NOMBRE_LICENCIA =
+  /^(licen[cs]e[\w.-]*|copying[\w.-]*|copyright|unlicense|ofl(-faq)?\.(txt|md)|ofl|lppl[\w.-]*|l?gpl[\w.-]*|agpl[\w.-]*|apache[\w.-]*|fdl[\w.-]*|cc-by[\w.-]*)(\.(txt|md|tex))?$/i;
+
+/**
+ * Archivos de licencia que el paquete trae entre sus `docfiles` (rutas relativas a la raíz de TeX Live).
+ * Se excluyen las preguntas frecuentes de OFL y los `.pdf`/imágenes.
+ * @param {Paquete} p @returns {string[]}
+ */
+export function archivosDeLicencia(p) {
+  return p.docfiles.filter((ruta) => {
+    const nombre = ruta.slice(ruta.lastIndexOf('/') + 1);
+    return NOMBRE_LICENCIA.test(nombre) && !/faq|\.(pdf|png|jpe?g|svg|html?)$/i.test(nombre);
+  });
 }

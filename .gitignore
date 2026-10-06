@@ -8,3 +8,5 @@ espejo-local/
 test-results/
 playwright-report/
 coverage/
+.env
+.env.local

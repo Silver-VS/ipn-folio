@@ -2,10 +2,12 @@
 // Comprueba un registro de peticiones de BusyTeX (`[{ formato, nombre, ruta, bytes }]`) contra el espejo.
 // Uso: node scripts/espejo/validar.mjs <registro.json> [--espejo espejo-local]
 // - `ruta` no nula: el archivo <formato>/<nombre> debe existir y pesar lo mismo.
+// - La comparación distingue mayúsculas aunque el disco no (lee el listado del directorio).
 // - `ruta` nula (TeX Live nativo no lo encontró): no debe existir; si existe, se avisa.
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { crearBuscadorExacto } from './exacto.mjs';
 
 /**
  * @param {{ formato: number, nombre: string, ruta: string | null, bytes: number }[]} registro
@@ -17,13 +19,15 @@ export function validar(registro, espejo) {
   const sobrantes = [];
   let esperados = 0;
   let encontrados = 0;
+  const tamanoExacto = crearBuscadorExacto();
   for (const p of registro) {
-    const archivo = join(espejo, String(p.formato), p.nombre);
-    const hay = existsSync(archivo) && statSync(archivo).isFile();
+    // Un nombre con separador (/ o \) nunca es un archivo del espejo (cada formato es una carpeta plana).
+    const bytes = /[\\/]/.test(p.nombre) ? null : tamanoExacto(join(espejo, String(p.formato), p.nombre));
+    const hay = bytes !== null;
     if (p.ruta) {
       esperados++;
       if (!hay) faltantes.push(`${p.formato}/${p.nombre}`);
-      else if (statSync(archivo).size !== p.bytes) distintos.push(`${p.formato}/${p.nombre}`);
+      else if (bytes !== p.bytes) distintos.push(`${p.formato}/${p.nombre}`);
       else encontrados++;
     } else if (hay) {
       sobrantes.push(`${p.formato}/${p.nombre}`);

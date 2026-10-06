@@ -173,7 +173,7 @@ describe('escenarios del plan (motor falso, sin WASM)', () => {
 describe('errores, PDF anterior y cancelación', () => {
   it('una imagen faltante en un capítulo da archivo y línea y conserva el PDF anterior', async () => {
     const entrada = {
-      archivos: proyecto('\include{capitulos/uno}', [{ ruta: 'capitulos/uno.tex', contenido: 'x' }]),
+      archivos: proyecto('\\include{capitulos/uno}', [{ ruta: 'capitulos/uno.tex', contenido: 'x' }]),
       principal: 'main.tex',
     };
     // Primera compilación buena; la segunda falla con la bitácora real de una imagen faltante.
@@ -190,6 +190,18 @@ describe('errores, PDF anterior y cancelación', () => {
     expect(problema?.archivo).toBe('img.tex');
     expect(problema?.linea).toBe(4);
     expect(mixto.orquestador.pdfAnterior?.byteLength).toBeGreaterThan(0);
+  });
+
+  it('una cancelación que llega entre dos operaciones también detiene la compilación', async () => {
+    const { orquestador, motor, programas } = preparar({
+      generar: (cmd) => (cmd[0] === 'pdflatex' ? { 'main.idx': '\\indexentry{a}{1}\n' } : {}),
+    });
+    // La cancelación llega justo después de la primera pasada, cuando el motor no tiene nada pendiente.
+    motor.alEjecutar = () => orquestador.cancelar();
+    const r = await orquestador.compilar({ archivos: proyecto('\\makeindex'), principal: 'main.tex' });
+    expect(r.cancelado).toBe(true);
+    expect(r.exito).toBe(false);
+    expect(programas()).toEqual(['pdflatex']);
   });
 
   it('cancelar termina con cancelado: true y sin problemas inventados', async () => {

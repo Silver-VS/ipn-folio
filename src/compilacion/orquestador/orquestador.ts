@@ -122,6 +122,8 @@ export class Orquestador {
   private ultimoPdf: Uint8Array | null = null;
   private cola: Promise<unknown> = Promise.resolve();
   private enCurso = false;
+  /** Se pidió cancelar: se revisa antes de cada operación con el motor (puede llegar entre dos de ellas). */
+  private cancelacionPedida = false;
 
   constructor(
     private readonly motor: PuertoOrquestador,
@@ -140,7 +142,9 @@ export class Orquestador {
 
   /** Cancela la compilación en curso; el evento `fin` llega con `cancelado: true`. */
   cancelar(): void {
-    if (this.enCurso) this.motor.cancelar();
+    if (!this.enCurso) return;
+    this.cancelacionPedida = true;
+    this.motor.cancelar();
   }
 
   /** Compila el proyecto. Las compilaciones se atienden de una en una. */
@@ -150,12 +154,18 @@ export class Orquestador {
     return turno;
   }
 
+  /** Una cancelación pedida entre dos operaciones con el motor debe detener la compilación igual que una en curso. */
+  private verificarCancelacion(): void {
+    if (this.cancelacionPedida) throw new ErrorMotor('cancelado');
+  }
+
   private emitir(evento: EventoOrquestador): void {
     this.opciones.alEvento?.(evento);
   }
 
   private async correr({ archivos, principal }: EntradaCompilacion): Promise<ResultadoCompilacion> {
     this.enCurso = true;
+    this.cancelacionPedida = false;
     const inicio = performance.now();
     this.emitir({ tipo: 'inicio' });
 
@@ -166,6 +176,7 @@ export class Orquestador {
     const conDir = (archivo: string | undefined) =>
       archivo && dir && !/^(?:\/|[A-Za-z]:)/.test(archivo) ? `${dir}/${archivo}` : archivo;
     const leerTexto = async (nombre: string): Promise<string | undefined> => {
+      this.verificarCancelacion();
       const bytes = await this.motor.leer(ruta(nombre));
       return bytes ? decodificador.decode(bytes) : undefined;
     };
@@ -202,10 +213,11 @@ export class Orquestador {
     let huellaAuxiliares = cache?.huellaAuxiliares ?? huellaDeAuxiliares(base, [], {});
     let logTex = '';
     let total = estimarTotalInicial(analisis, cache !== null);
-    let motivo: ResultadoCompilacion['motivo'] = 'completo';
+    let motivo!: ResultadoCompilacion['motivo'];
     let errorMotor: ErrorMotor | null = null;
 
     const correrComando = async (nombre: NombrePaso, cmd: string[]) => {
+      this.verificarCancelacion();
       const r = await this.motor.ejecutar(cmd, this.opciones.enVivo ? { enVivo: true } : {});
       pasos.push({ nombre, cmd, codigo: r.codigo, ms: r.ms });
       if (!this.opciones.enVivo && (r.stdout || r.stderr))
@@ -293,6 +305,7 @@ export class Orquestador {
     const huboFallo = motivo === 'fatal' || motivo === 'cancelado' || motivo === 'motor';
     if (!huboFallo) {
       try {
+        this.verificarCancelacion();
         const bytes = await this.motor.leer(ruta(`${base}.pdf`));
         if (bytes && bytes.byteLength > 0) {
           pdf = bytes;
@@ -370,6 +383,7 @@ export class Orquestador {
   ): Promise<ArchivoProyecto[]> {
     const generados: ArchivoProyecto[] = [];
     for (const nombre of generables(analisis, base)) {
+      this.verificarCancelacion();
       const bytes = await this.motor.leer(ruta(nombre));
       if (bytes) generados.push({ ruta: ruta(nombre), contenido: bytes });
     }

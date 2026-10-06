@@ -24,5 +24,6 @@ export function etiquetaDePaso(nombre: NombrePaso): string {
 
 /** «Paso 2 de 4: bibliografía». */
 export function textoDeProgreso(n: number, total: number, nombre: NombrePaso): string {
-  return t('compilacion.paso.progreso', { n, total, nombre: etiquetaDePaso(nombre) });
+  const etiqueta = etiquetaDePaso(nombre);
+  return t('compilacion.paso.progreso', { n, total, nombre: etiqueta });
 }

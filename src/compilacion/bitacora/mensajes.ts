@@ -374,7 +374,8 @@ export function crearProblema(
   detalle: Omit<Problema, 'codigo' | 'variables' | 'titulo' | 'accion'>,
 ): Problema {
   // Sin ubicación conocida el título no debe mostrar un signo de interrogación.
-  const variante = c.codigo === 'desconocido' && c.variables.linea === '?' ? 'desconocido-sin-linea' : c.variante;
+  const variante =
+    c.codigo === 'desconocido' && c.variables.linea === '?' ? 'desconocido-sin-linea' : c.variante;
   const entrada = CATALOGO[(variante ?? c.codigo) as keyof typeof CATALOGO] ?? CATALOGO.desconocido;
   return {
     ...detalle,
@@ -426,11 +427,7 @@ export function clasificar(mensaje: string, contexto: string, linea?: number): C
   if (cita) return resultado('cita-indefinida', { cita: cita[1]! });
   if (/There were undefined (?:references|citations)/.test(mensaje))
     return resultado('referencias-indefinidas');
-  if (
-    /Rerun to get|Rerun LaTeX|Label\(s\) may have changed|Please (?:re)?run LaTeX/i.test(
-      mensaje,
-    )
-  )
+  if (/Rerun to get|Rerun LaTeX|Label\(s\) may have changed|Please (?:re)?run LaTeX/i.test(mensaje))
     return resultado('repetir-pasada');
   const desbordado = /Overfull \\hbox\s*\((\d+(?:\.\d+)?)pt too wide\)/.exec(mensaje);
   if (desbordado)

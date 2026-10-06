@@ -43,7 +43,7 @@ export function crearMotorFalso(escenario: Escenario = {}) {
       const n = (ejecuciones.get(programa) ?? 0) + 1;
       ejecuciones.set(programa, n);
       const prefijo = directorio ? `${directorio}/` : '';
-      let log = '';
+      let log: string;
       if (programa === 'pdflatex') {
         log = escenario.logTex?.(n) ?? '';
         sistema.set(`${prefijo}main.pdf`, codificador.encode('%PDF-1.5 falso'));

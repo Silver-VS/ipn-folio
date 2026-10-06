@@ -95,13 +95,8 @@ test.describe('compilación con BusyTeX', () => {
     expect(r1.bytesPdf).toBeGreaterThan(1024);
     expect(r1.existe['main.ind']).toBe(true);
     expect(r1.existe['main.nls']).toBe(true);
-    expect(r1.pasos.map((p) => p.split('→')[0])).toEqual([
-      'pdflatex',
-      'makeindex',
-      'makeindex',
-      'pdflatex',
-      'pdflatex',
-    ]);
+    // Orquestador (sesión 06): una pasada, índice, nomenclatura y una pasada que los use (la secuencia provisional de la sesión 03 hacía 5 pasos).
+    expect(r1.pasos.map((p) => p.split('→')[0])).toEqual(['pdflatex', 'makeindex', 'makeindex', 'pdflatex']);
 
     const r2 = await compilar('con-indice');
     tiempos['conIndice2Ms'] = Math.round(r2.msTotal);

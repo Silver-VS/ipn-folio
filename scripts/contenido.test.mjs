@@ -26,6 +26,19 @@ function base(cambios = {}) {
 }
 
 describe('revisar (contenido)', () => {
+  it('un objeto de variables no literal es un aviso «sin verificar», no un error', () => {
+    const e = base({ usos: [{ clave: 'archivo.error.titulo', archivo: 'src/App.svelte', variables: null }] });
+    const r = revisar(e);
+    expect(r.errores).toEqual([]);
+    expect(r.avisos.join(' ')).toMatch(/sin verificar/);
+  });
+
+  it('el color #hex solo se marca como valor, no como selector (#add)', () => {
+    const estilo = (contenido) => base({ estilos: [{ archivo: 'src/X.svelte', contenido }] });
+    expect(revisar(estilo('#add { margin: 0; }')).errores).toEqual([]);
+    expect(revisar(estilo('a { color: #add; }')).errores.join(' ')).toMatch(/color fijo/);
+  });
+
   it('acepta un contenido correcto', () => {
     expect(revisar(base()).errores).toEqual([]);
   });

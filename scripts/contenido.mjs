@@ -103,7 +103,13 @@ export function revisar(e) {
       errores.push(`${uso.archivo}: la clave «${uso.clave}» no existe en es.toml ni en ipn-comun`);
       continue;
     }
-    if (uso.variables === null) continue;
+    if (uso.variables === null) {
+      if (uso.archivo !== 'index.html')
+        avisos.push(
+          `${uso.archivo}: las variables de «${uso.clave}» no son un objeto literal: sin verificar`,
+        );
+      continue;
+    }
     const esperadas = variablesDe(plantilla);
     for (const v of esperadas)
       if (!uso.variables.includes(v))
@@ -139,7 +145,7 @@ export function revisar(e) {
   for (const { archivo, contenido } of e.estilos ?? []) {
     if (/--(bg|sf|sf2|ac|acs|acx|tx|mu|ln|wa|was|er|ers|in|ins|oks)(?![\w-])/.test(contenido))
       errores.push(archivo + ': usa los tokens --ipn-*, no los nombres antiguos (--bg, --sf, --ac…)');
-    if (/#[0-9a-fA-F]{3,8}(?![\w-])/.test(contenido))
+    if (/[:,(]\s*#[0-9a-fA-F]{3,8}(?![\w-])(?!\s*[{,])/.test(contenido))
       errores.push(archivo + ': color fijo en el CSS; usa un token --ipn-* (principios 3.8)');
   }
 
@@ -156,7 +162,18 @@ function listar(dir, filtro, acumulado = []) {
   return acumulado;
 }
 
-const LLAMADA = /(?<![\w.$])t\(\s*(?:(['"`])([^'"`]+)\1\s*(?:,\s*\{([^}]*)\})?|(?![\s)]))/g;
+const LLAMADA = /(?<![\w.$])t\(\s*(?:(['"`])([^'"`]+)\1\s*(?:,\s*(\{[^}]*\}|(?=[^\s)])))?|(?![\s)]))/g;
+
+/** Claves de un objeto literal sencillo; `[]` sin segundo argumento; `null` («sin verificar») en cualquier otro caso. */
+function variablesLiterales(arg) {
+  if (arg === undefined) return [];
+  if (!arg.startsWith('{') || /[({[]/.test(arg.slice(1))) return null;
+  return arg
+    .slice(1, -1)
+    .split(',')
+    .map((p) => (p.split(':')[0] ?? '').trim())
+    .filter(Boolean);
+}
 
 export function reunir(raiz = RAIZ) {
   const rel = (r) => relative(raiz, r).replaceAll('\\', '/');
@@ -184,13 +201,7 @@ export function reunir(raiz = RAIZ) {
         usos.push({
           clave: m[2],
           archivo: rel(ruta),
-          variables:
-            m[3] === undefined
-              ? []
-              : m[3]
-                  .split(',')
-                  .map((p) => (p.split(':')[0] ?? '').trim())
-                  .filter(Boolean),
+          variables: variablesLiterales(m[3]),
         });
     }
     if (ruta.endsWith('.svelte')) {

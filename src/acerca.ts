@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Datos públicos del proyecto (enlace al código fuente, licencia, versión). Salen de config/*.json:
-// no hay URLs ni versión escritas en el código.
-import desarrollo from '../config/desarrollo.json';
-import produccion from '../config/produccion.json';
-
-export type Entorno = 'desarrollo' | 'produccion';
+// no hay URLs ni versión escritas en el código. vite.config.ts elige un solo JSON según el entorno y lo inyecta
+// como __FOLIO_CONFIG__, así el build de producción no empaqueta la configuración de desarrollo.
 
 export interface Acerca {
   REPO_URL: string;
@@ -12,13 +9,9 @@ export interface Acerca {
   version: string;
 }
 
-const CONFIGURACIONES: Record<Entorno, Acerca> = { desarrollo, produccion };
-
-export function obtenerAcerca(entorno: Entorno): Acerca {
-  return CONFIGURACIONES[entorno];
-}
-
 /** Datos del entorno con que se compiló esta página. */
-export const acerca: Acerca = obtenerAcerca(
-  typeof __FOLIO_ENTORNO__ === 'string' ? __FOLIO_ENTORNO__ : 'produccion',
-);
+export const acerca: Acerca = {
+  REPO_URL: __FOLIO_CONFIG__.REPO_URL,
+  LICENCIA: __FOLIO_CONFIG__.LICENCIA,
+  version: __FOLIO_CONFIG__.version,
+};

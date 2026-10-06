@@ -13,6 +13,16 @@ describe('evaluar (licencias)', () => {
     expect(evaluar('GPL-2.0-only')).toBe('prohibida');
     expect(evaluar('MIT AND GPL-2.0-only')).toBe('prohibida');
   });
+  it('respeta la precedencia SPDX: paréntesis primero y AND antes que OR', () => {
+    expect(evaluar('(MIT OR Apache-2.0) AND GPL-2.0-only')).toBe('prohibida');
+    expect(evaluar('MIT OR (Apache-2.0 AND GPL-2.0-only)')).toBe('permitida');
+    expect(evaluar('MIT OR Apache-2.0 AND GPL-2.0-only')).toBe('permitida');
+    expect(evaluar('GPL-2.0-only OR (MIT AND ISC)')).toBe('permitida');
+  });
+  it('trata GPL-2.0+ y GPL-2.0-or-later como compatibles', () => {
+    expect(evaluar('GPL-2.0+')).toBe('permitida');
+    expect(evaluar('GPL-2.0-or-later')).toBe('permitida');
+  });
   it('manda a revisar lo que no reconoce', () => {
     expect(evaluar('')).toBe('revisar');
     expect(evaluar('Licencia-Rara-1.0')).toBe('revisar');

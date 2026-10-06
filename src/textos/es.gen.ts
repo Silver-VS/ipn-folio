@@ -1,7 +1,7 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.7";
+export const VERSION_TEXTOS = "2026.10.8";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
@@ -92,7 +92,8 @@ export const TEXTOS_FOLIO = {
   "errores.motor.ruta_no_permitida": "El proyecto tiene un archivo con una ruta que sale de su carpeta. Corrige su nombre y vuelve a compilar.",
   "errores.motor.sin_montar": "Primero hay que cargar los archivos del proyecto. Vuelve a compilar.",
   "errores.motor.worker": "El motor de compilación se detuvo de forma inesperada. Vuelve a compilar: se reiniciará solo.",
-  "inicio.espacio.aria": "Espacio de trabajo"
+  "inicio.espacio.aria": "Espacio de trabajo",
+  "pie.codigo_fuente_licencia": "Código fuente ({licencia})"
 } as const;
 
 export const TEXTOS_COMUN: Readonly<Record<string, string>> = {
@@ -150,4 +151,5 @@ export interface VariablesPorClave {
   "errores.latex.paquete_error.titulo": { paquete: string | number };
   "errores.latex.referencia_indefinida.ayuda": { referencia: string | number };
   "errores.latex.referencia_indefinida.titulo": { referencia: string | number };
+  "pie.codigo_fuente_licencia": { licencia: string | number };
 }

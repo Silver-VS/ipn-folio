@@ -3,7 +3,7 @@
 # Reglas: claves a-z0-9_ con puntos; variables {nombre}; plurales {n, plural, one {# x} other {# xs}}.
 # Los textos que también necesita IPN-tools viven en ipn-comun (comun.es.toml), no aquí.
 # Al cambiar un texto: sube `version` y anota el cambio en contenido/CAMBIOS.md.
-version = "2026.10.7"
+version = "2026.10.8"
 
 [app]
 # Nombre del producto: <title> de la página y encabezado. Es un nombre propio.
@@ -14,6 +14,10 @@ lema = "Tus apuntes. Tus reglas."
 descripcion = "Editor LaTeX y cuadernos académicos en tu navegador, sin servidores."
 # Aviso dentro de <noscript>, para quien tiene JavaScript desactivado.
 sin_js = "IPN Folio necesita JavaScript para funcionar. Actívalo en tu navegador y vuelve a cargar la página."
+
+[pie]
+# Enlace del pie al código fuente; {licencia} es el identificador de la licencia (p. ej. AGPL-3.0).
+codigo_fuente_licencia = "Código fuente ({licencia})"
 
 [inicio]
 # Nombre accesible de la región principal donde se mostrará el trabajo (aún vacía).

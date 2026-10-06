@@ -13,8 +13,9 @@
   <main id="espacio-de-trabajo" aria-label={t('inicio.espacio.aria')}></main>
 
   <footer class="pie">
-    <a href={acerca.REPO_URL} rel="noopener">{t('pie.codigo_fuente')}</a>
-    <span class="licencia">({acerca.LICENCIA})</span>
+    <a href={acerca.REPO_URL} rel="noopener"
+      >{t('pie.codigo_fuente_licencia', { licencia: acerca.LICENCIA })}</a
+    >
   </footer>
 </div>
 
@@ -60,9 +61,5 @@
     display: inline-flex;
     align-items: center;
     min-height: calc(var(--ipn-esp-6) + var(--ipn-esp-3));
-  }
-
-  .licencia {
-    color: var(--ipn-tenue);
   }
 </style>

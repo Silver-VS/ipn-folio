@@ -30,3 +30,7 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 ## 2026.10.7
 
 - 2026-10-05 · `errores.motor.*` · (nuevas) mensajes de error del motor de compilación: cancelado, detenido, abortado, operación fallida, no listo, sin proyecto y ruta no permitida · Claude Sonnet (sesión 03).
+
+## 2026.10.8
+
+- 2026-10-05 · `pie.codigo_fuente_licencia` · (nueva) frase completa del pie, con la licencia como variable; sustituye armar `pie.codigo_fuente` + `(licencia)` en el código · Claude Sonnet (limpieza-01).

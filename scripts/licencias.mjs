@@ -25,25 +25,63 @@ export const PERMITIDAS = new Set([
   'AGPL-3.0-or-later',
 ]);
 
-/** 'permitida' | 'prohibida' | 'revisar' para una expresión SPDX sencilla (OR / AND / paréntesis). */
+/** Parte `texto` por el operador (OR / AND) solo en el nivel superior, fuera de paréntesis. */
+function dividir(texto, operador) {
+  const partes = [];
+  let nivel = 0;
+  let actual = '';
+  for (const palabra of texto.split(/\s+/)) {
+    if (nivel === 0 && palabra.toUpperCase() === operador) {
+      partes.push(actual.trim());
+      actual = '';
+      continue;
+    }
+    for (const c of palabra) nivel += c === '(' ? 1 : c === ')' ? -1 : 0;
+    actual += ' ' + palabra;
+  }
+  partes.push(actual.trim());
+  return partes;
+}
+
+/** Quita un par de paréntesis que envuelva toda la expresión. */
+function sinEnvolver(texto) {
+  if (!texto.startsWith('(') || !texto.endsWith(')')) return texto;
+  let nivel = 0;
+  for (let i = 0; i < texto.length; i++) {
+    nivel += texto[i] === '(' ? 1 : texto[i] === ')' ? -1 : 0;
+    if (nivel === 0 && i < texto.length - 1) return texto;
+  }
+  return texto.slice(1, -1).trim();
+}
+
+/**
+ * 'permitida' | 'prohibida' | 'revisar' para una expresión SPDX (OR / AND / paréntesis).
+ * Precedencia SPDX: los paréntesis primero, luego AND (liga más fuerte) y al final OR.
+ */
 export function evaluar(expresion) {
-  const texto = String(expresion ?? '').trim();
+  const texto = String(expresion ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
   if (!texto) return 'revisar';
-  const limpio = texto.replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim();
-  if (/\sOR\s/i.test(limpio)) {
-    const partes = limpio.split(/\sOR\s/i).map(evaluar);
+  const limpio = sinEnvolver(texto);
+  if (limpio !== texto) return evaluar(limpio);
+  const alternativas = dividir(texto, 'OR');
+  if (alternativas.length > 1) {
+    const partes = alternativas.map(evaluar);
     if (partes.includes('permitida')) return 'permitida';
     return partes.every((p) => p === 'prohibida') ? 'prohibida' : 'revisar';
   }
-  if (/\sAND\s/i.test(limpio)) {
-    const partes = limpio.split(/\sAND\s/i).map(evaluar);
+  const conjuntos = dividir(texto, 'AND');
+  if (conjuntos.length > 1) {
+    const partes = conjuntos.map(evaluar);
     if (partes.includes('prohibida')) return 'prohibida';
     return partes.every((p) => p === 'permitida') ? 'permitida' : 'revisar';
   }
-  if (PERMITIDAS.has(limpio)) return 'permitida';
+  // «GPL-2.0+» y «GPL-2.0-or-later» equivalen y son compatibles con AGPL-3.0.
+  if (PERMITIDAS.has(texto) || /^GPL-2\.0(\+|-or-later)$/i.test(texto)) return 'permitida';
   if (
-    /^(GPL-2\.0|LGPL-2|AGPL-1|SSPL|BUSL|CC-BY-NC|Commons-Clause|UNLICENSED$)/i.test(limpio) &&
-    !/or-later/i.test(limpio)
+    /^(GPL-2\.0|LGPL-2|AGPL-1|SSPL|BUSL|CC-BY-NC|Commons-Clause|UNLICENSED$)/i.test(texto) &&
+    !/or-later/i.test(texto)
   )
     return 'prohibida';
   return 'revisar';

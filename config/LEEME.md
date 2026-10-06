@@ -6,4 +6,4 @@
 - Quién la edita: quien mantiene el proyecto. Se elige con la variable `FOLIO_ENTORNO` (`desarrollo` en `npm run dev`,
   `produccion` en `npm run build`); `FOLIO_BASE` sustituye a `base`.
 - Todo lo de aquí es **público**. Nunca van secretos ni correos personales.
-- Cómo se valida: `src/acerca.test.ts`.
+- Cómo se valida: `src/acerca.test.ts`. `vite.config.ts` inyecta solo el JSON del entorno elegido (`__FOLIO_CONFIG__`).

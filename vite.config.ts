@@ -34,13 +34,16 @@ export default defineConfig(({ command }) => {
   const entorno = entornoPor(command);
   const config = JSON.parse(readFileSync(new URL(`./config/${entorno}.json`, import.meta.url), 'utf8')) as {
     base: string;
+    REPO_URL: string;
+    LICENCIA: string;
+    version: string;
   };
   // @ipn/comun puede ser un enlace a una carpeta fuera del repositorio (file:): el servidor debe poder leerla.
   const comun = realpathSync(new URL('./node_modules/@ipn/comun', import.meta.url));
   return {
     base: process.env.FOLIO_BASE ?? config.base ?? './',
     plugins: [svelte(), textosEnHtml()],
-    define: { __FOLIO_ENTORNO__: JSON.stringify(entorno) },
+    define: { __FOLIO_ENTORNO__: JSON.stringify(entorno), __FOLIO_CONFIG__: JSON.stringify(config) },
     // El worker de BusyTeX (sesión 03) usa importScripts, que no existe en workers de módulo.
     worker: { format: 'iife' },
     build: { target: 'es2022' },

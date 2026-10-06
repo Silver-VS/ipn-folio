@@ -1,0 +1,74 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/*
+ * Aspecto de dockview con los tokens semánticos de Folio (claro y oscuro salen de --ipn-*; ningún color fijo).
+ * Se aplica sobre `.dockview-theme-light` (que trae las medidas) cambiando solo colores y alturas.
+ */
+.dockview-theme-light.folio-paneles {
+  color-scheme: inherit;
+  font-family: var(--ipn-fuente-texto);
+  --dv-group-view-background-color: var(--ipn-superficie);
+  --dv-tabs-and-actions-container-background-color: var(--ipn-hundido);
+  --dv-tabs-and-actions-container-font-size: var(--ipn-tamano-s);
+  --dv-tabs-and-actions-container-height: var(--ipn-objetivo-tactil);
+  --dv-activegroup-visiblepanel-tab-background-color: var(--ipn-superficie);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(--ipn-hundido);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--ipn-superficie);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--ipn-hundido);
+  --dv-tab-divider-color: var(--ipn-linea);
+  --dv-activegroup-visiblepanel-tab-color: var(--ipn-texto);
+  --dv-activegroup-hiddenpanel-tab-color: var(--ipn-tenue);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--ipn-tenue);
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--ipn-tenue);
+  --dv-separator-border: var(--ipn-linea);
+  --dv-paneview-header-border-color: var(--ipn-linea);
+  --dv-paneview-active-outline-color: var(--ipn-acento);
+  --dv-sash-color: var(--ipn-linea);
+  --dv-active-sash-color: var(--ipn-acento);
+  --dv-drag-over-background-color: var(--ipn-acento-suave);
+  --dv-drag-over-border-color: var(--ipn-acento);
+  --dv-edge-dock-indicator-color: var(--ipn-acento);
+  --dv-icon-hover-background-color: var(--ipn-acento-suave);
+  --dv-tabs-container-scrollbar-color: var(--ipn-borde-control);
+  --dv-scrollbar-background-color: var(--ipn-borde-control);
+  --dv-floating-box-shadow: none;
+  --dv-floating-border: 1px solid var(--ipn-linea);
+}
+
+/* Cada panel llena su grupo. Sin ancestro: en una ventana emergente la clase del tema no envuelve estos elementos. */
+.panel-contenido {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Botón de cada grupo para sacarlo a otra ventana (lo crea espacio.ts con DOM directo). */
+.acciones-grupo {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.accion-ventana {
+  min-width: var(--ipn-objetivo-tactil);
+  height: 100%;
+  border: none;
+  background: none;
+  color: var(--ipn-tenue);
+  font: inherit;
+  font-size: var(--ipn-tamano-m);
+  cursor: pointer;
+}
+
+.accion-ventana:hover {
+  background: var(--ipn-acento-suave);
+  color: var(--ipn-texto);
+}
+
+.accion-ventana:focus-visible {
+  outline: 0.1875rem solid var(--ipn-acento);
+  outline-offset: -0.1875rem;
+}
+
+.acciones-grupo[hidden] {
+  display: none;
+}

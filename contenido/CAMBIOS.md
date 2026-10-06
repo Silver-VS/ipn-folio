@@ -34,3 +34,7 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 ## 2026.10.8
 
 - 2026-10-05 · `pie.codigo_fuente_licencia` · (nueva) frase completa del pie, con la licencia como variable; sustituye armar `pie.codigo_fuente` + `(licencia)` en el código · Claude Sonnet (limpieza-01).
+
+## 2026.10.9
+
+- 2026-10-05 · `proyecto.*`, `guardado.*`, `paneles.*`, `distribucion.*`, `compacto.*`, `archivos.*`, `editor.*`, `editor.cm.*`, `pdf.*`, `problemas.*`, `salida.*`, `paleta.*`, `mensajes.*`, `inicio.*` · (nuevas) textos de la pantalla de proyecto: paneles, árbol de archivos, editor, visor de PDF, indicador de guardado, paleta (esqueleto), inicio mínimo y traducción de CodeMirror · Claude Sonnet (sesión 08).

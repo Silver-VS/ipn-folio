@@ -14,3 +14,7 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 ## 2026.10.3
 
 - 2026-10-05 · `almacen.*`, `almacen.error.*` · (nuevas) mensajes de error de la capa de almacenamiento local y nombre de proyecto importado · Claude Sonnet (almacén).
+
+## 2026.10.4
+
+- 2026-10-05 · `almacen.aviso.*` · (nuevas) avisos al importar un .zip: codificación convertida y entrada duplicada · Claude Sonnet (almacén).

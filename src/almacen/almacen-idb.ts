@@ -241,7 +241,8 @@ export async function crearAlmacenIdb(opciones: OpcionesAlmacen = {}): Promise<A
         let i = 0;
         for (const v of valores) {
           opciones.inyectarFallo?.('renombrar', i++);
-          await archivos.put({ ...v, ruta: plan.get(v.ruta)!, modificado: t });
+          const hasta = plan.get(v.ruta)!;
+          await archivos.put({ ...v, ...ajustarContenido(hasta, v.contenido), ruta: hasta, modificado: t });
         }
         await tx.objectStore('proyectos').put({
           ...p,

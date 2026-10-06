@@ -4,7 +4,8 @@ import { unzipSync, zipSync } from 'fflate';
 import type { Zippable } from 'fflate';
 import { t } from '../textos/t';
 import { ErrorAlmacen } from './errores';
-import { aBytes, aTexto, extension, normalizarRuta, tipoPorRuta } from './rutas';
+import type { AvisoImportacion } from './errores';
+import { aBytes, aTexto, decodificarTexto, extension, normalizarRuta, tipoPorRuta } from './rutas';
 import type { Almacen, ArchivoInicial, Contenido, Proyecto } from './tipos';
 
 /** Extensiones de archivos auxiliares que genera la compilación: no se importan. */
@@ -78,6 +79,8 @@ export interface ResultadoImportacion {
   proyecto: Proyecto;
   /** Rutas que no se importaron (auxiliares, `__MACOSX/`, rutas inválidas). */
   ignorados: string[];
+  /** Avisos para mostrar al alumnado con `textoDeAviso`: texto convertido de otra codificación, entradas repetidas. */
+  avisos: AvisoImportacion[];
 }
 
 /** Crea un proyecto nuevo con el contenido del zip. `nombre` puede traer la extensión `.zip`. */
@@ -108,7 +111,9 @@ export async function importarZip(
     throw new ErrorAlmacen('zip_invalido');
   }
 
-  const archivos: ArchivoInicial[] = [];
+  // Por ruta ya normalizada: si dos entradas coinciden (`a.tex` y `./a.tex`) gana la última y se avisa.
+  const porRuta = new Map<string, { contenido: Contenido; convertido: boolean }>();
+  const avisos: AvisoImportacion[] = [];
   for (const [nombreEnZip, datos] of Object.entries(crudo)) {
     let ruta: string;
     try {
@@ -117,8 +122,18 @@ export async function importarZip(
       ignorados.push(nombreEnZip);
       continue;
     }
-    const contenido: Contenido = tipoPorRuta(ruta) === 'texto' ? aTexto(datos) : datos;
+    if (porRuta.has(ruta)) avisos.push({ clave: 'entrada_duplicada', variables: { ruta } });
+    if (tipoPorRuta(ruta) === 'texto') {
+      const { texto, convertido } = decodificarTexto(datos);
+      porRuta.set(ruta, { contenido: texto, convertido });
+    } else {
+      porRuta.set(ruta, { contenido: datos, convertido: false });
+    }
+  }
+  const archivos: ArchivoInicial[] = [];
+  for (const [ruta, { contenido, convertido }] of porRuta) {
     archivos.push({ ruta, contenido });
+    if (convertido) avisos.push({ clave: 'codificacion_convertida', variables: { ruta } });
   }
 
   const proyecto = await almacen.crearProyecto(
@@ -128,5 +143,5 @@ export async function importarZip(
     },
     archivos,
   );
-  return { proyecto, ignorados };
+  return { proyecto, ignorados, avisos };
 }

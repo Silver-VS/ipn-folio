@@ -2,7 +2,7 @@
 import { strToU8, zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { crearAlmacenMemoria } from './almacen-memoria';
-import { ErrorAlmacen } from './errores';
+import { ErrorAlmacen, textoDeAviso } from './errores';
 import { detectarPrincipal, exportarZip, importarZip } from './zip';
 
 const PNG = new Uint8Array([
@@ -76,6 +76,31 @@ describe('zip', () => {
     const { proyecto: otro } = await importarZip(a, salida, 'bom2');
     const archivo = (await a.leer(otro.id, 'main.tex'))!;
     expect(strToU8(archivo.contenido as string)).toEqual(conBom);
+  });
+
+  it('un .tex que no es UTF-8 se decodifica como Windows-1252 y se avisa, sin perder letras', async () => {
+    const a = crearAlmacenMemoria();
+    const latin1 = new Uint8Array([...strToU8('\\documentclass{article}\n% '), 0xe1, 0xf1, 0xdc, 0x0a]);
+    const { proyecto, avisos } = await importarZip(
+      a,
+      zipSync({ 'main.tex': latin1, 'ok.tex': strToU8('áñ') }),
+      'x',
+    );
+    const t = (await a.leer(proyecto.id, 'main.tex'))!.contenido as string;
+    expect(t).toContain('% áñÜ');
+    expect(t).not.toContain('\uFFFD');
+    expect((await a.leer(proyecto.id, 'ok.tex'))!.contenido).toBe('áñ');
+    expect(avisos).toEqual([{ clave: 'codificacion_convertida', variables: { ruta: 'main.tex' } }]);
+    expect(textoDeAviso(avisos[0]!)).toContain('main.tex');
+  });
+
+  it('una entrada duplicada no aborta la importación: gana la última y se avisa', async () => {
+    const a = crearAlmacenMemoria();
+    const zip = zipSync({ 'a.tex': strToU8('primera'), './a.tex': strToU8('segunda'), 'b.tex': strToU8('b') });
+    const { proyecto, avisos } = await importarZip(a, zip, 'x');
+    expect((await a.listarArchivos(proyecto.id)).map((f) => f.ruta)).toEqual(['a.tex', 'b.tex']);
+    expect((await a.leer(proyecto.id, 'a.tex'))!.contenido).toBe('segunda');
+    expect(avisos).toEqual([{ clave: 'entrada_duplicada', variables: { ruta: 'a.tex' } }]);
   });
 });
 

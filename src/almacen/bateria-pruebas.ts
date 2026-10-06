@@ -251,5 +251,25 @@ export function probarAlmacen(nombre: string, fabrica: FabricaAlmacen): void {
       expect(await a.listarProyectos('todos')).toEqual([]);
       a.cerrar();
     });
+
+    it('al renombrar, el tipo de archivo sigue a la extensión nueva', async () => {
+      const a = await nuevo();
+      const p = await a.crearProyecto({ nombre: 'Proyecto de ejemplo' }, [
+        { ruta: 'notas.txt', contenido: '\\documentclass{article}' },
+        { ruta: 'img.tex', contenido: 'abc' },
+      ]);
+      await a.renombrar(p.id, 'notas.txt', 'notas.png');
+      const binario = (await a.leer(p.id, 'notas.png'))!;
+      expect(binario).toMatchObject({ tipo: 'binario', tamano: 23 });
+      expect(binario.contenido).toBeInstanceOf(Uint8Array);
+      await a.renombrar(p.id, 'notas.png', 'notas.tex');
+      expect(await a.leer(p.id, 'notas.tex')).toMatchObject({
+        tipo: 'texto',
+        contenido: '\\documentclass{article}',
+      });
+      await a.renombrar(p.id, 'img.tex', 'img.bin');
+      expect(await a.leer(p.id, 'img.bin')).toMatchObject({ tipo: 'binario', tamano: 3 });
+      a.cerrar();
+    });
   });
 }

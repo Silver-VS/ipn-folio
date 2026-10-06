@@ -19,12 +19,12 @@ export async function crearAlmacen(opciones: OpcionesAlmacen = {}): Promise<Resu
 }
 
 export * from './tipos';
-export { ErrorAlmacen, textoDeError } from './errores';
-export type { CodigoErrorAlmacen } from './errores';
+export { ErrorAlmacen, textoDeAviso, textoDeError } from './errores';
+export type { AvisoImportacion, CodigoErrorAlmacen } from './errores';
 export { normalizarRuta, esRutaValida, tipoPorRuta } from './rutas';
 export { crearAlmacenIdb, crearAlmacenMemoria };
 export { crearAutoguardado } from './autoguardado';
-export type { Autoguardado, EstadoAutoguardado } from './autoguardado';
+export type { Autoguardado, EstadoAutoguardado, VentanaProtegible } from './autoguardado';
 export { crearAvisos, conectarAvisos } from './avisos';
 export type { Aviso, Avisos } from './avisos';
 export { exportarZip, importarZip, detectarPrincipal } from './zip';

@@ -3,7 +3,7 @@
 # Reglas: claves a-z0-9_ con puntos; variables {nombre}; plurales {n, plural, one {# x} other {# xs}}.
 # Los textos que también necesita IPN-tools viven en ipn-comun (comun.es.toml), no aquí.
 # Al cambiar un texto: sube `version` y anota el cambio en contenido/CAMBIOS.md.
-version = "2026.10.3"
+version = "2026.10.4"
 
 [app]
 # Nombre del producto: <title> de la página y encabezado. Es un nombre propio.
@@ -146,3 +146,7 @@ almacenamiento_lleno = "Tu navegador se quedó sin espacio para guardar. Descarg
 almacen_no_disponible = "Tu navegador no permite guardar proyectos en este dispositivo, así que se perderán al cerrar la pestaña. Descarga una copia en .zip con frecuencia o abre IPN Folio en otra ventana que no sea privada."
 zip_invalido = "No pudimos leer ese archivo .zip. Comprueba que no esté dañado y vuelve a intentarlo."
 zip_demasiado_grande = "El contenido de ese .zip es demasiado grande para abrirlo en el navegador. Quita los archivos pesados que no necesites y vuelve a intentarlo."
+
+[almacen.aviso]
+codificacion_convertida = "El archivo «{ruta}» no estaba en UTF-8; lo convertimos desde Windows-1252 (Latin-1). Si usa inputenc con latin1, cambia esa opción a utf8 o revisa los acentos."
+entrada_duplicada = "El .zip trae «{ruta}» más de una vez. Conservamos la última copia."

@@ -1,10 +1,12 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.3";
+export const VERSION_TEXTOS = "2026.10.4";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
+  "almacen.aviso.codificacion_convertida": "El archivo «{ruta}» no estaba en UTF-8; lo convertimos desde Windows-1252 (Latin-1). Si usa inputenc con latin1, cambia esa opción a utf8 o revisa los acentos.",
+  "almacen.aviso.entrada_duplicada": "El .zip trae «{ruta}» más de una vez. Conservamos la última copia.",
   "almacen.error.almacen_no_disponible": "Tu navegador no permite guardar proyectos en este dispositivo, así que se perderán al cerrar la pestaña. Descarga una copia en .zip con frecuencia o abre IPN Folio en otra ventana que no sea privada.",
   "almacen.error.almacenamiento_lleno": "Tu navegador se quedó sin espacio para guardar. Descarga una copia en .zip y libera espacio borrando proyectos que ya no uses.",
   "almacen.error.archivo_inexistente": "No encontramos el archivo «{ruta}». Revisa el nombre o actualiza la lista de archivos.",
@@ -101,6 +103,8 @@ export type ClaveTexto = ClaveFolio | ClaveComun;
 export interface VariablesPorClave {
   "aviso.errores.titulo": { n: string | number };
   "pie.licencia": { licencia: string | number };
+  "almacen.aviso.codificacion_convertida": { ruta: string | number };
+  "almacen.aviso.entrada_duplicada": { ruta: string | number };
   "almacen.error.archivo_inexistente": { ruta: string | number };
   "almacen.error.destino_ocupado": { ruta: string | number };
   "almacen.error.movimiento_invalido": { ruta: string | number };

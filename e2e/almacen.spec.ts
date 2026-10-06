@@ -64,14 +64,13 @@ test.describe('almacén local', () => {
     await a.goto(PAGINA);
     await b.goto(PAGINA);
     await b.evaluate(async () => {
-      const { crearAvisos } = await import('/src/almacen/avisos.ts');
+      const { crearAvisos } = await window.prueba;
       const avisos = crearAvisos();
       (window as unknown as { recibidos: unknown[] }).recibidos = [];
       avisos.escuchar((x) => (window as unknown as { recibidos: unknown[] }).recibidos.push(x));
     });
     await a.evaluate(async () => {
-      const { almacen } = await window.prueba;
-      const { crearAvisos, conectarAvisos } = await import('/src/almacen/avisos.ts');
+      const { almacen, crearAvisos, conectarAvisos } = await window.prueba;
       conectarAvisos(almacen, crearAvisos());
       const p = await almacen.crearProyecto({ nombre: 'Proyecto de ejemplo' });
       await almacen.escribir(p.id, 'main.tex', 'x');

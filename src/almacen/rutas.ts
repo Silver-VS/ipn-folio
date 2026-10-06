@@ -162,3 +162,18 @@ export class Emisor<E extends { tipo: string }> {
 export function sinContenido({ proyectoId, ruta, tipo, modificado, tamano }: ArchivoProyecto): InfoArchivo {
   return { proyectoId, ruta, tipo, modificado, tamano };
 }
+
+const decodificadorEstricto = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+const decodificadorWindows1252 = new TextDecoder('windows-1252');
+
+/**
+ * Decodifica bytes de un archivo de texto. Si no son UTF-8 válido (p. ej. un `.tex` en Latin-1) los interpreta
+ * como Windows-1252, que no pierde letras, y lo señala en `convertido`.
+ */
+export function decodificarTexto(bytes: Uint8Array): { texto: string; convertido: boolean } {
+  try {
+    return { texto: decodificadorEstricto.decode(bytes), convertido: false };
+  } catch {
+    return { texto: decodificadorWindows1252.decode(bytes), convertido: true };
+  }
+}

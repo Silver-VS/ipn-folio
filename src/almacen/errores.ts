@@ -64,3 +64,20 @@ export function traducirErrorNativo(e: unknown): unknown {
   }
   return e;
 }
+
+/** Aviso (no error) al importar un .zip; el texto sale de `textoDeAviso`. */
+export interface AvisoImportacion {
+  clave: 'codificacion_convertida' | 'entrada_duplicada';
+  variables: { ruta: string };
+}
+
+/** Texto en español del aviso (claves `almacen.aviso.*` en contenido/textos/es.toml). */
+export function textoDeAviso(aviso: AvisoImportacion): string {
+  const { ruta } = aviso.variables;
+  switch (aviso.clave) {
+    case 'codificacion_convertida':
+      return t('almacen.aviso.codificacion_convertida', { ruta });
+    case 'entrada_duplicada':
+      return t('almacen.aviso.entrada_duplicada', { ruta });
+  }
+}

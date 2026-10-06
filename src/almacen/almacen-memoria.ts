@@ -158,7 +158,7 @@ export function crearAlmacenMemoria(opciones: OpcionesAlmacen = {}): Almacen {
         opciones.inyectarFallo?.('renombrar', i++);
         const archivo = copia.get(desde)!;
         copia.delete(desde);
-        copia.set(hasta, { ...archivo, ruta: hasta, modificado: t });
+        copia.set(hasta, { ...archivo, ...ajustarContenido(hasta, archivo.contenido), ruta: hasta, modificado: t });
       }
       archivos.set(id, copia);
       p.modificado = t;

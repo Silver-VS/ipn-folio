@@ -105,3 +105,92 @@ describe('autoguardado', () => {
     auto.cerrar();
   });
 });
+
+describe('autoguardado y cambios de ruta', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  async function preparar() {
+    const almacen = crearAlmacenMemoria();
+    const p = await almacen.crearProyecto({ nombre: 'Proyecto de ejemplo' }, [
+      { ruta: 'main.tex', contenido: 'm' },
+      { ruta: 'cap/a.tex', contenido: 'viejo' },
+    ]);
+    return { almacen, p, auto: crearAutoguardado(almacen) };
+  }
+  const rutas = async (almacen: Awaited<ReturnType<typeof preparar>>['almacen'], id: string) =>
+    (await almacen.listarArchivos(id)).map((f) => f.ruta);
+
+  it('renombrar una carpeta con un cambio pendiente lo lleva a la ruta nueva y no resucita la vieja', async () => {
+    const { almacen, p, auto } = await preparar();
+    auto.programar(p.id, 'cap/a.tex', 'nuevo');
+    await auto.renombrar(p.id, 'cap', 'capitulos');
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(await rutas(almacen, p.id)).toEqual(['capitulos/a.tex', 'main.tex']);
+    expect((await almacen.leer(p.id, 'capitulos/a.tex'))!.contenido).toBe('nuevo');
+    expect(auto.estado).toBe('guardado');
+  });
+
+  it('borrar con un cambio pendiente (incluso bajo una carpeta) no hace reaparecer el archivo', async () => {
+    const { almacen, p, auto } = await preparar();
+    auto.programar(p.id, 'cap/a.tex', 'nuevo');
+    await auto.borrar(p.id, 'cap');
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(await rutas(almacen, p.id)).toEqual(['main.tex']);
+    expect(auto.estado).toBe('guardado');
+  });
+
+  it('mover a la papelera guarda lo pendiente primero y no deja el estado en error', async () => {
+    const { almacen, p, auto } = await preparar();
+    auto.programar(p.id, 'main.tex', 'ultimo');
+    await auto.moverAPapelera(p.id);
+    await vi.advanceTimersByTimeAsync(3000);
+    expect((await almacen.leer(p.id, 'main.tex'))!.contenido).toBe('ultimo');
+    expect(auto.estado).toBe('guardado');
+  });
+
+  it('descartar cancela lo pendiente de una ruta y de lo que cuelga de ella', async () => {
+    const { almacen, p, auto } = await preparar();
+    auto.programar(p.id, 'cap/a.tex', 'nuevo');
+    auto.descartar(p.id, 'cap');
+    expect(auto.estado).toBe('guardado');
+    await vi.advanceTimersByTimeAsync(3000);
+    expect((await almacen.leer(p.id, 'cap/a.tex'))!.contenido).toBe('viejo');
+  });
+});
+
+describe('autoguardado: salida de la página', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it('vacía el autoguardado al ocultarse la página y en pagehide', async () => {
+    const almacen = crearAlmacenMemoria();
+    const p = await almacen.crearProyecto({ nombre: 'Proyecto de ejemplo' });
+    const auto = crearAutoguardado(almacen);
+    const doc = Object.assign(new EventTarget(), { visibilityState: 'visible' });
+    const ventana = Object.assign(new EventTarget(), { document: doc });
+    const { protegerSalida } = auto; // sin depender de `this`
+    const desconectar = protegerSalida(ventana as never);
+
+    auto.programar(p.id, 'main.tex', 'uno');
+    doc.dispatchEvent(new Event('visibilitychange'));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(await almacen.leer(p.id, 'main.tex')).toBeUndefined();
+
+    doc.visibilityState = 'hidden';
+    doc.dispatchEvent(new Event('visibilitychange'));
+    await vi.advanceTimersByTimeAsync(0);
+    expect((await almacen.leer(p.id, 'main.tex'))!.contenido).toBe('uno');
+
+    auto.programar(p.id, 'main.tex', 'dos');
+    ventana.dispatchEvent(new Event('pagehide'));
+    await vi.advanceTimersByTimeAsync(0);
+    expect((await almacen.leer(p.id, 'main.tex'))!.contenido).toBe('dos');
+
+    desconectar();
+    auto.programar(p.id, 'main.tex', 'tres');
+    doc.dispatchEvent(new Event('visibilitychange'));
+    await vi.advanceTimersByTimeAsync(0);
+    expect((await almacen.leer(p.id, 'main.tex'))!.contenido).toBe('dos');
+  });
+});

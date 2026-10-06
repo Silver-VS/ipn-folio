@@ -1,10 +1,23 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.2";
+export const VERSION_TEXTOS = "2026.10.3";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
+  "almacen.error.almacen_no_disponible": "Tu navegador no permite guardar proyectos en este dispositivo, así que se perderán al cerrar la pestaña. Descarga una copia en .zip con frecuencia o abre IPN Folio en otra ventana que no sea privada.",
+  "almacen.error.almacenamiento_lleno": "Tu navegador se quedó sin espacio para guardar. Descarga una copia en .zip y libera espacio borrando proyectos que ya no uses.",
+  "almacen.error.archivo_inexistente": "No encontramos el archivo «{ruta}». Revisa el nombre o actualiza la lista de archivos.",
+  "almacen.error.desconocido": "No se pudo guardar tu trabajo. Inténtalo de nuevo; si sigue fallando, descarga una copia en .zip.",
+  "almacen.error.destino_ocupado": "Ya existe un archivo o una carpeta llamada «{ruta}». Elige otro nombre.",
+  "almacen.error.movimiento_invalido": "No se puede mover una carpeta dentro de sí misma («{ruta}»). Elige otro destino.",
+  "almacen.error.nombre_invalido": "El nombre del proyecto no puede estar vacío. Escribe un nombre para continuar.",
+  "almacen.error.proyecto_en_papelera": "Ese proyecto está en la papelera. Restáuralo para poder editarlo.",
+  "almacen.error.proyecto_inexistente": "No encontramos ese proyecto. Vuelve a la lista de proyectos y ábrelo de nuevo.",
+  "almacen.error.ruta_invalida": "El nombre de archivo «{ruta}» no es válido. Usa un nombre relativo, sin «..» ni letras de unidad, por ejemplo capitulos/introduccion.tex.",
+  "almacen.error.zip_demasiado_grande": "El contenido de ese .zip es demasiado grande para abrirlo en el navegador. Quita los archivos pesados que no necesites y vuelve a intentarlo.",
+  "almacen.error.zip_invalido": "No pudimos leer ese archivo .zip. Comprueba que no esté dañado y vuelve a intentarlo.",
+  "almacen.proyecto_sin_nombre": "Proyecto importado",
   "app.descripcion": "Editor LaTeX y cuadernos académicos en tu navegador, sin servidores.",
   "app.lema": "Tus apuntes. Tus reglas.",
   "app.nombre": "IPN Folio",
@@ -88,6 +101,10 @@ export type ClaveTexto = ClaveFolio | ClaveComun;
 export interface VariablesPorClave {
   "aviso.errores.titulo": { n: string | number };
   "pie.licencia": { licencia: string | number };
+  "almacen.error.archivo_inexistente": { ruta: string | number };
+  "almacen.error.destino_ocupado": { ruta: string | number };
+  "almacen.error.movimiento_invalido": { ruta: string | number };
+  "almacen.error.ruta_invalida": { ruta: string | number };
   "errores.latex.archivo_faltante.ayuda": { archivo: string | number };
   "errores.latex.archivo_faltante.titulo": { archivo: string | number };
   "errores.latex.bibliografia_campo_vacio.ayuda": { campo: string | number; cita: string | number };

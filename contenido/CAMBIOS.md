@@ -10,3 +10,7 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 ## 2026.10.2
 
 - 2026-10-05 · `errores.latex.*` · (nuevas) títulos y acciones del lector de bitácoras de TeX, BibTeX e índices · Codex.
+
+## 2026.10.3
+
+- 2026-10-05 · `almacen.*`, `almacen.error.*` · (nuevas) mensajes de error de la capa de almacenamiento local y nombre de proyecto importado · Claude Sonnet (almacén).

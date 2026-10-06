@@ -1,0 +1,3 @@
+# Binarios: sin conversión de saltos de línea (el PDF de prueba pierde sus posiciones si se convierte).
+*.pdf binary
+*.woff2 binary

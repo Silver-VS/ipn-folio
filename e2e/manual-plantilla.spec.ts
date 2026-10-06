@@ -10,6 +10,7 @@
 //   npx playwright test e2e/manual-plantilla.spec.ts --project=escritorio
 import { existsSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+import { urlBanco } from './config';
 import type { ResumenCompilacion } from './banco/banco';
 
 const plantilla = process.env['FOLIO_PLANTILLA'];
@@ -30,9 +31,7 @@ test.describe('plantilla grande (manual)', () => {
     const pagina = await contexto.newPage();
     const peticiones: string[] = [];
     pagina.on('request', (p) => peticiones.push(p.url()));
-    await pagina.goto(
-      `http://localhost:4174/e2e/banco/index.html${espejo ? `?espejo=${encodeURIComponent(espejo)}` : ''}`,
-    );
+    await pagina.goto(urlBanco(espejo));
     await pagina.waitForFunction(() => 'banco' in window);
     await pagina.setInputFiles('#carpeta', plantilla!);
 

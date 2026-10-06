@@ -5,11 +5,9 @@
 //
 // Las pasadas extra solo se hacen si hacen falta (hubo bibliografía, índice, nomenclatura o TeX pidió repetir).
 // Solo pdfLaTeX con BibTeX: Biber, XeLaTeX, LuaLaTeX y --shell-escape quedan fuera de la capa A (D23).
+import { FORMATO_PDFLATEX } from './config';
 import type { PuertoMotor } from './motor';
 import type { ArchivoProyecto, ResultadoEjecucion } from './tipos';
-
-/** Formato precompilado de pdfLaTeX dentro de los activos de BusyTeX (ruta del sistema de archivos del WASM). */
-export const FORMATO_PDFLATEX = '/texlive/texmf-dist/texmf-var/web2c/pdftex/pdflatex.fmt';
 
 const PATRONES_REPETIR = [
   'Rerun to get',

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from 'vitest';
-import { rutaDeBitacora } from './adaptador';
+import { Adaptador, ErrorAdaptador, rutaDeBitacora } from './adaptador';
 
 describe('rutaDeBitacora', () => {
   it('TeX: el .log del archivo principal', () => {
@@ -26,5 +26,41 @@ describe('rutaDeBitacora', () => {
 
   it('makeindex con -t usa la bitácora indicada', () => {
     expect(rutaDeBitacora(['makeindex', 'a.idx', '-t', 'otra.ilg'])).toBe('otra.ilg');
+  });
+});
+
+describe('Adaptador: aborto del WASM', () => {
+  function adaptadorConPipeline(runCmd: () => never) {
+    const adaptador = new Adaptador({ progreso: () => undefined, salida: () => undefined });
+    const interno = adaptador as unknown as Record<string, unknown>;
+    interno['pipeline'] = { _run_cmd: runCmd, project_dir: '/home/web_user/project_dir' };
+    interno['modulo'] = { FS: {}, PATH: { join: (...p: string[]) => p.join('/') } };
+    interno['cabecera'] = new Uint8Array(1);
+    return adaptador;
+  }
+  const aborta = () => {
+    throw new Error('Aborted(OOM)');
+  };
+
+  it('si _run_cmd lanza, marca el adaptador inutilizable y avisa con el código «abortado»', () => {
+    const adaptador = adaptadorConPipeline(aborta);
+    let capturado: unknown;
+    try {
+      adaptador.ejecutar(['pdflatex', 'a.tex']);
+    } catch (error) {
+      capturado = error;
+    }
+    expect(capturado).toBeInstanceOf(ErrorAdaptador);
+    expect((capturado as ErrorAdaptador).codigo).toBe('abortado');
+    expect(adaptador.inutilizable).toBe(true);
+  });
+
+  it('después de abortar, ejecutar y leer fallan con «abortado» sin tocar el WASM', () => {
+    const adaptador = adaptadorConPipeline(aborta);
+    expect(() => adaptador.ejecutar(['pdflatex', 'a.tex'])).toThrow();
+    expect(() => adaptador.ejecutar(['pdflatex', 'a.tex'])).toThrowError(
+      expect.objectContaining({ codigo: 'abortado' }),
+    );
+    expect(() => adaptador.leer('a.pdf')).toThrowError(expect.objectContaining({ codigo: 'abortado' }));
   });
 });

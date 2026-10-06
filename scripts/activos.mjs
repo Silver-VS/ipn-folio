@@ -94,7 +94,7 @@ async function principal() {
   writeFileSync(join(DESTINO, 'activos.json'), JSON.stringify(activos, null, 2) + '\n');
   const total = registro.reduce((s, a) => s + a.bytes, 0);
   console.log(
-    `Listo: ${registro.length} archivos en public/busytex/ (${(total / 1048576).toFixed(1)} MB sin comprimir).`,
+    `Listo: ${registro.length} archivos en public/busytex/ (${(total / 1e6).toFixed(1)} MB decimales sin comprimir).`,
   );
 }
 

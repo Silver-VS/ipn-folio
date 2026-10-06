@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Compilación real con BusyTeX en Chromium. Se salta si no existen los activos (`npm run activos`),
-// por ejemplo en la CI. Usa el banco `e2e/banco` empaquetado con e2e/banco/vite.config.ts (puerto 4174).
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+// por ejemplo en la CI. Usa el banco `e2e/banco` empaquetado con e2e/banco/vite.config.ts (puerto en e2e/config.ts).
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import type { BrowserContext, Page } from '@playwright/test';
+import { urlBanco } from './config';
 import type { ResumenCompilacion } from './banco/banco';
 
 const hayActivos = existsSync('public/busytex/busytex.wasm');
-const BANCO = 'http://localhost:4174/e2e/banco/index.html';
+const BANCO = urlBanco();
 
 test.describe('compilación con BusyTeX', () => {
   test.skip(!hayActivos, 'No hay activos de BusyTeX en public/busytex/ (corre npm run activos).');
-  // Un solo perfil: el motor pesa ~125 MB y las pruebas comparten la misma página (caché de IndexedDB).
+  // Un solo perfil: el motor pesa ~128 MB y las pruebas comparten la misma página (caché de IndexedDB).
   test.describe.configure({ mode: 'serial', timeout: 240_000 });
 
   let contexto: BrowserContext;
@@ -53,6 +54,29 @@ test.describe('compilación con BusyTeX', () => {
     expect(r.inicioPdf).toBe('%PDF-');
     expect(r.bytesPdf).toBeGreaterThan(1024);
     expect(r.pasos[0]).toBe('pdflatex→0');
+  });
+
+  test('progreso de la primera descarga: eventos crecientes hasta el total (wasm + datos)', async () => {
+    const eventos = await pagina.evaluate(() => window.banco.progreso());
+    expect(eventos.length).toBeGreaterThan(10);
+    for (let i = 1; i < eventos.length; i++) {
+      expect(eventos[i]![0]).toBeGreaterThanOrEqual(eventos[i - 1]![0]);
+      expect(eventos[i]![0]).toBeLessThanOrEqual(eventos[i]![1]);
+    }
+    // El total cubre busytex.wasm y texlive-basic.data, no solo uno de los dos.
+    const activos = JSON.parse(readFileSync('public/busytex/activos.json', 'utf8')) as {
+      archivos: Array<{ nombre: string; bytes: number }>;
+    };
+    const bytes = (n: string) => activos.archivos.find((a) => a.nombre === n)!.bytes;
+    const esperado = bytes('busytex.wasm') + bytes('texlive-basic.data');
+    const ultimo = eventos.at(-1)!;
+    expect(ultimo[0]).toBe(ultimo[1]);
+    expect(ultimo[1]).toBe(esperado);
+    // Hubo avance durante la descarga del wasm (antes de empezar los datos) y después.
+    const bytesWasm = bytes('busytex.wasm');
+    expect(eventos.some(([c]) => c > 0 && c < bytesWasm)).toBe(true);
+    expect(eventos.some(([c]) => c > bytesWasm && c < esperado)).toBe(true);
+    tiempos['eventosProgreso'] = eventos.length;
   });
 
   test('segunda compilación de «hola» en menos de 15 s', async () => {

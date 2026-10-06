@@ -1,7 +1,7 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.2";
+export const VERSION_TEXTOS = "2026.10.3";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
@@ -65,6 +65,13 @@ export const TEXTOS_FOLIO = {
   "errores.latex.referencias_indefinidas.titulo": "Hay referencias sin definir",
   "errores.latex.repetir_pasada.ayuda": "Vuelve a compilar para actualizar las referencias y los enlaces del documento.",
   "errores.latex.repetir_pasada.titulo": "Hace falta volver a compilar",
+  "errores.motor.abortado": "El motor de compilación se detuvo al procesar el documento, por ejemplo por falta de memoria o un ciclo sin fin. Revisa tu último cambio y vuelve a compilar: el motor se reiniciará solo.",
+  "errores.motor.cancelado": "Se canceló la compilación.",
+  "errores.motor.no_listo": "El motor de compilación todavía no está listo. Espera a que termine de cargar y vuelve a intentarlo.",
+  "errores.motor.peticion": "El motor de compilación no pudo completar la operación. Vuelve a intentarlo.",
+  "errores.motor.ruta_no_permitida": "El proyecto tiene un archivo con una ruta que sale de su carpeta. Corrige su nombre y vuelve a compilar.",
+  "errores.motor.sin_montar": "Primero hay que cargar los archivos del proyecto. Vuelve a compilar.",
+  "errores.motor.worker": "El motor de compilación se detuvo de forma inesperada. Vuelve a compilar: se reiniciará solo.",
   "inicio.espacio.aria": "Espacio de trabajo"
 } as const;
 

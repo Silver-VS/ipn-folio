@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Motor (hilo principal): API con promesas sobre el worker de BusyTeX. Bajo nivel: no decide qué pasos
 // correr (eso es del orquestador, sesión 06); solo monta archivos y ejecuta comandos sueltos, uno a la vez.
+import { t } from '../textos/t';
 import { BUSYTEX_BASE, CATALOGO_BASICO, ESPEJO_URL } from './config';
 import type {
   ArchivoProyecto,
+  CodigoErrorWorker,
   ArchivoRemoto,
   Datos,
   EventosMotor,
@@ -21,15 +23,41 @@ export interface PuertoMotor {
   existe(ruta: string): Promise<boolean>;
 }
 
-export type CodigoErrorMotor = 'cancelado' | 'worker' | 'peticion';
+/**
+ * `cancelado`: `cancelar()`. `worker`: el worker murió. `abortado`: el WASM abortó (memoria, pila): se descarta el worker.
+ * `peticion`: error de una operación concreta. El resto llega del adaptador (`CodigoErrorWorker`).
+ */
+export type CodigoErrorMotor = 'cancelado' | 'worker' | 'abortado' | 'peticion' | CodigoErrorWorker;
 
-/** Error del motor; `codigo` permite al orquestador elegir el texto de interfaz (sin texto visible aquí). */
+function textoDeError(codigo: CodigoErrorMotor): string {
+  switch (codigo) {
+    case 'cancelado':
+      return t('errores.motor.cancelado');
+    case 'worker':
+      return t('errores.motor.worker');
+    case 'abortado':
+      return t('errores.motor.abortado');
+    case 'no_listo':
+      return t('errores.motor.no_listo');
+    case 'sin_montar':
+      return t('errores.motor.sin_montar');
+    case 'ruta_no_permitida':
+      return t('errores.motor.ruta_no_permitida');
+    case 'peticion':
+      return t('errores.motor.peticion');
+  }
+}
+
+/**
+ * Error del motor. `message` es el texto de interfaz (en español, de `es.toml`) según `codigo`;
+ * `detalle` es el mensaje técnico original, solo para la consola o el informe de errores.
+ */
 export class ErrorMotor extends Error {
   constructor(
     public readonly codigo: CodigoErrorMotor,
-    mensaje: string,
+    public readonly detalle = '',
   ) {
-    super(mensaje);
+    super(textoDeError(codigo));
     this.name = 'ErrorMotor';
   }
 }
@@ -61,7 +89,7 @@ const crearCanalWorker: CrearCanal = (alRecibir, alFallar) => {
   worker.onmessage = (evento: MessageEvent<Respuesta>) => alRecibir(evento.data);
   worker.onerror = (evento) => {
     evento.preventDefault();
-    alFallar(evento.message || 'El worker de compilación falló.');
+    alFallar(evento.message || 'worker error');
   };
   return { enviar: (peticion) => worker.postMessage(peticion), terminar: () => worker.terminate() };
 };
@@ -80,7 +108,10 @@ export class Motor implements PuertoMotor {
   private canal: Canal | null = null;
   private versiones: Promise<Record<string, string>> | null = null;
   private siguienteId = 1;
+  /** Cambia cada vez que se descarta el worker; lo que llega de un worker de otra generación se ignora. */
   private generacion = 0;
+  /** Por qué se descartó el worker actual (lo que esperaba en cola falla con ese código). */
+  private motivo: CodigoErrorMotor = 'cancelado';
   private readonly pendientes = new Map<number, Pendiente>();
   private cola: Promise<unknown> = Promise.resolve();
   private readonly eventos: Partial<EventosMotor>;
@@ -114,7 +145,7 @@ export class Motor implements PuertoMotor {
     return this.enSerie(async () => {
       await this.asegurar();
       const datos = await this.pedir({ tipo: 'ejecutar', cmd, enVivo: opciones.enVivo });
-      if (datos.de !== 'ejecutar') throw new ErrorMotor('peticion', 'Respuesta inesperada del worker.');
+      if (datos.de !== 'ejecutar') throw new ErrorMotor('peticion', 'unexpected worker response');
       return datos.resultado;
     });
   }
@@ -123,7 +154,7 @@ export class Motor implements PuertoMotor {
     return this.enSerie(async () => {
       await this.asegurar();
       const datos = await this.pedir({ tipo: 'leer', ruta });
-      if (datos.de !== 'leer') throw new ErrorMotor('peticion', 'Respuesta inesperada del worker.');
+      if (datos.de !== 'leer') throw new ErrorMotor('peticion', 'unexpected worker response');
       return datos.contenido;
     });
   }
@@ -132,7 +163,7 @@ export class Motor implements PuertoMotor {
     return this.enSerie(async () => {
       await this.asegurar();
       const datos = await this.pedir({ tipo: 'existe', ruta });
-      if (datos.de !== 'existe') throw new ErrorMotor('peticion', 'Respuesta inesperada del worker.');
+      if (datos.de !== 'existe') throw new ErrorMotor('peticion', 'unexpected worker response');
       return datos.existe;
     });
   }
@@ -157,13 +188,18 @@ export class Motor implements PuertoMotor {
    * (el paquete `basic` sale de IndexedDB) y hay que volver a montar.
    */
   cancelar(): void {
+    this.descartar('cancelado');
+  }
+
+  /** Termina el worker (si hay) y rechaza lo pendiente con `codigo`. La próxima llamada crea uno nuevo. */
+  private descartar(codigo: CodigoErrorMotor, detalle?: string): void {
     this.generacion++;
+    this.motivo = codigo;
     const canal = this.canal;
     this.canal = null;
     this.versiones = null;
     canal?.terminar();
-    const error = new ErrorMotor('cancelado', 'Compilación cancelada.');
-    for (const pendiente of this.pendientes.values()) pendiente.rechazar(error);
+    for (const pendiente of this.pendientes.values()) pendiente.rechazar(new ErrorMotor(codigo, detalle));
     this.pendientes.clear();
   }
 
@@ -171,7 +207,7 @@ export class Motor implements PuertoMotor {
   private enSerie<T>(tarea: () => Promise<T>): Promise<T> {
     const generacion = this.generacion;
     const resultado = this.cola.then(() => {
-      if (generacion !== this.generacion) throw new ErrorMotor('cancelado', 'Compilación cancelada.');
+      if (generacion !== this.generacion) throw new ErrorMotor(this.motivo);
       return tarea();
     });
     this.cola = resultado.catch(() => undefined);
@@ -181,9 +217,14 @@ export class Motor implements PuertoMotor {
   private asegurar(): Promise<Record<string, string>> {
     if (this.canal && this.versiones) return this.versiones;
     const generacion = this.generacion;
+    // Los eventos de un worker ya descartado (generación vieja) no deben tocar al nuevo.
     this.canal = this.crearCanal(
-      (respuesta) => this.recibir(respuesta),
-      (mensaje) => this.fallar(mensaje),
+      (respuesta) => {
+        if (generacion === this.generacion) this.recibir(respuesta);
+      },
+      (mensaje) => {
+        if (generacion === this.generacion) this.descartar('worker', mensaje);
+      },
     );
     const iniciando = this.pedir({
       tipo: 'iniciar',
@@ -201,7 +242,7 @@ export class Motor implements PuertoMotor {
 
   private pedir(peticion: PeticionSinId): Promise<Datos> {
     const canal = this.canal;
-    if (!canal) return Promise.reject(new ErrorMotor('cancelado', 'Compilación cancelada.'));
+    if (!canal) return Promise.reject(new ErrorMotor(this.motivo));
     const id = this.siguienteId++;
     return new Promise<Datos>((resolver, rechazar) => {
       this.pendientes.set(id, { resolver, rechazar });
@@ -224,7 +265,11 @@ export class Motor implements PuertoMotor {
         this.cerrar(respuesta.id, (p) => p.resolver(respuesta.datos));
         return;
       case 'error':
-        this.cerrar(respuesta.id, (p) => p.rechazar(new ErrorMotor('peticion', respuesta.mensaje)));
+        this.cerrar(respuesta.id, (p) =>
+          p.rechazar(new ErrorMotor(respuesta.codigo ?? 'peticion', respuesta.mensaje)),
+        );
+        // El WASM abortó: el módulo no sirve para nada más. Se descarta; la siguiente llamada recrea el worker.
+        if (respuesta.codigo === 'abortado') this.descartar('abortado', respuesta.mensaje);
         return;
     }
   }
@@ -234,15 +279,5 @@ export class Motor implements PuertoMotor {
     if (!pendiente) return;
     this.pendientes.delete(id);
     accion(pendiente);
-  }
-
-  /** El worker murió o no pudo cargar: se rechaza todo lo pendiente. */
-  private fallar(mensaje: string): void {
-    const error = new ErrorMotor('worker', mensaje);
-    for (const pendiente of this.pendientes.values()) pendiente.rechazar(error);
-    this.pendientes.clear();
-    this.canal?.terminar();
-    this.canal = null;
-    this.versiones = null;
   }
 }

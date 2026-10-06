@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { ErrorMotor, Motor } from './motor';
 import type { Canal, CrearCanal } from './motor';
 import type { Peticion, Respuesta } from './tipos';
+import { t } from '../textos/t';
 
 /** Worker falso: guarda lo que recibe y deja a la prueba decidir cuándo y qué responder. */
 function canalFalso() {
@@ -137,7 +138,11 @@ describe('Motor: protocolo', () => {
     const leer = motor.leer('no-existe.pdf');
     await esperar();
     canal.responder({ tipo: 'error', id: canal.recibidas[1]!.id, mensaje: 'fallo interno' });
-    await expect(leer).rejects.toMatchObject({ codigo: 'peticion', message: 'fallo interno' });
+    await expect(leer).rejects.toMatchObject({
+      codigo: 'peticion',
+      detalle: 'fallo interno',
+      message: t('errores.motor.peticion'),
+    });
     const otra = motor.leer('a.pdf');
     await esperar();
     canal.responder({
@@ -203,6 +208,97 @@ describe('Motor: cancelar', () => {
     await esperar();
     const canal = canales[1]!;
     expect(canales).toHaveLength(2);
+    canal.responder({ tipo: 'resultado', id: canal.recibidas[1]!.id, datos: { de: 'existe', existe: true } });
+    expect(await nueva).toBe(true);
+  });
+});
+
+describe('Motor: worker abortado', () => {
+  it('si el WASM aborta en ejecutar: error claro, worker descartado y recreado en la siguiente llamada', async () => {
+    const { crear, canales } = canalFalso();
+    const motor = new Motor({ base: 'http://x/b', espejo: null, crearCanal: crear });
+    void motor.iniciar();
+    await iniciarCon(motor, canales);
+    const viejo = canales[0]!;
+    const ejecucion = motor.ejecutar(['pdflatex', 'a.tex']);
+    await esperar();
+    viejo.responder({
+      tipo: 'error',
+      id: viejo.recibidas[1]!.id,
+      codigo: 'abortado',
+      mensaje: 'Aborted(stack overflow)',
+    });
+    await expect(ejecucion).rejects.toMatchObject({
+      codigo: 'abortado',
+      message: t('errores.motor.abortado'),
+      detalle: 'Aborted(stack overflow)',
+    });
+    expect(viejo.terminado).toBe(true);
+
+    // La siguiente llamada crea un worker nuevo (no reutiliza el roto) y funciona.
+    const nueva = motor.existe('main.pdf');
+    await iniciarCon(motor, canales, 1);
+    await esperar();
+    expect(canales).toHaveLength(2);
+    const canal = canales[1]!;
+    canal.responder({ tipo: 'resultado', id: canal.recibidas[1]!.id, datos: { de: 'existe', existe: true } });
+    expect(await nueva).toBe(true);
+  });
+
+  it('lo que esperaba en cola tras el aborto falla sin llegar al worker roto', async () => {
+    const { crear, canales } = canalFalso();
+    const motor = new Motor({ base: 'http://x/b', espejo: null, crearCanal: crear });
+    void motor.iniciar();
+    await iniciarCon(motor, canales);
+    const viejo = canales[0]!;
+    const primera = motor.ejecutar(['pdflatex', 'a.tex']);
+    const segunda = motor.ejecutar(['pdflatex', 'b.tex']);
+    await esperar();
+    viejo.responder({ tipo: 'error', id: viejo.recibidas[1]!.id, codigo: 'abortado', mensaje: 'abort' });
+    await expect(primera).rejects.toMatchObject({ codigo: 'abortado' });
+    await expect(segunda).rejects.toMatchObject({ codigo: 'abortado' });
+    expect(viejo.recibidas.filter((p) => p.tipo === 'ejecutar')).toHaveLength(1);
+  });
+
+  it('un error no fatal (sin código) no descarta el worker', async () => {
+    const { crear, canales } = canalFalso();
+    const motor = new Motor({ base: 'http://x/b', espejo: null, crearCanal: crear });
+    void motor.iniciar();
+    await iniciarCon(motor, canales);
+    const canal = canales[0]!;
+    const e = motor.ejecutar(['pdflatex', 'a.tex']);
+    await esperar();
+    canal.responder({ tipo: 'error', id: canal.recibidas[1]!.id, mensaje: 'algo' });
+    await expect(e).rejects.toMatchObject({ codigo: 'peticion' });
+    expect(canal.terminado).toBe(false);
+  });
+
+  it('si el worker muere (onerror) durante ejecutar, se recrea en la siguiente llamada', async () => {
+    const { crear, canales } = canalFalso();
+    const motor = new Motor({ base: 'http://x/b', espejo: null, crearCanal: crear });
+    void motor.iniciar();
+    await iniciarCon(motor, canales);
+    const ejecucion = motor.ejecutar(['pdflatex', 'a.tex']);
+    await esperar();
+    canales[0]!.fallar('RuntimeError: unreachable');
+    await expect(ejecucion).rejects.toMatchObject({ codigo: 'worker', message: t('errores.motor.worker') });
+    void motor.existe('a');
+    await esperar();
+    expect(canales).toHaveLength(2);
+  });
+
+  it('un evento tardío del worker viejo no afecta al nuevo', async () => {
+    const { crear, canales } = canalFalso();
+    const motor = new Motor({ base: 'http://x/b', espejo: null, crearCanal: crear });
+    void motor.iniciar();
+    await iniciarCon(motor, canales);
+    motor.cancelar();
+    const nueva = motor.existe('a');
+    await iniciarCon(motor, canales, 1);
+    await esperar();
+    canales[0]!.fallar('tardío'); // onerror del worker ya terminado
+    const canal = canales[1]!;
+    expect(canal.terminado).toBe(false);
     canal.responder({ tipo: 'resultado', id: canal.recibidas[1]!.id, datos: { de: 'existe', existe: true } });
     expect(await nueva).toBe(true);
   });

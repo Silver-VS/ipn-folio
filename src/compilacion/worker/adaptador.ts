@@ -4,7 +4,19 @@
 // No usamos `BusytexPipeline.compile` (D9): aquí se replica lo que `compile` hace antes de ejecutar
 // (montar un MEMFS limpio en `project_dir`, escribir los archivos, `chdir`, guardar la cabecera de memoria)
 // y se ejecutan comandos sueltos con `_run_cmd`, que restaura la memoria del WASM después de cada uno.
-import type { ArchivoProyecto, ArchivoRemoto, ResultadoEjecucion } from '../tipos';
+import type { ArchivoProyecto, ArchivoRemoto, CodigoErrorWorker, ResultadoEjecucion } from '../tipos';
+import { medirDescarga, ProgresoDescarga, totalesDeActivos } from './progreso';
+
+/** Error del adaptador con un código que el Motor traduce a un texto de interfaz; `message` es solo para la consola. */
+export class ErrorAdaptador extends Error {
+  constructor(
+    public readonly codigo: CodigoErrorWorker,
+    mensaje: string,
+  ) {
+    super(mensaje);
+    this.name = 'ErrorAdaptador';
+  }
+}
 
 const PROGRESO_DESCARGA = /^Downloading data\.\.\. \((\d+)\/(\d+)\)$/;
 /** Ruta que no existe: `_run_cmd` pide rutas de `.aux`/`.bbl` que aquí no se usan. */
@@ -60,7 +72,7 @@ export function rutaDeBitacora(cmd: readonly string[]): string {
 /** Rechaza rutas que salgan de la raíz del proyecto. */
 function rutaSegura(ruta: string): string {
   const partes = ruta.split('/').filter((p) => p !== '' && p !== '.');
-  if (partes.includes('..')) throw new Error(`Ruta no permitida: ${ruta}`);
+  if (partes.includes('..')) throw new ErrorAdaptador('ruta_no_permitida', `Path not allowed: ${ruta}`);
   return partes.join('/');
 }
 
@@ -68,42 +80,57 @@ export class Adaptador {
   private pipeline: BusytexPipeline | null = null;
   private modulo: BusytexModulo | null = null;
   private cabecera: Uint8Array | null = null;
+  /** El WASM abortó: el módulo de Emscripten falla en todas las llamadas siguientes; hay que crear otro worker. */
+  inutilizable = false;
 
   constructor(private readonly escuchas: Escuchas) {}
 
   async iniciar({ base, catalogo, espejo }: OpcionesInicio): Promise<Record<string, string>> {
     importScripts(`${base}/busytex_pipeline.js`);
     const paquetes = catalogo.map((nombre) => `${base}/${nombre}`);
-    let totalVisto = 0;
-    let ultimoAviso = 0;
+    const progreso = new ProgresoDescarga(
+      (cargado, total) => this.escuchas.progreso(cargado, total),
+      await this.leerTotales(base, catalogo),
+    );
     const imprimir = (texto: string) => {
       const m = PROGRESO_DESCARGA.exec(texto);
-      if (m) {
-        // Emscripten avisa cada fragmento descargado (miles de veces): se reenvía a lo más cada 0,5 %.
-        const cargado = Number(m[1]);
-        totalVisto = Number(m[2]);
-        if (cargado - ultimoAviso >= totalVisto / 200) {
-          ultimoAviso = cargado;
-          this.escuchas.progreso(cargado, totalVisto);
-        }
-      } else if (texto === 'All downloads complete.') {
-        if (totalVisto > 0) this.escuchas.progreso(totalVisto, totalVisto);
-      } else {
-        this.escuchas.salida(texto);
-      }
+      if (m) progreso.datos(Number(m[1]), Number(m[2]));
+      else if (texto === 'All downloads complete.') progreso.terminar();
+      else this.escuchas.salida(texto);
     };
     // Los paquetes del catálogo son también los que se precargan: así no hay recarga del módulo después.
-    const pipeline = new BusytexPipeline(
-      `${base}/busytex.js`,
-      `${base}/busytex.wasm`,
-      paquetes,
-      paquetes,
-      [],
-      imprimir,
-      () => undefined,
-      true,
-      BusytexPipeline.ScriptLoaderWorker,
-    );
+    // El constructor pide `busytex.wasm` con el `fetch` global: se envuelve solo durante esa llamada para medirlo.
+    const urlWasm = `${base}/busytex.wasm`;
+    const fetchOriginal = globalThis.fetch;
+    globalThis.fetch = (entrada, init) => {
+      const url = typeof entrada === 'string' ? entrada : entrada instanceof URL ? entrada.href : entrada.url;
+      const peticion = fetchOriginal(entrada, init);
+      return url === urlWasm
+        ? peticion.then((r) =>
+            medirDescarga(
+              r,
+              (acumulado) => progreso.wasm(acumulado),
+              () => progreso.wasmTerminado(),
+            ),
+          )
+        : peticion;
+    };
+    let pipeline: BusytexPipeline;
+    try {
+      pipeline = new BusytexPipeline(
+        `${base}/busytex.js`,
+        urlWasm,
+        paquetes,
+        paquetes,
+        [],
+        imprimir,
+        () => undefined,
+        true,
+        BusytexPipeline.ScriptLoaderWorker,
+      );
+    } finally {
+      globalThis.fetch = fetchOriginal;
+    }
     this.pipeline = pipeline;
     const modulo = await pipeline.Module;
     const versiones = (await pipeline.on_initialized_promise) as Record<string, string> | undefined;
@@ -112,8 +139,21 @@ export class Adaptador {
     return versiones ?? modulo.applet_versions ?? {};
   }
 
+  /** Tamaños esperados (de `activos.json`) para que el progreso conozca el total desde el principio. */
+  private async leerTotales(base: string, catalogo: string[]) {
+    try {
+      const respuesta = await fetch(`${base}/activos.json`);
+      return respuesta.ok ? totalesDeActivos(await respuesta.json(), catalogo) : {};
+    } catch {
+      return {};
+    }
+  }
+
   private requerir(): { pipeline: BusytexPipeline; modulo: BusytexModulo } {
-    if (!this.pipeline || !this.modulo) throw new Error('El motor de compilación todavía no está listo.');
+    if (this.inutilizable)
+      throw new ErrorAdaptador('abortado', 'The WASM module aborted; this worker is unusable.');
+    if (!this.pipeline || !this.modulo)
+      throw new ErrorAdaptador('no_listo', 'The compilation engine is not ready yet.');
     return { pipeline: this.pipeline, modulo: this.modulo };
   }
 
@@ -147,24 +187,33 @@ export class Adaptador {
 
   ejecutar(cmd: string[], enVivo = false): ResultadoEjecucion {
     const { pipeline, modulo } = this.requerir();
-    if (!this.cabecera) throw new Error('Primero hay que montar el proyecto.');
+    if (!this.cabecera) throw new ErrorAdaptador('sin_montar', 'The project must be mounted first.');
     const bitacora = rutaDeBitacora(cmd);
     const entradas: Array<{ stdout: string; stderr: string; exit_code: number }> = [];
     const inicio = performance.now();
     // error_messages [''] hace que `_run_cmd` devuelva siempre el código de salida real del programa.
-    const { log } = pipeline._run_cmd(
-      modulo,
-      modulo.FS,
-      cmd,
-      [''],
-      enVivo ? 'info' : 'silent',
-      bitacora,
-      bitacora,
-      SIN_RUTA,
-      SIN_RUTA,
-      this.cabecera,
-      entradas,
-    );
+    let log: string;
+    try {
+      ({ log } = pipeline._run_cmd(
+        modulo,
+        modulo.FS,
+        cmd,
+        [''],
+        enVivo ? 'info' : 'silent',
+        bitacora,
+        bitacora,
+        SIN_RUTA,
+        SIN_RUTA,
+        this.cabecera,
+        entradas,
+      ));
+    } catch (error) {
+      // `_run_cmd` no lanza en un fallo normal de TeX (devuelve el código de salida): si lanza, el WASM abortó
+      // (pila, memoria, abort()) y `callMain` no restauró la memoria. El módulo ya no sirve.
+      this.inutilizable = true;
+      const detalle = error instanceof Error ? error.message : String(error);
+      throw new ErrorAdaptador('abortado', detalle);
+    }
     const ms = performance.now() - inicio;
     const ultima = entradas[entradas.length - 1];
     return {

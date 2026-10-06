@@ -51,12 +51,18 @@ export type Datos =
   | { de: 'registrarRemotos' }
   | { de: 'registrarFallos' };
 
+/**
+ * Causa de un error del worker que el Motor distingue (el resto llega sin código y se trata como error de la petición).
+ * `abortado`: el WASM abortó y el worker ya no sirve. El `mensaje` es técnico (consola), nunca para la interfaz.
+ */
+export type CodigoErrorWorker = 'abortado' | 'no_listo' | 'sin_montar' | 'ruta_no_permitida';
+
 export type Respuesta =
   | { tipo: 'progreso'; cargado: number; total: number }
   | { tipo: 'listo'; id: number; versiones: Record<string, string> }
   | { tipo: 'salida'; texto: string }
   | { tipo: 'resultado'; id: number; datos: Datos }
-  | { tipo: 'error'; id: number; mensaje: string };
+  | { tipo: 'error'; id: number; mensaje: string; codigo?: CodigoErrorWorker };
 
 /** Escuchas que el Motor ofrece al resto de la aplicación. */
 export interface EventosMotor {

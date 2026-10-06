@@ -2,7 +2,7 @@
 // Worker CLÁSICO (BusyTeX se carga con importScripts; ver `worker.format: 'iife'` en vite.config.ts).
 // Recibe peticiones del Motor, las atiende de una en una y responde con el mismo `id`.
 import type { Datos, Peticion, Respuesta } from '../tipos';
-import { Adaptador } from './adaptador';
+import { Adaptador, ErrorAdaptador } from './adaptador';
 
 function enviar(respuesta: Respuesta, transferir: Transferable[] = []): void {
   self.postMessage(respuesta, { transfer: transferir });
@@ -55,7 +55,8 @@ self.onmessage = (evento: MessageEvent<Peticion>) => {
       else enviar({ tipo: 'resultado', id: peticion.id, datos }, transferir);
     } catch (error) {
       const mensaje = error instanceof Error ? error.message : String(error);
-      enviar({ tipo: 'error', id: peticion.id, mensaje });
+      const codigo = error instanceof ErrorAdaptador ? error.codigo : undefined;
+      enviar({ tipo: 'error', id: peticion.id, mensaje, codigo });
     }
   });
 };

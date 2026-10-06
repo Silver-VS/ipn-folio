@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { existsSync } from 'node:fs';
 import { defineConfig, devices } from '@playwright/test';
+import { PUERTO_BANCO } from './e2e/config';
 
 const PUERTO = 4173;
 // Banco de compilación (e2e/banco): lo empaqueta y sirve Vite (build propio) y solo se levanta si hay activos de BusyTeX.
-const PUERTO_BANCO = 4174;
 const hayActivos = existsSync('public/busytex/busytex.wasm');
 
 // Tres perfiles: escritorio (Chromium), móvil (Chromium emulando un teléfono) y WebKit (motor de Safari).

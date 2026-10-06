@@ -15,7 +15,7 @@ import type {
   ResultadoEjecucion,
 } from './tipos';
 
-/** Lo que otras piezas (p. ej. la secuencia) necesitan de un motor; permite sustituirlo por uno falso en pruebas. */
+/** Lo que otras piezas (p. ej. el orquestador) necesitan de un motor; permite sustituirlo por uno falso en pruebas. */
 export interface PuertoMotor {
   montar(archivos: ArchivoProyecto[], directorio?: string): Promise<void>;
   ejecutar(cmd: string[], opciones?: { enVivo?: boolean }): Promise<ResultadoEjecucion>;
@@ -29,7 +29,7 @@ export interface PuertoMotor {
  */
 export type CodigoErrorMotor = 'cancelado' | 'worker' | 'abortado' | 'peticion' | CodigoErrorWorker;
 
-function textoDeError(codigo: CodigoErrorMotor): string {
+export function textoDeError(codigo: CodigoErrorMotor): string {
   switch (codigo) {
     case 'cancelado':
       return t('errores.motor.cancelado');

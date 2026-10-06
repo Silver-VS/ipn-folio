@@ -1,0 +1,15 @@
+% SPDX-License-Identifier: CC0-1.0
+% Documento de prueba (propio, ficticio): dos índices con nombre (imakeidx). `noautomatic` evita pedir
+% a TeX que ejecute makeindex por su cuenta (no hay shell-escape): lo hace el orquestador.
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[noautomatic]{imakeidx}
+\makeindex[name=autores,title=Índice de autores]
+\makeindex[name=temas,title=Índice de temas]
+\begin{document}
+Un autor\index[autores]{Autora, Ana} y un tema\index[temas]{composición}.
+Otro autor\index[autores]{Autor, Beto} y otro tema\index[temas]{bibliografía}.
+
+\printindex[autores]
+\printindex[temas]
+\end{document}

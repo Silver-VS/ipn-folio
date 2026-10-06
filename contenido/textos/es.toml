@@ -3,7 +3,7 @@
 # Reglas: claves a-z0-9_ con puntos; variables {nombre}; plurales {n, plural, one {# x} other {# xs}}.
 # Los textos que también necesita IPN-tools viven en ipn-comun (comun.es.toml), no aquí.
 # Al cambiar un texto: sube `version` y anota el cambio en contenido/CAMBIOS.md.
-version = "2026.10.8"
+version = "2026.10.10"
 
 [app]
 # Nombre del producto: <title> de la página y encabezado. Es un nombre propio.
@@ -175,3 +175,31 @@ peticion = "El motor de compilación no pudo completar la operación. Vuelve a i
 no_listo = "El motor de compilación todavía no está listo. Espera a que termine de cargar y vuelve a intentarlo."
 sin_montar = "Primero hay que cargar los archivos del proyecto. Vuelve a compilar."
 ruta_no_permitida = "El proyecto tiene un archivo con una ruta que sale de su carpeta. Corrige su nombre y vuelve a compilar."
+
+[errores.latex.campos_por_llenar]
+titulo = "Hay campos por llenar en {archivo} (entrada {cita})"
+ayuda = "Llena los campos marcados de la entrada {cita} o bórrala si no la necesitas. Mientras tanto la compilación continúa, pero esa referencia saldrá incompleta."
+
+[errores.latex.campos_por_llenar_sin_entrada]
+titulo = "Hay campos por llenar en {archivo}, línea {linea}"
+ayuda = "Llena los campos marcados en esa línea o quita el marcador. Mientras tanto la compilación continúa."
+
+[errores.latex.biber_no_soportado]
+titulo = "Esta bibliografía necesita Biber, que aún no está disponible"
+ayuda = "En las opciones de biblatex, cambia el motor de bibliografía a bibtex para generarla con BibTeX. Mientras tanto, las citas aparecerán sin resolver."
+
+[errores.latex.motor_detenido]
+titulo = "No se pudo completar la compilación"
+ayuda = "Vuelve a compilar: el motor se reiniciará solo."
+
+[compilacion.paso]
+# Nombre de cada paso de la compilación; se muestra después de «Paso n de m:» (en minúsculas).
+primera = "primera pasada"
+bibliografia = "bibliografía"
+indice = "índice"
+nomenclatura = "nomenclatura"
+glosario = "glosario"
+pasada = "nueva pasada"
+final = "pasada final"
+# Avance de la compilación; {nombre} es uno de los nombres anteriores.
+progreso = "Paso {n} de {total}: {nombre}"

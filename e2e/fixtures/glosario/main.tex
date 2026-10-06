@@ -1,0 +1,15 @@
+% SPDX-License-Identifier: CC0-1.0
+% Documento de prueba (propio, ficticio): glosario y lista de acrónimos con el paquete glossaries.
+% El paquete no viene en «basic»: llega del espejo de TeX Live.
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[acronym]{glossaries}
+\makeglossaries
+\newglossaryentry{motor}{name={motor},description={programa que convierte el código en un PDF}}
+\newacronym{pdf}{PDF}{formato de documento portátil}
+\begin{document}
+El \gls{motor} produce un \gls{pdf}.
+
+\printglossary
+\printglossary[type=\acronymtype]
+\end{document}

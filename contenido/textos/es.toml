@@ -3,7 +3,7 @@
 # Reglas: claves a-z0-9_ con puntos; variables {nombre}; plurales {n, plural, one {# x} other {# xs}}.
 # Los textos que también necesita IPN-tools viven en ipn-comun (comun.es.toml), no aquí.
 # Al cambiar un texto: sube `version` y anota el cambio en contenido/CAMBIOS.md.
-version = "2026.10.3"
+version = "2026.10.4"
 
 [app]
 # Nombre del producto: <title> de la página y encabezado. Es un nombre propio.
@@ -94,6 +94,18 @@ ayuda = "LaTeX usó otra variante de fuente. Revisa la apariencia del texto y lo
 [errores.latex.paquete_aviso]
 titulo = "El paquete {paquete} necesita revisión"
 ayuda = "Revisa el detalle del aviso y la configuración de {paquete} antes de volver a compilar."
+
+[errores.latex.paquete_error]
+titulo = "El paquete {paquete} informó un error"
+ayuda = "Revisa el detalle original: suele ser una opción mal escrita o un archivo que falta. Corrige la línea del documento que carga {paquete}."
+
+[errores.latex.bibliografia_vacia]
+titulo = "La bibliografía quedó vacía"
+ayuda = "Agrega al menos una cita en el documento y vuelve a compilar."
+
+[errores.latex.desconocido_sin_linea]
+titulo = "LaTeX encontró un problema"
+ayuda = "Revisa el detalle original para ubicar el problema en tu documento."
 
 [errores.latex.bibliografia_faltante]
 titulo = "Falta la bibliografía {archivo}"

@@ -62,9 +62,16 @@ export function analizarTex(log: string): ResultadoAnalisis {
     }
     const texto = fragmentos.map((l) => l.texto).join('\n');
     const ubicacion = /^l\.(\d+)/m.exec(texto) ?? /(?:on input line |at lines? )(\d+)/m.exec(texto);
-    // Si el error es de una biblioteca (.sty, .cls), la ubicación útil es la del proyecto (l.N y pila).
+    // Si el error es de una biblioteca (.sty, .cls), el archivo útil es el del proyecto (pila) y la línea
+    // del .sty o el l.N de la biblioteca no sirven al alumno: queda sin línea.
     const delProyecto = explicita && !deBiblioteca;
-    const linea = delProyecto ? Number(explicita[2]) : ubicacion ? Number(ubicacion[1]) : undefined;
+    const linea = delProyecto
+      ? Number(explicita[2])
+      : explicita
+        ? undefined
+        : ubicacion
+          ? Number(ubicacion[1])
+          : undefined;
     const archivo = delProyecto ? explicita[1]?.replace(/^\.\//, '') : archivos[i];
     const mensaje = explicita ? texto.slice(actual.texto.length - (explicita[3]?.length ?? 0)) : texto;
     const clasificacion = clasificar(mensaje, texto, linea);

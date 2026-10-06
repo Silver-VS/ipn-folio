@@ -26,7 +26,6 @@ describe('tex', () => {
     ['entorno.log', 'entorno-indefinido', 12, { entorno: 'inventado' }],
     ['entorno-cierre.log', 'entorno-cierre', 15, { entorno: 'itemize', cierre: 'enumerate' }],
     ['babel.log', 'idioma-espanol-faltante', 4, {}],
-    ['babel-sty.log', 'idioma-espanol-faltante', 4, {}],
     ['desbordado.log', 'formato-desbordado', 22, { puntos: 12.5 }],
     ['fuente.log', 'fuente-indefinida', 24, {}],
     ['paquete-aviso.log', 'paquete-aviso', 25, { paquete: 'ejemplo' }],
@@ -74,24 +73,56 @@ describe('tex', () => {
     expect(r.senales.repetirPasada).toBe(true);
     expect(r.problemas[0]?.codigo).toBe('repetir-pasada');
   });
-  it('does not request another pass for clean output that loads hyperref', () => {
-    const r = analizar({ log: fixture('limpia-hyperref.log') });
+  // Fixtures real-*.log: generados con pdflatex y bibtex de TeX Live 2026 (-file-line-error) sobre documentos mínimos.
+  it('does not request another pass on the clean second hyperref pass', () => {
+    const r = analizar({ log: fixture('real-hyperref-2.log') });
     expect(r.senales.repetirPasada).toBe(false);
     expect(r.problemas).toEqual([]);
   });
-  it('requests another pass for the real hyperref warning', () =>
-    expect(
-      analizar({ log: 'Package hyperref Warning: Rerun to get /PageLabels entry.' }).senales.repetirPasada,
-    ).toBe(true));
-  it('keeps errors attributed to library files in -file-line-error mode', () => {
-    const r = analizar({ log: fixture('babel-sty.log') });
+  it('requests another pass on the first hyperref pass', () => {
+    const r = analizar({ log: fixture('real-hyperref-1.log') });
+    expect(r.senales).toMatchObject({ repetirPasada: true, referenciasIndefinidas: true });
+  });
+  it('keeps a real package error attributed to a Windows library path', () => {
+    const r = analizar({ log: fixture('real-babel-opcion.log') });
     expect(r.problemas).toHaveLength(1);
     expect(r.problemas[0]).toMatchObject({
-      codigo: 'idioma-espanol-faltante',
-      archivo: 'principal.tex',
-      linea: 4,
+      codigo: 'paquete-error',
+      gravedad: 'error',
+      archivo: 'b.tex',
+      linea: undefined,
+      variables: { paquete: 'babel' },
     });
-    expect(r.senales.faltantes).toEqual(['spanish.ldf']);
+    expect(r.problemas[0]?.titulo).not.toContain('?');
+  });
+  it.each([
+    ['real-cmd.log', 'comando-indefinido', 'cmd.tex', 3],
+    ['real-llave.log', 'llave-extra', 'llave.tex', 3],
+    ['real-img.log', 'archivo-faltante', 'img.tex', 4],
+  ])('%s', (nombre, codigo, archivo, linea) =>
+    expect(primero(fixture(nombre))).toMatchObject({ codigo, archivo, linea }),
+  );
+  it('reads a real missing package followed by an emergency stop', () => {
+    const r = analizar({ log: fixture('real-sty.log') });
+    expect(r.problemas.map((p) => p.codigo)).toEqual([
+      'archivo-faltante',
+      'compilacion-detenida',
+      'compilacion-fatal',
+    ]);
+    expect(r.senales).toMatchObject({ fatal: true, faltantes: ['paqueteinexistente.sty'] });
+  });
+  it('reads a real bibtex run with a missing database', () => {
+    const r = analizar({ log: fixture('real-cita.log'), blg: fixture('real-cita.blg') });
+    expect(r.problemas.map((p) => p.codigo)).toEqual([
+      'cita-indefinida',
+      'referencia-indefinida',
+      'bibliografia-vacia',
+      'referencias-indefinidas',
+      'bibliografia-faltante',
+      'bibliografia-entrada-faltante',
+    ]);
+    expect(r.problemas.some((p) => p.codigo === 'desconocido')).toBe(false);
+    expect(r.senales).toMatchObject({ citasIndefinidas: true, faltantes: ['ausente.bib'] });
   });
   it('keeps a library error without a project line', () =>
     expect(

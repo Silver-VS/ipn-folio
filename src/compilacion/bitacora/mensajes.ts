@@ -201,6 +201,36 @@ export const CATALOGO = {
       accion: t('errores.latex.paquete_aviso.ayuda', { paquete: v.paquete ?? '?' }),
     }),
   },
+  'paquete-error': {
+    codigo: 'paquete-error',
+    variables: ['paquete'],
+    titulo: 'errores.latex.paquete_error.titulo',
+    ayuda: 'errores.latex.paquete_error.ayuda',
+    resolver: (v: Record<string, string | number>) => ({
+      titulo: t('errores.latex.paquete_error.titulo', { paquete: v.paquete ?? '?' }),
+      accion: t('errores.latex.paquete_error.ayuda', { paquete: v.paquete ?? '?' }),
+    }),
+  },
+  'bibliografia-vacia': {
+    codigo: 'bibliografia-vacia',
+    variables: [],
+    titulo: 'errores.latex.bibliografia_vacia.titulo',
+    ayuda: 'errores.latex.bibliografia_vacia.ayuda',
+    resolver: () => ({
+      titulo: t('errores.latex.bibliografia_vacia.titulo'),
+      accion: t('errores.latex.bibliografia_vacia.ayuda'),
+    }),
+  },
+  'desconocido-sin-linea': {
+    codigo: 'desconocido',
+    variables: [],
+    titulo: 'errores.latex.desconocido_sin_linea.titulo',
+    ayuda: 'errores.latex.desconocido_sin_linea.ayuda',
+    resolver: () => ({
+      titulo: t('errores.latex.desconocido_sin_linea.titulo'),
+      accion: t('errores.latex.desconocido_sin_linea.ayuda'),
+    }),
+  },
   'bibliografia-faltante': {
     codigo: 'bibliografia-faltante',
     variables: ['archivo'],
@@ -300,7 +330,9 @@ export function crearProblema(
   c: Clasificacion,
   detalle: Omit<Problema, 'codigo' | 'variables' | 'titulo' | 'accion'>,
 ): Problema {
-  const entrada = CATALOGO[(c.variante ?? c.codigo) as keyof typeof CATALOGO] ?? CATALOGO.desconocido;
+  // Sin ubicación conocida el título no debe mostrar un signo de interrogación.
+  const variante = c.codigo === 'desconocido' && c.variables.linea === '?' ? 'desconocido-sin-linea' : c.variante;
+  const entrada = CATALOGO[(variante ?? c.codigo) as keyof typeof CATALOGO] ?? CATALOGO.desconocido;
   return {
     ...detalle,
     codigo: entrada.codigo,
@@ -331,7 +363,7 @@ export function clasificar(mensaje: string, contexto: string, linea?: number): C
     return resultado('comando-indefinido', { comando: comandos.at(-1)?.[0] ?? '?' });
   }
   if (/Missing \$ inserted/.test(mensaje)) return resultado('matematicas-delimitador');
-  if (/Extra \}, or forgotten \$/.test(mensaje)) return resultado('llave-extra');
+  if (/Extra \}, or forgotten \$|Too many \}'s/.test(mensaje)) return resultado('llave-extra');
   if (/Missing \} inserted/.test(mensaje)) return resultado('llave-faltante');
   if (/Runaway argument\?/.test(mensaje)) return resultado('argumento-incompleto');
   const entorno = /Environment\s+(\S+)\s+undefined/.exec(mensaje);
@@ -342,6 +374,9 @@ export function clasificar(mensaje: string, contexto: string, linea?: number): C
   if (/Fatal error occurred/.test(mensaje)) return resultado('compilacion-fatal');
   if (/Package babel Error:[\s\S]*?Unknown option\s+[`'"]spanish['"]/.test(mensaje))
     return resultado('idioma-espanol-faltante');
+  const errorPaquete = /Package\s+(\S+)\s+Error:/.exec(mensaje);
+  if (errorPaquete) return resultado('paquete-error', { paquete: errorPaquete[1]! });
+  if (/Empty [`']thebibliography' environment/.test(mensaje)) return resultado('bibliografia-vacia');
   const referencia = /Reference\s+[`'"]([^`'"]+)['"][\s\S]*?undefined/.exec(mensaje);
   if (referencia) return resultado('referencia-indefinida', { referencia: referencia[1]! });
   const cita = /Citation\s+[`'"]([^`'"]+)['"][\s\S]*?undefined/.exec(mensaje);

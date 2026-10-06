@@ -1,7 +1,7 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.3";
+export const VERSION_TEXTOS = "2026.10.4";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
@@ -24,6 +24,8 @@ export const TEXTOS_FOLIO = {
   "errores.latex.bibliografia_sin_citas.titulo": "La bibliografía no tiene citas que procesar",
   "errores.latex.bibliografia_sintaxis.ayuda": "Revisa las comas, las llaves y los nombres de campo en la línea indicada.",
   "errores.latex.bibliografia_sintaxis.titulo": "Revisa la bibliografía en la línea {linea}",
+  "errores.latex.bibliografia_vacia.ayuda": "Agrega al menos una cita en el documento y vuelve a compilar.",
+  "errores.latex.bibliografia_vacia.titulo": "La bibliografía quedó vacía",
   "errores.latex.cita_indefinida.ayuda": "Revisa que {cita} exista en tu archivo de bibliografía y que su nombre coincida con el de la cita.",
   "errores.latex.cita_indefinida.titulo": "La cita {cita} no está definida",
   "errores.latex.comando_indefinido.ayuda": "Revisa cómo se escribe {comando} y que hayas cargado el paquete que lo define.",
@@ -32,6 +34,8 @@ export const TEXTOS_FOLIO = {
   "errores.latex.compilacion_detenida.titulo": "La compilación se detuvo",
   "errores.latex.compilacion_fatal.ayuda": "Corrige los problemas anteriores y vuelve a compilar.",
   "errores.latex.compilacion_fatal.titulo": "No se pudo generar el PDF",
+  "errores.latex.desconocido_sin_linea.ayuda": "Revisa el detalle original para ubicar el problema en tu documento.",
+  "errores.latex.desconocido_sin_linea.titulo": "LaTeX encontró un problema",
   "errores.latex.desconocido.ayuda": "Revisa el detalle original y el código de la línea indicada. Si no aparece una línea, revisa el último comando del documento.",
   "errores.latex.desconocido.titulo": "LaTeX encontró un problema en la línea {linea}",
   "errores.latex.entorno_cierre.ayuda": "Haz que el nombre del entorno de cierre coincida con {entorno}.",
@@ -58,6 +62,8 @@ export const TEXTOS_FOLIO = {
   "errores.latex.matematicas_delimitador.titulo": "Falta un delimitador de fórmula",
   "errores.latex.paquete_aviso.ayuda": "Revisa el detalle del aviso y la configuración de {paquete} antes de volver a compilar.",
   "errores.latex.paquete_aviso.titulo": "El paquete {paquete} necesita revisión",
+  "errores.latex.paquete_error.ayuda": "Revisa el detalle original: suele ser una opción mal escrita o un archivo que falta. Corrige la línea del documento que carga {paquete}.",
+  "errores.latex.paquete_error.titulo": "El paquete {paquete} informó un error",
   "errores.latex.referencia_indefinida.ayuda": "Revisa que exista una etiqueta con el nombre {referencia}. Si acabas de agregarla, vuelve a compilar.",
   "errores.latex.referencia_indefinida.titulo": "La referencia {referencia} no está definida",
   "errores.latex.referencias_indefinidas.ayuda": "Revisa las referencias y citas indicadas en los avisos. Si acabas de agregarlas, vuelve a compilar.",
@@ -112,6 +118,8 @@ export interface VariablesPorClave {
   "errores.latex.indice_rechazadas.titulo": { n: string | number };
   "errores.latex.paquete_aviso.ayuda": { paquete: string | number };
   "errores.latex.paquete_aviso.titulo": { paquete: string | number };
+  "errores.latex.paquete_error.ayuda": { paquete: string | number };
+  "errores.latex.paquete_error.titulo": { paquete: string | number };
   "errores.latex.referencia_indefinida.ayuda": { referencia: string | number };
   "errores.latex.referencia_indefinida.titulo": { referencia: string | number };
 }

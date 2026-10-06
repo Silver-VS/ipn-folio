@@ -14,3 +14,7 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 ## 2026.10.3
 
 - 2026-10-05 · `errores.latex.bibliografia_campo_vacio.*` · `campo_autor`, `campo_otro` y `ayuda` → `ayuda_autor` y `ayuda_otro` (frases completas; el nombre del campo de BibTeX va en `{campo}`) · Claude Sonnet.
+
+## 2026.10.4
+
+- 2026-10-05 · `errores.latex.paquete_error.*`, `bibliografia_vacia.*`, `desconocido_sin_linea.*` · (nuevas) error de paquete, bibliografía vacía y problema sin línea (sin «?») · Claude Sonnet.

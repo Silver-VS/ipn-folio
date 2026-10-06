@@ -14,6 +14,17 @@ export function analizarBibtex(blg: string): Problema[] {
     const vacio = /Warning--empty (\w+) in (.+)/.exec(texto);
     const entrada = /Warning--I didn't find a database entry for ["'](.+)["']/.exec(texto);
     const sintaxis = /---line (\d+) of file (.+)/.exec(texto);
+    // Con una base de datos que no abre, BibTeX añade líneas de contexto y consecuencias: pertenecen al mismo problema.
+    const previoFaltante = problemas.at(-1)?.codigo === 'bibliografia-faltante';
+    if (previoFaltante && /^---line \d+ of file /.test(texto)) {
+      problemas.at(-1)!.original += '\n' + texto;
+      continue;
+    }
+    if (
+      problemas.some((p) => p.codigo === 'bibliografia-faltante') &&
+      /^(?:I found no database files|I'm skipping whatever remains)/.test(texto)
+    )
+      continue;
     const vars: Record<string, string | number> = {};
     let codigo: string | undefined;
     let variante: string | undefined;

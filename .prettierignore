@@ -11,3 +11,5 @@ test-results/
 coverage/
 public/busytex/
 espejo-local/
+.cache-activos/
+.cache-banco/

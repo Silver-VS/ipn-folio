@@ -16,6 +16,8 @@ export default tseslint.config(
       'test-results/',
       'coverage/',
       'public/busytex/',
+      '.cache-activos/',
+      '.cache-banco/',
       'espejo-local/',
       'src/textos/es.gen.ts',
     ],

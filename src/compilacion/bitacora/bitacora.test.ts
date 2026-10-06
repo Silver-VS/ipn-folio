@@ -26,6 +26,7 @@ describe('tex', () => {
     ['entorno.log', 'entorno-indefinido', 12, { entorno: 'inventado' }],
     ['entorno-cierre.log', 'entorno-cierre', 15, { entorno: 'itemize', cierre: 'enumerate' }],
     ['babel.log', 'idioma-espanol-faltante', 4, {}],
+    ['babel-sty.log', 'idioma-espanol-faltante', 4, {}],
     ['desbordado.log', 'formato-desbordado', 22, { puntos: 12.5 }],
     ['fuente.log', 'fuente-indefinida', 24, {}],
     ['paquete-aviso.log', 'paquete-aviso', 25, { paquete: 'ejemplo' }],
@@ -73,6 +74,52 @@ describe('tex', () => {
     expect(r.senales.repetirPasada).toBe(true);
     expect(r.problemas[0]?.codigo).toBe('repetir-pasada');
   });
+  it('does not request another pass for clean output that loads hyperref', () => {
+    const r = analizar({ log: fixture('limpia-hyperref.log') });
+    expect(r.senales.repetirPasada).toBe(false);
+    expect(r.problemas).toEqual([]);
+  });
+  it('requests another pass for the real hyperref warning', () =>
+    expect(
+      analizar({ log: 'Package hyperref Warning: Rerun to get /PageLabels entry.' }).senales.repetirPasada,
+    ).toBe(true));
+  it('keeps errors attributed to library files in -file-line-error mode', () => {
+    const r = analizar({ log: fixture('babel-sty.log') });
+    expect(r.problemas).toHaveLength(1);
+    expect(r.problemas[0]).toMatchObject({
+      codigo: 'idioma-espanol-faltante',
+      archivo: 'principal.tex',
+      linea: 4,
+    });
+    expect(r.senales.faltantes).toEqual(['spanish.ldf']);
+  });
+  it('keeps a library error without a project line', () =>
+    expect(
+      primero('(./principal.tex\n/tex/latex/demo/demo.sty:7: Package demo Error: Algo.\n)'),
+    ).toMatchObject({ archivo: 'principal.tex', linea: undefined }));
+  it('does not merge distinct diagnostics without a line', () => {
+    const r = analizar({
+      log: 'Package foo Warning: uno.\n\nPackage bar Warning: dos.',
+      blg: [
+        `Warning--I didn't find a database entry for "a"`,
+        `Warning--I didn't find a database entry for "b"`,
+        'Warning--empty author in x',
+        'Warning--empty year in y',
+      ].join('\n'),
+    });
+    expect(r.problemas.map((p) => p.variables)).toEqual([
+      { paquete: 'foo' },
+      { paquete: 'bar' },
+      { cita: 'a' },
+      { cita: 'b' },
+      { cita: 'x' },
+      { campo: 'year', cita: 'y' },
+    ]);
+  });
+  it('still groups identical diagnostics without a line', () =>
+    expect(
+      analizar({ log: 'Package foo Warning: uno.\n\nPackage foo Warning: uno.' }).problemas,
+    ).toHaveLength(1));
   it('leaves clean output empty', () =>
     expect(analizar({ log: fixture('limpia.log') })).toEqual({
       problemas: [],
@@ -177,14 +224,15 @@ describe('additional diagnostic boundaries', () => {
     expect(p.titulo).toContain('a&amp;b.png');
     expect(p.original).toContain('a&b.png');
   });
-  it('uses a text key for nonauthor empty fields', () => {
+  it('names the BibTeX field in full sentences for nonauthor empty fields', () => {
     const p = analizarBibtex('Warning--empty year in demo')[0];
-    expect(p?.variables).toEqual({
-      campo: TEXTOS_FOLIO['errores.latex.bibliografia_campo_vacio.campo_otro'],
-      cita: 'demo',
-    });
+    expect(p?.variables).toEqual({ campo: 'year', cita: 'demo' });
+    expect(p?.accion).toContain('year');
+    expect(p?.accion).not.toContain('campo campo');
     expect(p?.original).toContain('year');
   });
+  it('has no translated fragments inside other sentences', () =>
+    expect(Object.keys(TEXTOS_FOLIO).filter((k) => /\.campo_(autor|otro)$/.test(k))).toEqual([]));
 });
 
 describe('file stack', () => {
@@ -246,10 +294,7 @@ describe('bibtex and makeindex', () => {
         codigo: 'bibliografia-campo-vacio',
         gravedad: 'aviso',
         archivo: 'referencias.bib',
-        variables: {
-          campo: TEXTOS_FOLIO['errores.latex.bibliografia_campo_vacio.campo_autor'],
-          cita: 'obra-demo',
-        },
+        variables: { cita: 'obra-demo' },
       },
       { codigo: 'bibliografia-entrada-faltante', variables: { cita: 'otra-obra' } },
       {

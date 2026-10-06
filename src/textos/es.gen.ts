@@ -1,7 +1,7 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.2";
+export const VERSION_TEXTOS = "2026.10.3";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
@@ -13,9 +13,8 @@ export const TEXTOS_FOLIO = {
   "errores.latex.archivo_faltante.titulo": "Falta el archivo {archivo}",
   "errores.latex.argumento_incompleto.ayuda": "Revisa las llaves del comando anterior y cierra su argumento.",
   "errores.latex.argumento_incompleto.titulo": "Un comando tiene un argumento sin cerrar",
-  "errores.latex.bibliografia_campo_vacio.ayuda": "Completa el campo {campo} de la entrada {cita} en tu archivo de bibliografía.",
-  "errores.latex.bibliografia_campo_vacio.campo_autor": "autor",
-  "errores.latex.bibliografia_campo_vacio.campo_otro": "campo indicado en el detalle",
+  "errores.latex.bibliografia_campo_vacio.ayuda_autor": "Completa el campo del autor de la entrada {cita} en tu archivo de bibliografía.",
+  "errores.latex.bibliografia_campo_vacio.ayuda_otro": "Completa el campo {campo} de la entrada {cita} en tu archivo de bibliografía.",
   "errores.latex.bibliografia_campo_vacio.titulo": "La entrada {cita} tiene un campo vacío",
   "errores.latex.bibliografia_entrada_faltante.ayuda": "Agrega la entrada {cita} al archivo de bibliografía o corrige el nombre de la cita.",
   "errores.latex.bibliografia_entrada_faltante.titulo": "Falta la entrada bibliográfica {cita}",
@@ -90,7 +89,8 @@ export interface VariablesPorClave {
   "pie.licencia": { licencia: string | number };
   "errores.latex.archivo_faltante.ayuda": { archivo: string | number };
   "errores.latex.archivo_faltante.titulo": { archivo: string | number };
-  "errores.latex.bibliografia_campo_vacio.ayuda": { campo: string | number; cita: string | number };
+  "errores.latex.bibliografia_campo_vacio.ayuda_autor": { cita: string | number };
+  "errores.latex.bibliografia_campo_vacio.ayuda_otro": { campo: string | number; cita: string | number };
   "errores.latex.bibliografia_campo_vacio.titulo": { cita: string | number };
   "errores.latex.bibliografia_entrada_faltante.ayuda": { cita: string | number };
   "errores.latex.bibliografia_entrada_faltante.titulo": { cita: string | number };

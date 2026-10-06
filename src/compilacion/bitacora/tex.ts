@@ -15,22 +15,27 @@ export function senalesVacias(): Senales {
 }
 
 const cabecera =
-  /^(?:!\s|(?:\.\/)?[^\s].*?\.tex:\d+:\s|Runaway argument\?|LaTeX (?:Font )?Warning:|Package \S+ Warning:|Overfull \\hbox|.*Fatal error occurred)/;
-const fileLine = /^(\.\/[^:]+|[^:]+\.tex):(\d+):\s*(.*)$/;
+  /^(?:!\s|[^\s()].*?\.(?:tex|sty|cls|ldf|def|cfg|fd):\d+:\s|Runaway argument\?|LaTeX (?:Font )?Warning:|Package \S+ Warning:|Overfull \\hbox|.*Fatal error occurred)/;
+const fileLine = /^([^\s()].*?\.(?:tex|sty|cls|ldf|def|cfg|fd)):(\d+):\s*(.*)$/;
+// Rutas absolutas (TeX Live, WASM): el error es de la biblioteca, no de un archivo del alumno.
+const esBiblioteca = (ruta: string) => /^(?:\/|[A-Za-z]:[\\/])/.test(ruta);
+// Se busca solo en líneas de bitácora que piden otra pasada; la línea informativa
+// «Package: rerunfilecheck … Rerun checks for auxiliary files» (la imprime hyperref) no cuenta.
+const pidePasada = /Rerun to get|Rerun LaTeX|Label\(s\) may have changed|Please (?:re)?run LaTeX/i;
 
 export function analizarTex(log: string): ResultadoAnalisis {
   const lineas = desenvolver(log);
   const archivos = archivoPorLinea(lineas);
   const resultado: ResultadoAnalisis = { problemas: [], senales: senalesVacias() };
-  resultado.senales.repetirPasada =
-    /Rerun to get cross-references right|Label\(s\) may have changed|rerunfilecheck[\s\S]*?Rerun|Please (?:re)?run LaTeX/i.test(
-      log,
-    );
+  resultado.senales.repetirPasada = lineas.some(
+    (l) => !/^Package: /.test(l.texto) && pidePasada.test(l.texto),
+  );
   resultado.senales.fatal = /Emergency stop|Fatal error occurred/.test(log);
   for (let i = 0; i < lineas.length; i++) {
     const actual = lineas[i];
     if (!actual || !cabecera.test(actual.texto)) continue;
     const explicita = fileLine.exec(actual.texto);
+    const deBiblioteca = explicita ? esBiblioteca(explicita[1] ?? '') : false;
     const fragmentos = [actual];
     let j = i + 1;
     while (j < lineas.length && j <= i + 12) {
@@ -57,8 +62,10 @@ export function analizarTex(log: string): ResultadoAnalisis {
     }
     const texto = fragmentos.map((l) => l.texto).join('\n');
     const ubicacion = /^l\.(\d+)/m.exec(texto) ?? /(?:on input line |at lines? )(\d+)/m.exec(texto);
-    const linea = explicita ? Number(explicita[2]) : ubicacion ? Number(ubicacion[1]) : undefined;
-    const archivo = explicita ? explicita[1]?.replace(/^\.\//, '') : archivos[i];
+    // Si el error es de una biblioteca (.sty, .cls), la ubicación útil es la del proyecto (l.N y pila).
+    const delProyecto = explicita && !deBiblioteca;
+    const linea = delProyecto ? Number(explicita[2]) : ubicacion ? Number(ubicacion[1]) : undefined;
+    const archivo = delProyecto ? explicita[1]?.replace(/^\.\//, '') : archivos[i];
     const mensaje = explicita ? texto.slice(actual.texto.length - (explicita[3]?.length ?? 0)) : texto;
     const clasificacion = clasificar(mensaje, texto, linea);
     if (!clasificacion) continue;

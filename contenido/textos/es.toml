@@ -3,7 +3,7 @@
 # Reglas: claves a-z0-9_ con puntos; variables {nombre}; plurales {n, plural, one {# x} other {# xs}}.
 # Los textos que también necesita IPN-tools viven en ipn-comun (comun.es.toml), no aquí.
 # Al cambiar un texto: sube `version` y anota el cambio en contenido/CAMBIOS.md.
-version = "2026.10.2"
+version = "2026.10.3"
 
 [app]
 # Nombre del producto: <title> de la página y encabezado. Es un nombre propio.
@@ -104,10 +104,9 @@ titulo = "La bibliografía no tiene citas que procesar"
 ayuda = "Agrega una cita en el documento si quieres incluir la bibliografía."
 
 [errores.latex.bibliografia_campo_vacio]
-campo_autor = "autor"
-campo_otro = "campo indicado en el detalle"
 titulo = "La entrada {cita} tiene un campo vacío"
-ayuda = "Completa el campo {campo} de la entrada {cita} en tu archivo de bibliografía."
+ayuda_autor = "Completa el campo del autor de la entrada {cita} en tu archivo de bibliografía."
+ayuda_otro = "Completa el campo {campo} de la entrada {cita} en tu archivo de bibliografía."
 
 [errores.latex.bibliografia_entrada_faltante]
 titulo = "Falta la entrada bibliográfica {cita}"

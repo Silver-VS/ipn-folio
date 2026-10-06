@@ -225,13 +225,23 @@ export const CATALOGO = {
     codigo: 'bibliografia-campo-vacio',
     variables: ['campo', 'cita'],
     titulo: 'errores.latex.bibliografia_campo_vacio.titulo',
-    ayuda: 'errores.latex.bibliografia_campo_vacio.ayuda',
+    ayuda: 'errores.latex.bibliografia_campo_vacio.ayuda_otro',
     resolver: (v: Record<string, string | number>) => ({
       titulo: t('errores.latex.bibliografia_campo_vacio.titulo', { cita: v.cita ?? '?' }),
-      accion: t('errores.latex.bibliografia_campo_vacio.ayuda', {
+      accion: t('errores.latex.bibliografia_campo_vacio.ayuda_otro', {
         campo: v.campo ?? '?',
         cita: v.cita ?? '?',
       }),
+    }),
+  },
+  'bibliografia-autor-vacio': {
+    codigo: 'bibliografia-campo-vacio',
+    variables: ['cita'],
+    titulo: 'errores.latex.bibliografia_campo_vacio.titulo',
+    ayuda: 'errores.latex.bibliografia_campo_vacio.ayuda_autor',
+    resolver: (v: Record<string, string | number>) => ({
+      titulo: t('errores.latex.bibliografia_campo_vacio.titulo', { cita: v.cita ?? '?' }),
+      accion: t('errores.latex.bibliografia_campo_vacio.ayuda_autor', { cita: v.cita ?? '?' }),
     }),
   },
   'bibliografia-entrada-faltante': {
@@ -339,7 +349,7 @@ export function clasificar(mensaje: string, contexto: string, linea?: number): C
   if (/There were undefined (?:references|citations)/.test(mensaje))
     return resultado('referencias-indefinidas');
   if (
-    /Rerun to get cross-references right|Label\(s\) may have changed|Please (?:re)?run LaTeX|Rerun/i.test(
+    /Rerun to get|Rerun LaTeX|Label\(s\) may have changed|Please (?:re)?run LaTeX/i.test(
       mensaje,
     )
   )

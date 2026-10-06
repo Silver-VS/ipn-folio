@@ -22,7 +22,8 @@ export function analizar({
   }
   const unicos = new Map<string, (typeof resultado.problemas)[number]>();
   for (const p of resultado.problemas) {
-    const clave = JSON.stringify([p.codigo, p.archivo, p.linea]);
+    // Sin línea no hay forma de saber si dos diagnósticos son el mismo: se agrupan solo si las variables coinciden.
+    const clave = JSON.stringify([p.codigo, p.archivo, p.linea, p.linea === undefined ? p.variables : null]);
     const previo = unicos.get(clave);
     if (!previo) unicos.set(clave, p);
     // Keep every distinct diagnostic in the detail even when its location is grouped.

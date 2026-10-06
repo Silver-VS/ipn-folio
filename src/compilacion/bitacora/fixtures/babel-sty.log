@@ -1,0 +1,9 @@
+(./principal.tex
+(/tex/latex/base/article.cls)
+/tex/babel/babel.sty:1234: Package babel Error: Unknown option `spanish'.
+(babel)                or the language definition file spanish.ldf was not found.
+
+See the babel package documentation for explanation.
+
+l.4 \usepackage[spanish]{babel}
+)

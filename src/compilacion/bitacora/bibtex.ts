@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { crearProblema } from './mensajes';
-import { t } from '../../textos/t';
 import type { Problema } from './tipos';
 
 export function analizarBibtex(blg: string): Problema[] {
@@ -17,16 +16,15 @@ export function analizarBibtex(blg: string): Problema[] {
     const sintaxis = /---line (\d+) of file (.+)/.exec(texto);
     const vars: Record<string, string | number> = {};
     let codigo: string | undefined;
+    let variante: string | undefined;
     if (faltante) {
       codigo = 'bibliografia-faltante';
       vars.archivo = faltante[1]!.trim();
     } else if (/I found no \\citation commands/.test(texto)) codigo = 'bibliografia-sin-citas';
     else if (vacio) {
       codigo = 'bibliografia-campo-vacio';
-      vars.campo =
-        vacio[1] === 'author'
-          ? t('errores.latex.bibliografia_campo_vacio.campo_autor')
-          : t('errores.latex.bibliografia_campo_vacio.campo_otro');
+      if (vacio[1] === 'author') variante = 'bibliografia-autor-vacio';
+      else vars.campo = vacio[1]!;
       vars.cita = vacio[2]!.trim();
     } else if (entrada) {
       codigo = 'bibliografia-entrada-faltante';
@@ -48,7 +46,7 @@ export function analizarBibtex(blg: string): Problema[] {
     const original = sintaxis && texto.startsWith('---line') ? anterior + '\n' + texto : texto;
     problemas.push(
       crearProblema(
-        { codigo, variables: vars },
+        { codigo, variables: vars, variante },
         {
           gravedad: texto.startsWith('Warning--') ? 'aviso' : 'error',
           archivo: sintaxis ? sintaxis[2]?.replace(/^\.\//, '') : archivo,

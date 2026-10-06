@@ -25,6 +25,14 @@ export const PERMITIDAS = new Set([
   'AGPL-3.0-or-later',
 ]);
 
+/**
+ * Paquetes opcionales de otras plataformas: npm no los instala aquí y no hay package.json que leer.
+ * Licencia verificada en el registro de npm (`npm view <paquete> license`); no entran al build del navegador.
+ */
+const VERIFICADAS_NO_INSTALADAS = [
+  { patron: /^@napi-rs\/canvas-[a-z0-9-]+$/, licencia: 'MIT', nota: 'binarios opcionales de pdfjs-dist (solo Node)' },
+];
+
 /** Parte `texto` por el operador (OR / AND) solo en el nivel superior, fuera de paréntesis. */
 function dividir(texto, operador) {
   const partes = [];
@@ -120,7 +128,9 @@ function recolectar(nodo, acumulado) {
     const clave = `${dep}@${hijo.version ?? '?'}`;
     if (acumulado.has(clave)) continue;
     const archivo = join(ruta, 'package.json');
-    const licencia = existsSync(archivo) ? licenciaDe(JSON.parse(readFileSync(archivo, 'utf8'))) : '';
+    const licencia = existsSync(archivo)
+      ? licenciaDe(JSON.parse(readFileSync(archivo, 'utf8')))
+      : (VERIFICADAS_NO_INSTALADAS.find((v) => v.patron.test(dep))?.licencia ?? '');
     acumulado.set(clave, { nombre: dep, version: hijo.version ?? '?', licencia });
     recolectar(hijo, acumulado);
   }

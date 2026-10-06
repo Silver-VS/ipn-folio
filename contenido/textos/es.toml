@@ -3,7 +3,7 @@
 # Reglas: claves a-z0-9_ con puntos; variables {nombre}; plurales {n, plural, one {# x} other {# xs}}.
 # Los textos que también necesita IPN-tools viven en ipn-comun (comun.es.toml), no aquí.
 # Al cambiar un texto: sube `version` y anota el cambio en contenido/CAMBIOS.md.
-version = "2026.10.6"
+version = "2026.10.7"
 
 [app]
 # Nombre del producto: <title> de la página y encabezado. Es un nombre propio.
@@ -161,3 +161,13 @@ zip_demasiado_grande = "El contenido de ese .zip es demasiado grande para abrirl
 [almacen.aviso]
 codificacion_convertida = "El archivo «{ruta}» no estaba en UTF-8; lo convertimos desde Windows-1252 (Latin-1). Si usa inputenc con latin1, cambia esa opción a utf8 o revisa los acentos."
 entrada_duplicada = "El .zip trae «{ruta}» más de una vez. Conservamos la última copia."
+
+[errores.motor]
+# Errores del motor de compilación (el orquestador los muestra según el código del error).
+cancelado = "Se canceló la compilación."
+worker = "El motor de compilación se detuvo de forma inesperada. Vuelve a compilar: se reiniciará solo."
+abortado = "El motor de compilación se detuvo al procesar el documento, por ejemplo por falta de memoria o un ciclo sin fin. Revisa tu último cambio y vuelve a compilar: el motor se reiniciará solo."
+peticion = "El motor de compilación no pudo completar la operación. Vuelve a intentarlo."
+no_listo = "El motor de compilación todavía no está listo. Espera a que termine de cargar y vuelve a intentarlo."
+sin_montar = "Primero hay que cargar los archivos del proyecto. Vuelve a compilar."
+ruta_no_permitida = "El proyecto tiene un archivo con una ruta que sale de su carpeta. Corrige su nombre y vuelve a compilar."

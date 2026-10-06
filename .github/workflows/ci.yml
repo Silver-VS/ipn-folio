@@ -20,6 +20,8 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      # @ipn/comun se instala desde GitHub: sin llave SSH en la CI, se usa HTTPS.
+      - run: git config --global url."https://github.com/".insteadOf ssh://git@github.com/
       - run: npm ci
       - run: npm run verificar
       - run: npx playwright install --with-deps chromium webkit

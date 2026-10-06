@@ -26,3 +26,7 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 ## 2026.10.6
 
 - 2026-10-05 · `almacen.aviso.*` · (nuevas) avisos al importar un .zip: codificación convertida y entrada duplicada · Claude Sonnet (almacén).
+
+## 2026.10.7
+
+- 2026-10-05 · `errores.motor.*` · (nuevas) mensajes de error del motor de compilación: cancelado, detenido, abortado, operación fallida, no listo, sin proyecto y ruta no permitida · Claude Sonnet (sesión 03).

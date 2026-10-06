@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { existsSync } from 'node:fs';
 import { defineConfig, devices } from '@playwright/test';
+import { PUERTO_BANCO, PUERTO_DESARROLLO } from './e2e/config';
 
 const PUERTO = 4173;
-const PUERTO_DESARROLLO = 4174;
+// Banco de compilación (e2e/banco): lo empaqueta y sirve Vite (build propio) y solo se levanta si hay activos de BusyTeX.
+const hayActivos = existsSync('public/busytex/busytex.wasm');
 
 // Tres perfiles: escritorio (Chromium), móvil (Chromium emulando un teléfono) y WebKit (motor de Safari).
 // Los navegadores se buscan en PLAYWRIGHT_BROWSERS_PATH (en este equipo: D:\Tools\playwright-browsers).
@@ -41,5 +44,15 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
+    ...(hayActivos
+      ? [
+          {
+            command: `npx vite build --config e2e/banco/vite.config.ts && npx vite preview --config e2e/banco/vite.config.ts --port ${PUERTO_BANCO} --strictPort`,
+            url: `http://localhost:${PUERTO_BANCO}/e2e/banco/index.html`,
+            reuseExistingServer: !process.env.CI,
+            timeout: 180_000,
+          },
+        ]
+      : []),
   ],
 });

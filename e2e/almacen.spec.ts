@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { expect, test } from '@playwright/test';
+import { PUERTO_DESARROLLO } from './config';
 
-// El almacén se prueba con IndexedDB real de cada navegador, en una página de prueba servida por vite (puerto 4174).
-const PAGINA = 'http://localhost:4174/e2e/almacen.html';
+// El almacén se prueba con IndexedDB real de cada navegador, en una página de prueba servida por vite (puerto PUERTO_DESARROLLO de e2e/config.ts).
+const PAGINA = `http://localhost:${PUERTO_DESARROLLO}/e2e/almacen.html`;
 
 test.describe('almacén local', () => {
   test('un proyecto y su archivo siguen ahí después de recargar la página', async ({ page }) => {

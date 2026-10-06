@@ -19,6 +19,7 @@
     "formato": "prettier --write .",
     "tipos": "svelte-check --tsconfig ./tsconfig.json && tsc --noEmit",
     "licencias": "node scripts/licencias.mjs",
+    "activos": "node scripts/activos.mjs",
     "contenido": "node scripts/textos.mjs && node scripts/codificacion.mjs && node scripts/contenido.mjs",
     "verificar": "npm run contenido && npm run lint && npm run tipos && npm run test && npm run licencias && npm run build"
   },
@@ -42,6 +43,7 @@
     "prettier-plugin-svelte": "^4.1.1",
     "smol-toml": "^1.9.0",
     "svelte-check": "^4.7.6",
+    "texlyre-busytex": "1.4.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.1",
     "vite": "^8.3.2",

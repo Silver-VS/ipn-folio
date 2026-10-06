@@ -2,6 +2,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const PUERTO = 4173;
+const PUERTO_DESARROLLO = 4174;
 
 // Tres perfiles: escritorio (Chromium), móvil (Chromium emulando un teléfono) y WebKit (motor de Safari).
 // Los navegadores se buscan en PLAYWRIGHT_BROWSERS_PATH (en este equipo: D:\Tools\playwright-browsers).
@@ -26,10 +27,19 @@ export default defineConfig({
     },
     { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
-  webServer: {
-    command: `npm run build && npm run preview -- --port ${PUERTO} --strictPort`,
-    url: `http://localhost:${PUERTO}`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: [
+    {
+      command: `npm run build && npm run preview -- --port ${PUERTO} --strictPort`,
+      url: `http://localhost:${PUERTO}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+    {
+      // Sirve la página de prueba del almacén (e2e/almacen.html), que no forma parte del build.
+      command: `npm run dev -- --port ${PUERTO_DESARROLLO} --strictPort`,
+      url: `http://localhost:${PUERTO_DESARROLLO}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+  ],
 });

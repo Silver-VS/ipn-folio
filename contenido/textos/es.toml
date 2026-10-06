@@ -3,7 +3,7 @@
 # Reglas: claves a-z0-9_ con puntos; variables {nombre}; plurales {n, plural, one {# x} other {# xs}}.
 # Los textos que también necesita IPN-tools viven en ipn-comun (comun.es.toml), no aquí.
 # Al cambiar un texto: sube `version` y anota el cambio en contenido/CAMBIOS.md.
-version = "2026.10.9"
+version = "2026.10.10"
 
 [app]
 # Nombre del producto: <title> de la página y encabezado. Es un nombre propio.
@@ -190,7 +190,7 @@ ayuda = "En las opciones de biblatex, cambia el motor de bibliografía a bibtex 
 
 [errores.latex.motor_detenido]
 titulo = "No se pudo completar la compilación"
-ayuda = "{mensaje}"
+ayuda = "Vuelve a compilar: el motor se reiniciará solo."
 
 [compilacion.paso]
 # Nombre de cada paso de la compilación; se muestra después de «Paso n de m:» (en minúsculas).
@@ -199,7 +199,7 @@ bibliografia = "bibliografía"
 indice = "índice"
 nomenclatura = "nomenclatura"
 glosario = "glosario"
-pasada = "pasada intermedia"
+pasada = "nueva pasada"
 final = "pasada final"
 # Avance de la compilación; {nombre} es uno de los nombres anteriores.
 progreso = "Paso {n} de {total}: {nombre}"

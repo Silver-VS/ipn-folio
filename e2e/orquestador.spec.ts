@@ -72,7 +72,7 @@ test.describe('orquestador de compilación', () => {
       'Paso 1 de 3: primera pasada',
       'Paso 2 de 4: índice',
       'Paso 3 de 4: nomenclatura',
-      'Paso 4 de 4: pasada intermedia',
+      'Paso 4 de 4: nueva pasada',
     ]);
   });
 

@@ -266,12 +266,12 @@ export const CATALOGO = {
   },
   'motor-detenido': {
     codigo: 'motor-detenido',
-    variables: ['mensaje'],
+    variables: [],
     titulo: 'errores.latex.motor_detenido.titulo',
     ayuda: 'errores.latex.motor_detenido.ayuda',
-    resolver: (v: Record<string, string | number>) => ({
+    resolver: () => ({
       titulo: t('errores.latex.motor_detenido.titulo'),
-      accion: t('errores.latex.motor_detenido.ayuda', { mensaje: v.mensaje ?? '' }),
+      accion: t('errores.latex.motor_detenido.ayuda'),
     }),
   },
   'bibliografia-faltante': {

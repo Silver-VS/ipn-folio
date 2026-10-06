@@ -5,7 +5,7 @@
 import { analizar } from '../bitacora';
 import { crearProblema } from '../bitacora/mensajes';
 import type { Problema } from '../bitacora/tipos';
-import { ErrorMotor } from '../motor';
+import { ErrorMotor, textoDeError } from '../motor';
 import type { PuertoMotor } from '../motor';
 import type { ArchivoProyecto } from '../tipos';
 import { analizarProyecto } from './analisis-proyecto';
@@ -120,6 +120,7 @@ function generables(analisis: AnalisisProyecto, base: string): string[] {
 export class Orquestador {
   private cache: Cache | null = null;
   private ultimoPdf: Uint8Array | null = null;
+  private proyectoPdf: string | null = null;
   private cola: Promise<unknown> = Promise.resolve();
   private enCurso = false;
   /** Se pidió cancelar: se revisa antes de cada operación con el motor (puede llegar entre dos de ellas). */
@@ -135,9 +136,11 @@ export class Orquestador {
     return this.ultimoPdf;
   }
 
-  /** Olvida lo recordado entre compilaciones (la siguiente corre todas las herramientas). */
+  /** Olvida la caché y el PDF anterior al cambiar de proyecto; la siguiente corre todas las herramientas. */
   olvidarCache(): void {
     this.cache = null;
+    this.ultimoPdf = null;
+    this.proyectoPdf = null;
   }
 
   /** Cancela la compilación en curso; el evento `fin` llega con `cancelado: true`. */
@@ -149,7 +152,11 @@ export class Orquestador {
 
   /** Compila el proyecto. Las compilaciones se atienden de una en una. */
   compilar(entrada: EntradaCompilacion): Promise<ResultadoCompilacion> {
-    const turno = this.cola.then(() => this.correr(entrada));
+    const turno = this.cola.then(() =>
+      this.correr(entrada).finally(() => {
+        this.enCurso = false;
+      }),
+    );
     this.cola = turno.catch(() => undefined);
     return turno;
   }
@@ -191,7 +198,9 @@ export class Orquestador {
 
     const rutasProyecto = new Set(archivos.map((a) => a.ruta));
     const clave = [...rutasProyecto].sort().join('\n');
-    const cache =
+    const proyecto = `${principal}\n${clave}`;
+    if (this.proyectoPdf !== proyecto) this.ultimoPdf = null;
+    let cache =
       this.cache && this.cache.principal === principal && this.cache.rutas === clave ? this.cache : null;
     const extraBib = huella(
       archivos
@@ -202,6 +211,13 @@ export class Orquestador {
     );
 
     const pasos: PasoEjecutado[] = [];
+    const extraEstilos = huella(
+      archivos
+        .filter((a) => /\.ist$/i.test(a.ruta))
+        .sort((a, b) => a.ruta.localeCompare(b.ruta))
+        .map((a) => `${a.ruta}\n${aTexto(a.contenido)}`)
+        .join('\n'),
+    );
     const usadas: Record<string, string> = { ...(cache?.huellas ?? {}) };
     const registros: Record<string, Registro> = { ...(cache?.registros ?? {}) };
     const corridas = new Set<string>();
@@ -275,7 +291,7 @@ export class Orquestador {
         ultimaTex = { codigo: r.codigo, repetir: lectura.repetirPasada, fatal: lectura.fatal };
         texEjecutadas++;
         herramientaTrasUltimaTex = false;
-        if (r.codigo !== 0) continue;
+        if (r.codigo !== 0 || lectura.fatal) continue;
 
         // Lo que TeX dejó: auxiliares (¿cambiaron?) y entradas de las herramientas (¿hay algo nuevo que procesar?).
         const auxiliares = [`${base}.aux`, ...analisis.incluidos.map((i) => `${i}.aux`)];
@@ -289,7 +305,26 @@ export class Orquestador {
         const nueva = huellaDeAuxiliares(base, auxiliares, contenidos);
         auxiliaresCambiaron = nueva !== huellaAuxiliares;
         huellaAuxiliares = nueva;
-        entradas = Object.fromEntries(lista.map((c: Candidata) => [c.clave, c.huella(contenidos, extraBib)]));
+        entradas = Object.fromEntries(
+          lista.map((c: Candidata) => [
+            c.clave,
+            c.huella(contenidos, c.nombre === 'bibliografia' ? extraBib : extraEstilos),
+          ]),
+        );
+        if (cache && lista.some((c) => usadas[c.clave] && entradas[c.clave] === null)) {
+          // Las salidas montadas ya pudieron imprimirse: repetir con un sistema de archivos limpio.
+          this.cache = cache = null;
+          for (const clave of Object.keys(usadas)) delete usadas[clave];
+          for (const clave of Object.keys(registros)) delete registros[clave];
+          corridas.clear();
+          entradas = {};
+          texEjecutadas = 0;
+          ultimaTex = null;
+          auxiliaresCambiaron = false;
+          huellaAuxiliares = huellaDeAuxiliares(base, [], {});
+          this.verificarCancelacion();
+          await this.motor.montar(archivos, dir);
+        }
       }
     } catch (error) {
       if (!(error instanceof ErrorMotor)) {
@@ -302,22 +337,19 @@ export class Orquestador {
 
     let pdf: Uint8Array | null = null;
     let synctex: Uint8Array | null = null;
+    if (motivo === 'fatal') this.cache = null;
     const huboFallo = motivo === 'fatal' || motivo === 'cancelado' || motivo === 'motor';
     if (!huboFallo) {
       try {
         this.verificarCancelacion();
         const bytes = await this.motor.leer(ruta(`${base}.pdf`));
         if (bytes && bytes.byteLength > 0) {
+          const sincronizacion = await this.motor.leer(ruta(`${base}.synctex.gz`));
+          const generados = await this.leerGenerados(analisis, base, ruta);
+          this.verificarCancelacion();
+          this.guardarCache(principal, clave, usadas, huellaAuxiliares, registros, generados);
           pdf = bytes;
-          synctex = await this.motor.leer(ruta(`${base}.synctex.gz`));
-          this.guardarCache(
-            principal,
-            clave,
-            usadas,
-            huellaAuxiliares,
-            registros,
-            await this.leerGenerados(analisis, base, ruta),
-          );
+          synctex = sincronizacion;
         } else motivo = 'sin-pdf';
       } catch (error) {
         if (!(error instanceof ErrorMotor)) {
@@ -340,22 +372,29 @@ export class Orquestador {
         .filter((r) => r.tipo === 'ilg')
         .map((r) => r.texto)
         .join('\n');
-      problemas.push(...analizar({ log: logTex, blg, ilg }).problemas);
+      problemas.push(
+        ...analizar({ log: logTex, blg, ilg }).problemas.map((p) => ({
+          ...p,
+          archivo: conDir(p.archivo),
+        })),
+      );
     }
     if (motivo === 'sin-pdf')
       problemas.push(
         crearProblema({ codigo: 'compilacion-fatal', variables: {} }, { gravedad: 'error', original: '' }),
       );
     if (errorMotor && motivo === 'motor')
-      problemas.push(
-        crearProblema(
-          { codigo: 'motor-detenido', variables: { mensaje: errorMotor.message } },
+      problemas.push({
+        ...crearProblema(
+          { codigo: 'motor-detenido', variables: {} },
           { gravedad: 'error', original: errorMotor.detalle },
         ),
-      );
-    for (const p of problemas) p.archivo = conDir(p.archivo);
-
-    if (exito) this.ultimoPdf = pdf;
+        accion: textoDeError(errorMotor.codigo),
+      });
+    if (exito) {
+      this.ultimoPdf = pdf;
+      this.proyectoPdf = proyecto;
+    }
     const resultado: ResultadoCompilacion = {
       exito,
       cancelado: motivo === 'cancelado',

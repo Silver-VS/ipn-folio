@@ -3,6 +3,11 @@
 
 Una línea por cambio: fecha · clave · antes → después · quién.
 
+## 2026.10.10
+
+- 2026-10-05 · `compilacion.paso.pasada` · «pasada intermedia» → «nueva pasada», válida también para el último paso · Codex.
+- 2026-10-05 · `errores.latex.motor_detenido.ayuda` · frase recibida en `{mensaje}` → frase completa de respaldo; el orquestador usa `errores.motor.<codigo>` para la acción específica · Codex.
+
 ## 2026.10.1
 
 - 2026-10-05 · `app.*`, `inicio.espacio.aria` · (nuevas) primeras claves de la pantalla inicial · Claude Sonnet (andamiaje).

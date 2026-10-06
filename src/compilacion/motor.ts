@@ -29,7 +29,7 @@ export interface PuertoMotor {
  */
 export type CodigoErrorMotor = 'cancelado' | 'worker' | 'abortado' | 'peticion' | CodigoErrorWorker;
 
-function textoDeError(codigo: CodigoErrorMotor): string {
+export function textoDeError(codigo: CodigoErrorMotor): string {
   switch (codigo) {
     case 'cancelado':
       return t('errores.motor.cancelado');

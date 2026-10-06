@@ -6,6 +6,12 @@ import type { ArchivoProyecto } from '../tipos';
 const f = (ruta: string, contenido: string | Uint8Array): ArchivoProyecto => ({ ruta, contenido });
 
 describe('analizarProyecto', () => {
+  it('un número par de barras antes del porcentaje inicia un comentario', () => {
+    expect(analizarProyecto([f('main.tex', String.raw`\\% \makeindex`)]).indice).toBe(false);
+    expect(analizarProyecto([f('main.tex', String.raw`\\\\% \makeindex`)]).indice).toBe(false);
+    expect(analizarProyecto([f('main.tex', String.raw`\\\% \makeindex`)]).indice).toBe(true);
+  });
+
   it('detecta nomenclatura cargada desde un archivo de paquetes, no desde el principal', () => {
     const a = analizarProyecto([
       f(

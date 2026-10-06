@@ -110,6 +110,26 @@ describe('decidir', () => {
 });
 
 describe('candidatas', () => {
+  it('la huella del glosario cambia si cambia el estilo generado por TeX', () => {
+    const glosario = candidatas(analisis, 'main').find((c) => c.clave === 'glosario:glo')!;
+    const primera = glosario.huella({ 'main.glo': 'entrada', 'main.ist': 'primero' }, '');
+    expect(glosario.huella({ 'main.glo': 'entrada', 'main.ist': 'segundo' }, '')).not.toBe(primera);
+  });
+
+  it('BibTeX encuentra la bibliografía en el auxiliar de un capítulo incluido', () => {
+    const con = analizarProyecto([{ ruta: 'main.tex', contenido: '\\include{bibliografia}' }]);
+    const bib = candidatas(con, 'main')[0]!;
+    expect(
+      bib.huella(
+        {
+          'main.aux': '\\citation{a}\n\\@input{bibliografia.aux}\n',
+          'bibliografia.aux': '\\bibdata{refs}\n\\bibstyle{plain}\n',
+        },
+        '',
+      ),
+    ).not.toBeNull();
+  });
+
   it('BibTeX necesita \\bibdata y al menos una \\citation (también en el .aux de un capítulo)', () => {
     const con = analizarProyecto([{ ruta: 'main.tex', contenido: '\\include{cap}' }]);
     const bib = candidatas(con, 'main')[0]!;

@@ -1,7 +1,7 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.9";
+export const VERSION_TEXTOS = "2026.10.10";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
@@ -29,7 +29,7 @@ export const TEXTOS_FOLIO = {
   "compilacion.paso.glosario": "glosario",
   "compilacion.paso.indice": "índice",
   "compilacion.paso.nomenclatura": "nomenclatura",
-  "compilacion.paso.pasada": "pasada intermedia",
+  "compilacion.paso.pasada": "nueva pasada",
   "compilacion.paso.primera": "primera pasada",
   "compilacion.paso.progreso": "Paso {n} de {total}: {nombre}",
   "errores.latex.archivo_faltante.ayuda": "Agrega {archivo} al proyecto o corrige su nombre en el código. Si es un paquete, revisa que esté disponible para compilar.",
@@ -89,7 +89,7 @@ export const TEXTOS_FOLIO = {
   "errores.latex.llave_faltante.titulo": "Falta cerrar una llave",
   "errores.latex.matematicas_delimitador.ayuda": "Revisa que la fórmula esté entre signos de dólar o dentro de un entorno de matemáticas. Si escribes un guion bajo en texto, antepón una barra invertida.",
   "errores.latex.matematicas_delimitador.titulo": "Falta un delimitador de fórmula",
-  "errores.latex.motor_detenido.ayuda": "{mensaje}",
+  "errores.latex.motor_detenido.ayuda": "Vuelve a compilar: el motor se reiniciará solo.",
   "errores.latex.motor_detenido.titulo": "No se pudo completar la compilación",
   "errores.latex.paquete_aviso.ayuda": "Revisa el detalle del aviso y la configuración de {paquete} antes de volver a compilar.",
   "errores.latex.paquete_aviso.titulo": "El paquete {paquete} necesita revisión",
@@ -165,7 +165,6 @@ export interface VariablesPorClave {
   "errores.latex.imagen_faltante.ayuda": { archivo: string | number };
   "errores.latex.imagen_faltante.titulo": { archivo: string | number };
   "errores.latex.indice_rechazadas.titulo": { n: string | number };
-  "errores.latex.motor_detenido.ayuda": { mensaje: string | number };
   "errores.latex.paquete_aviso.ayuda": { paquete: string | number };
   "errores.latex.paquete_aviso.titulo": { paquete: string | number };
   "errores.latex.paquete_error.ayuda": { paquete: string | number };

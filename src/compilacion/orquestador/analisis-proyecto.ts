@@ -40,7 +40,7 @@ const decodificador = new TextDecoder('utf-8');
 const esFuenteTeX = (ruta: string) => /\.(tex|sty|cls)$/i.test(ruta);
 const aTexto = (c: ArchivoProyecto['contenido']) => (typeof c === 'string' ? c : decodificador.decode(c));
 /** Quita los comentarios (`%` no escapado hasta el fin de línea). */
-const sinComentarios = (texto: string) => texto.replace(/(^|[^\\])%.*$/gm, '$1');
+const sinComentarios = (texto: string) => texto.replace(/(^|[^\\])((?:\\\\)*)%.*$/gm, '$1$2');
 
 const PAQUETE = /\\(?:usepackage|RequirePackage)\s*(?:\[([^\]]*)\])?\s*\{([^}]*)\}/g;
 const CLASE = /\\documentclass\s*(?:\[([^\]]*)\])?\s*\{([^}]*)\}/g;

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { ErrorMotor } from '../motor';
+import { t } from '../../textos/t';
 import type { ArchivoProyecto } from '../tipos';
 import { crearMotorFalso } from './motor-falso';
 import type { Escenario } from './motor-falso';
@@ -20,7 +22,7 @@ const AUX_BIB = String.raw`\relax
 \bibdata{refs}
 `;
 const AUX_BIB_RESUELTO = AUX_BIB + String.raw`\bibcite{a}{1}` + '\n';
-const RERUN = 'LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.';
+const RERUN = logReal('real-hyperref-1.log');
 
 function preparar(escenario: Escenario = {}) {
   const falso = crearMotorFalso(escenario);
@@ -30,6 +32,26 @@ function preparar(escenario: Escenario = {}) {
 }
 
 describe('escenarios del plan (motor falso, sin WASM)', () => {
+  it('ejecuta BibTeX sobre el principal cuando la bibliografía está en un capítulo incluido', async () => {
+    const { orquestador, comandos } = preparar({
+      generar: (cmd) =>
+        cmd[0] === 'pdflatex'
+          ? {
+              'main.aux': '\\citation{a}\n\\@input{bibliografia.aux}\n',
+              'bibliografia.aux': '\\bibdata{refs}\n\\bibstyle{plain}\n',
+            }
+          : {},
+    });
+    const r = await orquestador.compilar({
+      archivos: proyecto('\\include{bibliografia}', [
+        { ruta: 'bibliografia.tex', contenido: '\\bibliography{refs}' },
+      ]),
+      principal: 'main.tex',
+    });
+    expect(r.exito).toBe(true);
+    expect(comandos).toContainEqual(['bibtex8', '--8bit', 'main.aux']);
+  });
+
   it('documento simple sin referencias: una sola pasada', async () => {
     const { orquestador, programas } = preparar({ generar: () => ({ 'main.aux': '\\relax \n' }) });
     const r = await orquestador.compilar({
@@ -147,7 +169,7 @@ describe('escenarios del plan (motor falso, sin WASM)', () => {
   it('con un fatal en la primera pasada se detiene sin PDF', async () => {
     const { orquestador, programas } = preparar({
       codigo: () => 1,
-      logTex: () => 'Fatal error occurred, no output PDF file produced!',
+      logTex: () => logReal('real-img.log'),
     });
     const r = await orquestador.compilar({
       archivos: proyecto('\\documentclass{article}'),
@@ -171,6 +193,95 @@ describe('escenarios del plan (motor falso, sin WASM)', () => {
 });
 
 describe('errores, PDF anterior y cancelación', () => {
+  it('cancelar al leer los generados no publica ni conserva un PDF nuevo', async () => {
+    const { orquestador, motor } = preparar();
+    const entrada = { archivos: proyecto('x'), principal: 'main.tex' };
+    await orquestador.compilar(entrada);
+    const anterior = orquestador.pdfAnterior;
+    const leer = motor.leer.bind(motor);
+    let leyendoGenerados = false;
+    motor.leer = async (ruta) => {
+      const bytes = await leer(ruta);
+      if (leyendoGenerados) orquestador.cancelar();
+      if (ruta.endsWith('.synctex.gz')) leyendoGenerados = true;
+      return bytes;
+    };
+    const r = await orquestador.compilar(entrada);
+    expect(r).toMatchObject({
+      exito: false,
+      cancelado: true,
+      pdf: null,
+      synctex: null,
+      pdfAnteriorConservado: true,
+    });
+    expect(orquestador.pdfAnterior).toBe(anterior);
+  });
+
+  it('un fallo en el análisis libera enCurso y permite la siguiente compilación', async () => {
+    const { orquestador, motor } = preparar();
+    const cancelar = vi.spyOn(motor, 'cancelar');
+    const archivo: ArchivoProyecto = {
+      ruta: 'main.tex',
+      get contenido(): string {
+        throw new Error('fallo de lectura');
+      },
+    };
+    await expect(orquestador.compilar({ archivos: [archivo], principal: 'main.tex' })).rejects.toThrow(
+      'fallo de lectura',
+    );
+    orquestador.cancelar();
+    expect(cancelar).not.toHaveBeenCalled();
+    expect((await orquestador.compilar({ archivos: proyecto('x'), principal: 'main.tex' })).exito).toBe(true);
+  });
+
+  it.each(['principal', 'rutas', 'olvidar'] as const)(
+    'el PDF anterior se descarta al cambiar %s',
+    async (cambio) => {
+      const { orquestador, motor } = preparar();
+      await orquestador.compilar({ archivos: proyecto('x'), principal: 'main.tex' });
+      if (cambio === 'olvidar') {
+        orquestador.olvidarCache();
+        expect(orquestador.pdfAnterior).toBeNull();
+      }
+      motor.ejecutar = async () => {
+        throw new ErrorMotor('abortado');
+      };
+      const r = await orquestador.compilar({
+        archivos: cambio === 'rutas' ? proyecto('x', [{ ruta: 'otro.tex', contenido: 'x' }]) : proyecto('x'),
+        principal: cambio === 'principal' ? 'otro.tex' : 'main.tex',
+      });
+      expect(r.pdfAnteriorConservado).toBe(false);
+      expect(orquestador.pdfAnterior).toBeNull();
+    },
+  );
+
+  it.each(['worker', 'abortado', 'peticion', 'no_listo', 'sin_montar', 'ruta_no_permitida'] as const)(
+    'la ayuda del motor usa la clave de %s',
+    async (codigo) => {
+      const { orquestador, motor } = preparar();
+      motor.ejecutar = async () => {
+        throw new ErrorMotor(codigo, 'detalle técnico');
+      };
+      const r = await orquestador.compilar({ archivos: proyecto('x'), principal: 'main.tex' });
+      expect(r.problemas.find((p) => p.codigo === 'motor-detenido')).toMatchObject({
+        accion: t(`errores.motor.${codigo}`),
+        original: 'detalle técnico',
+      });
+    },
+  );
+
+  it('la prerevisión conserva la ruta desde la raíz con el principal en subcarpeta', async () => {
+    const { orquestador } = preparar();
+    const r = await orquestador.compilar({
+      archivos: [
+        { ruta: 'tesis/main.tex', contenido: 'x' },
+        { ruta: 'tesis/refs.bib', contenido: '@book{molde,title={\x7f}}' },
+      ],
+      principal: 'tesis/main.tex',
+    });
+    expect(r.problemas.find((p) => p.codigo === 'campos-por-llenar')?.archivo).toBe('tesis/refs.bib');
+  });
+
   it('una imagen faltante en un capítulo da archivo y línea y conserva el PDF anterior', async () => {
     const entrada = {
       archivos: proyecto('\\include{capitulos/uno}', [{ ruta: 'capitulos/uno.tex', contenido: 'x' }]),
@@ -268,6 +379,14 @@ describe('errores, PDF anterior y cancelación', () => {
 });
 
 describe('eventos', () => {
+  it('el último paso tras un índice tiene una etiqueta neutra', async () => {
+    const { orquestador, eventos } = preparar({
+      generar: (cmd) => (cmd[0] === 'pdflatex' ? { 'main.idx': 'entrada' } : {}),
+    });
+    await orquestador.compilar({ archivos: proyecto('\\makeindex'), principal: 'main.tex' });
+    expect(eventos.filter((e) => e.tipo === 'paso').at(-1)?.texto).toBe('Paso 3 de 3: nueva pasada');
+  });
+
   it('emite inicio, pasos «Paso n de m» en español y fin', async () => {
     const { orquestador, eventos } = preparar({
       generar: (cmd, n) =>
@@ -283,7 +402,7 @@ describe('eventos', () => {
     expect(pasos.map((p) => p.texto)).toEqual([
       'Paso 1 de 4: primera pasada',
       'Paso 2 de 4: bibliografía',
-      'Paso 3 de 4: pasada intermedia',
+      'Paso 3 de 4: nueva pasada',
       'Paso 4 de 4: pasada final',
     ]);
     expect(eventos.at(-1)).toMatchObject({ tipo: 'fin', exito: true, pdfAnteriorConservado: false });
@@ -291,6 +410,70 @@ describe('eventos', () => {
 });
 
 describe('caché entre compilaciones', () => {
+  it('un fatal con caché la invalida para el siguiente intento', async () => {
+    const { orquestador, motor, montajes } = preparar({ generar: () => ({ 'main.aux': '\\relax\n' }) });
+    const entrada = { archivos: proyecto('x'), principal: 'main.tex' };
+    await orquestador.compilar(entrada);
+    const ejecutar = motor.ejecutar.bind(motor);
+    motor.ejecutar = async (cmd) => ({ ...(await ejecutar(cmd)), codigo: 1, log: logReal('real-img.log') });
+    expect((await orquestador.compilar(entrada)).motivo).toBe('fatal');
+    motor.ejecutar = ejecutar;
+    expect((await orquestador.compilar(entrada)).cacheUsada).toBe(false);
+    expect(montajes.at(-1)!.archivos.map((a) => a.ruta)).not.toContain('main.aux');
+  });
+
+  it('cambiar un estilo del proyecto vuelve a ejecutar makeindex', async () => {
+    const { orquestador, programas } = preparar({
+      generar: (cmd) => (cmd[0] === 'pdflatex' ? { 'main.idx': 'entrada' } : {}),
+    });
+    const entrada = (estilo: string) => ({
+      archivos: proyecto('\\makeindex', [{ ruta: 'miestilo.ist', contenido: estilo }]),
+      principal: 'main.tex',
+    });
+    await orquestador.compilar(entrada('primero'));
+    const antes = programas().length;
+    await orquestador.compilar(entrada('segundo'));
+    expect(programas().slice(antes)).toContain('makeindex');
+    const sinCambio = programas().length;
+    await orquestador.compilar(entrada('segundo'));
+    expect(programas().slice(sinCambio)).not.toContain('makeindex');
+  });
+
+  it.each([
+    ['índice', 'main.idx', 'main.ind', '\\makeindex', '\\indexentry{a}{1}\n', 'indice.ilg'],
+    ['bibliografía', 'main.aux', 'main.bbl', '\\bibliography{refs}', AUX_BIB, 'real-cita.blg'],
+    ['nomenclatura', 'main.nlo', 'main.nls', '\\makenomenclature', 'entrada', 'indice.ilg'],
+    ['glosario', 'main.glo', 'main.gls', '\\makeglossaries', 'entrada', 'indice.ilg'],
+    ['acrónimos', 'main.acn', 'main.acr', '\\makeglossaries', 'entrada', 'indice.ilg'],
+  ])(
+    'al vaciar la entrada de %s reinicia sin salidas ni avisos anteriores',
+    async (_nombre, entrada, salida, fuente, texto, bitacora) => {
+      let vacia = false;
+      const { orquestador, montajes, sistema, programas } = preparar({
+        generar: (cmd) =>
+          cmd[0] === 'pdflatex'
+            ? { [entrada]: vacia ? '' : texto, 'main.ist': 'estilo' }
+            : { [salida]: 'resultado anterior' },
+        logHerramienta: () => logReal(bitacora),
+      });
+      const proyectoActual = { archivos: proyecto(fuente), principal: 'main.tex' };
+      const primera = await orquestador.compilar(proyectoActual);
+      expect(primera.problemas.length).toBeGreaterThan(0);
+      expect(sistema.has(salida)).toBe(true);
+      vacia = true;
+      const antes = programas().length;
+      const segunda = await orquestador.compilar(proyectoActual);
+      expect(segunda.exito).toBe(true);
+      expect(segunda.cacheUsada).toBe(false);
+      expect(programas().slice(antes)).toEqual(['pdflatex', 'pdflatex']);
+      expect(montajes.at(-1)!.archivos.map((a) => a.ruta)).not.toContain(salida);
+      expect(sistema.has(salida)).toBe(false);
+      expect(segunda.problemas).toEqual([]);
+      await orquestador.compilar(proyectoActual);
+      expect(montajes.at(-1)!.archivos.map((a) => a.ruta)).not.toContain(salida);
+    },
+  );
+
   const bib = [{ ruta: 'refs.bib', contenido: '@book{a,title={x}}' }];
   const escenario: Escenario = {
     generar: (cmd, n) => {

@@ -22,15 +22,16 @@ export interface Candidata {
   lee: string[];
   /**
    * Huella de la entrada, o `null` si no hay nada que procesar (archivo ausente o vacío).
-   * `extra` es la huella de los archivos del proyecto que también influyen (`.bib`, `.bst`).
+   * `extra` es la huella de los archivos del proyecto que también influyen (`.bib`, `.bst` o `.ist`).
    */
   huella(contenidos: Readonly<Record<string, string | undefined>>, extra: string): string | null;
 }
 
-const entradaConTexto = (ruta: string) => (contenidos: Readonly<Record<string, string | undefined>>) => {
-  const texto = contenidos[ruta];
-  return texto === undefined || texto.trim() === '' ? null : huella(texto);
-};
+const entradaConTexto =
+  (ruta: string) => (contenidos: Readonly<Record<string, string | undefined>>, extra: string) => {
+    const texto = contenidos[ruta];
+    return texto === undefined || texto.trim() === '' ? null : huella(texto + '\n' + extra);
+  };
 
 /** Herramientas que el proyecto puede necesitar, en el orden en que se ofrecen tras una pasada. */
 export function candidatas(analisis: AnalisisProyecto, base: string): Candidata[] {
@@ -43,8 +44,8 @@ export function candidatas(analisis: AnalisisProyecto, base: string): Candidata[
     cmd: cmdBibtex(base),
     lee: auxiliares,
     huella(contenidos, extra) {
-      // `\bibdata` en el .aux principal y al menos una `\citation` en cualquiera de los .aux (con biblatex+Biber no hay).
-      if (!/^\\bibdata\b/m.test(contenidos[`${base}.aux`] ?? '')) return null;
+      // BibTeX sigue los auxiliares de capítulos incluidos para encontrar la bibliografía y las citas.
+      if (!auxiliares.some((a) => /^\\bibdata\b/m.test(contenidos[a] ?? ''))) return null;
       const lineas = auxiliares.flatMap(
         (a) => (contenidos[a] ?? '').match(/^\\(?:citation|bibstyle|bibdata)\b.*$/gm) ?? [],
       );
@@ -92,10 +93,10 @@ export function candidatas(analisis: AnalisisProyecto, base: string): Candidata[
       cmd: cmdGlosario(base, g.entrada, g.salida, g.bitacora),
       lee: [entrada, estilo],
       // Sin el estilo `.ist` (lo escribe TeX con \makeglossaries) no hay forma de armar el glosario con makeindex.
-      huella: (contenidos) =>
+      huella: (contenidos, extra) =>
         contenidos[estilo] === undefined || (contenidos[entrada] ?? '').trim() === ''
           ? null
-          : huella(contenidos[entrada] ?? ''),
+          : huella((contenidos[entrada] ?? '') + '\n' + contenidos[estilo] + '\n' + extra),
     });
   }
   return lista;

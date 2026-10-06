@@ -23,4 +23,4 @@ export const PUERTO_ESPEJO: number =
   ).servidor?.puerto ?? 8766;
 
 /** URL del espejo local. */
-export const URL_ESPEJO = `http://localhost:${PUERTO_ESPEJO}`;
+export const URL_ESPEJO = `http://127.0.0.1:${PUERTO_ESPEJO}`;

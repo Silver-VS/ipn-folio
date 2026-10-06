@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from 'vitest';
-import { revisar } from './contenido.mjs';
+import { revisar, sinExpresiones } from './contenido.mjs';
 
 function base(cambios = {}) {
   return {
@@ -66,6 +66,19 @@ describe('revisar (contenido)', () => {
     const texto = revisar(e).errores.join('\n');
     expect(texto).toMatch(/MAYÚSCULAS/);
     expect(texto).toMatch(/plural/);
+  });
+
+  it('no confunde una flecha dentro de una expresión con el cierre de la etiqueta', () => {
+    const e = base({
+      svelte: [
+        {
+          archivo: 'src/Y.svelte',
+          contenido: '<button onclick={() => { if (a > b) hacer(); }}>{t("x")}</button>{#each lista as x (x)}<li>{x}</li>{/each}',
+        },
+      ],
+    });
+    expect(revisar(e).errores.join('\n')).not.toMatch(/texto escrito en la plantilla/);
+    expect(sinExpresiones("a{ '}' + {b: 1} }c")).toBe('a c');
   });
 
   it('falla ante texto suelto en un .svelte y enlaces internos rotos', () => {

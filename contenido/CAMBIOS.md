@@ -34,3 +34,7 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 ## 2026.10.8
 
 - 2026-10-05 · `pie.codigo_fuente_licencia` · (nueva) frase completa del pie, con la licencia como variable; sustituye armar `pie.codigo_fuente` + `(licencia)` en el código · Claude Sonnet (limpieza-01).
+
+## 2026.10.9
+
+- 2026-10-05 · `errores.latex.campos_por_llenar.*`, `campos_por_llenar_sin_entrada.*`, `biber_no_soportado.*`, `motor_detenido.*`, `compilacion.paso.*` · (nuevas) avisos de la revisión previa, de Biber y del motor, y nombres de los pasos del orquestador · Claude Sonnet.

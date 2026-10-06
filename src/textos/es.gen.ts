@@ -1,7 +1,7 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.8";
+export const VERSION_TEXTOS = "2026.10.9";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
@@ -24,10 +24,20 @@ export const TEXTOS_FOLIO = {
   "app.lema": "Tus apuntes. Tus reglas.",
   "app.nombre": "IPN Folio",
   "app.sin_js": "IPN Folio necesita JavaScript para funcionar. Actívalo en tu navegador y vuelve a cargar la página.",
+  "compilacion.paso.bibliografia": "bibliografía",
+  "compilacion.paso.final": "pasada final",
+  "compilacion.paso.glosario": "glosario",
+  "compilacion.paso.indice": "índice",
+  "compilacion.paso.nomenclatura": "nomenclatura",
+  "compilacion.paso.pasada": "pasada intermedia",
+  "compilacion.paso.primera": "primera pasada",
+  "compilacion.paso.progreso": "Paso {n} de {total}: {nombre}",
   "errores.latex.archivo_faltante.ayuda": "Agrega {archivo} al proyecto o corrige su nombre en el código. Si es un paquete, revisa que esté disponible para compilar.",
   "errores.latex.archivo_faltante.titulo": "Falta el archivo {archivo}",
   "errores.latex.argumento_incompleto.ayuda": "Revisa las llaves del comando anterior y cierra su argumento.",
   "errores.latex.argumento_incompleto.titulo": "Un comando tiene un argumento sin cerrar",
+  "errores.latex.biber_no_soportado.ayuda": "En las opciones de biblatex, cambia el motor de bibliografía a bibtex para generarla con BibTeX. Mientras tanto, las citas aparecerán sin resolver.",
+  "errores.latex.biber_no_soportado.titulo": "Esta bibliografía necesita Biber, que aún no está disponible",
   "errores.latex.bibliografia_campo_vacio.ayuda_autor": "Completa el campo del autor de la entrada {cita} en tu archivo de bibliografía.",
   "errores.latex.bibliografia_campo_vacio.ayuda_otro": "Completa el campo {campo} de la entrada {cita} en tu archivo de bibliografía.",
   "errores.latex.bibliografia_campo_vacio.titulo": "La entrada {cita} tiene un campo vacío",
@@ -41,6 +51,10 @@ export const TEXTOS_FOLIO = {
   "errores.latex.bibliografia_sintaxis.titulo": "Revisa la bibliografía en la línea {linea}",
   "errores.latex.bibliografia_vacia.ayuda": "Agrega al menos una cita en el documento y vuelve a compilar.",
   "errores.latex.bibliografia_vacia.titulo": "La bibliografía quedó vacía",
+  "errores.latex.campos_por_llenar_sin_entrada.ayuda": "Llena los campos marcados en esa línea o quita el marcador. Mientras tanto la compilación continúa.",
+  "errores.latex.campos_por_llenar_sin_entrada.titulo": "Hay campos por llenar en {archivo}, línea {linea}",
+  "errores.latex.campos_por_llenar.ayuda": "Llena los campos marcados de la entrada {cita} o bórrala si no la necesitas. Mientras tanto la compilación continúa, pero esa referencia saldrá incompleta.",
+  "errores.latex.campos_por_llenar.titulo": "Hay campos por llenar en {archivo} (entrada {cita})",
   "errores.latex.cita_indefinida.ayuda": "Revisa que {cita} exista en tu archivo de bibliografía y que su nombre coincida con el de la cita.",
   "errores.latex.cita_indefinida.titulo": "La cita {cita} no está definida",
   "errores.latex.comando_indefinido.ayuda": "Revisa cómo se escribe {comando} y que hayas cargado el paquete que lo define.",
@@ -75,6 +89,8 @@ export const TEXTOS_FOLIO = {
   "errores.latex.llave_faltante.titulo": "Falta cerrar una llave",
   "errores.latex.matematicas_delimitador.ayuda": "Revisa que la fórmula esté entre signos de dólar o dentro de un entorno de matemáticas. Si escribes un guion bajo en texto, antepón una barra invertida.",
   "errores.latex.matematicas_delimitador.titulo": "Falta un delimitador de fórmula",
+  "errores.latex.motor_detenido.ayuda": "{mensaje}",
+  "errores.latex.motor_detenido.titulo": "No se pudo completar la compilación",
   "errores.latex.paquete_aviso.ayuda": "Revisa el detalle del aviso y la configuración de {paquete} antes de volver a compilar.",
   "errores.latex.paquete_aviso.titulo": "El paquete {paquete} necesita revisión",
   "errores.latex.paquete_error.ayuda": "Revisa el detalle original: suele ser una opción mal escrita o un archivo que falta. Corrige la línea del documento que carga {paquete}.",
@@ -122,6 +138,7 @@ export interface VariablesPorClave {
   "almacen.error.destino_ocupado": { ruta: string | number };
   "almacen.error.movimiento_invalido": { ruta: string | number };
   "almacen.error.ruta_invalida": { ruta: string | number };
+  "compilacion.paso.progreso": { n: string | number; nombre: string | number; total: string | number };
   "errores.latex.archivo_faltante.ayuda": { archivo: string | number };
   "errores.latex.archivo_faltante.titulo": { archivo: string | number };
   "errores.latex.bibliografia_campo_vacio.ayuda_autor": { cita: string | number };
@@ -132,6 +149,9 @@ export interface VariablesPorClave {
   "errores.latex.bibliografia_faltante.ayuda": { archivo: string | number };
   "errores.latex.bibliografia_faltante.titulo": { archivo: string | number };
   "errores.latex.bibliografia_sintaxis.titulo": { linea: string | number };
+  "errores.latex.campos_por_llenar_sin_entrada.titulo": { archivo: string | number; linea: string | number };
+  "errores.latex.campos_por_llenar.ayuda": { cita: string | number };
+  "errores.latex.campos_por_llenar.titulo": { archivo: string | number; cita: string | number };
   "errores.latex.cita_indefinida.ayuda": { cita: string | number };
   "errores.latex.cita_indefinida.titulo": { cita: string | number };
   "errores.latex.comando_indefinido.ayuda": { comando: string | number };
@@ -145,6 +165,7 @@ export interface VariablesPorClave {
   "errores.latex.imagen_faltante.ayuda": { archivo: string | number };
   "errores.latex.imagen_faltante.titulo": { archivo: string | number };
   "errores.latex.indice_rechazadas.titulo": { n: string | number };
+  "errores.latex.motor_detenido.ayuda": { mensaje: string | number };
   "errores.latex.paquete_aviso.ayuda": { paquete: string | number };
   "errores.latex.paquete_aviso.titulo": { paquete: string | number };
   "errores.latex.paquete_error.ayuda": { paquete: string | number };

@@ -231,6 +231,49 @@ export const CATALOGO = {
       accion: t('errores.latex.desconocido_sin_linea.ayuda'),
     }),
   },
+  'campos-por-llenar': {
+    codigo: 'campos-por-llenar',
+    variables: ['archivo', 'cita'],
+    titulo: 'errores.latex.campos_por_llenar.titulo',
+    ayuda: 'errores.latex.campos_por_llenar.ayuda',
+    resolver: (v: Record<string, string | number>) => ({
+      titulo: t('errores.latex.campos_por_llenar.titulo', { archivo: v.archivo ?? '?', cita: v.cita ?? '?' }),
+      accion: t('errores.latex.campos_por_llenar.ayuda', { cita: v.cita ?? '?' }),
+    }),
+  },
+  'campos-por-llenar-sin-entrada': {
+    codigo: 'campos-por-llenar',
+    variables: ['archivo', 'linea'],
+    titulo: 'errores.latex.campos_por_llenar_sin_entrada.titulo',
+    ayuda: 'errores.latex.campos_por_llenar_sin_entrada.ayuda',
+    resolver: (v: Record<string, string | number>) => ({
+      titulo: t('errores.latex.campos_por_llenar_sin_entrada.titulo', {
+        archivo: v.archivo ?? '?',
+        linea: v.linea ?? '?',
+      }),
+      accion: t('errores.latex.campos_por_llenar_sin_entrada.ayuda'),
+    }),
+  },
+  'biber-no-soportado': {
+    codigo: 'biber-no-soportado',
+    variables: [],
+    titulo: 'errores.latex.biber_no_soportado.titulo',
+    ayuda: 'errores.latex.biber_no_soportado.ayuda',
+    resolver: () => ({
+      titulo: t('errores.latex.biber_no_soportado.titulo'),
+      accion: t('errores.latex.biber_no_soportado.ayuda'),
+    }),
+  },
+  'motor-detenido': {
+    codigo: 'motor-detenido',
+    variables: ['mensaje'],
+    titulo: 'errores.latex.motor_detenido.titulo',
+    ayuda: 'errores.latex.motor_detenido.ayuda',
+    resolver: (v: Record<string, string | number>) => ({
+      titulo: t('errores.latex.motor_detenido.titulo'),
+      accion: t('errores.latex.motor_detenido.ayuda', { mensaje: v.mensaje ?? '' }),
+    }),
+  },
   'bibliografia-faltante': {
     codigo: 'bibliografia-faltante',
     variables: ['archivo'],

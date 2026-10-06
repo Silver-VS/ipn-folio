@@ -1,0 +1,26 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/*
+ * Tokens propios de IPN Folio (principio 3.6: sobrescrituras locales, no se tocan los tokens comunes).
+ * Solo se componen a partir de los tokens semánticos de @ipn/comun, así que siguen solos el modo claro y oscuro
+ * y no hay ningún color fijo. Si algún día IPN-tools los necesita, se mueven a ipn-comun.
+ */
+:root {
+  /* D24: interfaz en Noto Sans; editor y código en JetBrains Mono (ligaduras apagadas), con Noto Sans Math de respaldo. */
+  --ipn-fuente-texto:
+    'Noto Sans', 'Noto Sans Math', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ipn-fuente-mono:
+    'JetBrains Mono', 'Noto Sans Mono', 'Noto Sans Math', ui-monospace, Consolas, monospace;
+
+  /* Colores de sintaxis del editor (diseño v2: comando, argumento, matemáticas, comentario). */
+  --ipn-sintaxis-comando: var(--ipn-acento);
+  --ipn-sintaxis-entorno: var(--ipn-acento-fuerte);
+  --ipn-sintaxis-argumento: var(--ipn-info);
+  --ipn-sintaxis-matematicas: var(--ipn-ok);
+  --ipn-sintaxis-comentario: var(--ipn-tenue);
+  --ipn-sintaxis-llave: var(--ipn-tenue);
+
+  /* Medidas de la pantalla de proyecto. */
+  --ipn-radio-s: 0.375rem;
+  --ipn-objetivo-tactil: 2.75rem;
+  --ipn-alto-barra: 3rem;
+}

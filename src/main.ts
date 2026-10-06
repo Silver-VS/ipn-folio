@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { mount } from 'svelte';
 import { iniciarTema } from '@ipn/comun/js/tema.js';
-import '@ipn/comun/dist/fuentes.css';
+// PROVISIONAL: copia de las fuentes de ipn-comun (rama claude/fuentes-folio) hasta que ese repositorio etiquete una
+// versión que las incluya; entonces se importa '@ipn/comun/dist/fuentes.css' y se borra src/estilos/fuentes/.
+import './estilos/fuentes.css';
 import '@ipn/comun/dist/tokens.css';
+import './estilos/tokens-folio.css';
 import './estilos/base.css';
 import App from './App.svelte';
 

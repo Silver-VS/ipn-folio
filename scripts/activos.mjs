@@ -63,7 +63,13 @@ function carpetaDeActivos(argumentos) {
   const origen = join(CACHE, 'busytex');
   if (!existsSync(join(origen, 'busytex.wasm'))) {
     const cli = join(RAIZ, 'node_modules', 'texlyre-busytex', 'scripts', 'cli.cjs');
-    const r = spawnSync(process.execPath, [cli, 'download-assets', CACHE], { stdio: 'inherit' });
+    // El CLI extrae con `tar` del PATH; el GNU tar de Git Bash toma «D:» por un servidor remoto. En Windows
+    // se antepone System32, donde está el tar de Windows (bsdtar).
+    const env = { ...process.env };
+    if (process.platform === 'win32' && process.env['SystemRoot']) {
+      env['PATH'] = `${join(process.env['SystemRoot'], 'System32')};${process.env['PATH'] ?? ''}`;
+    }
+    const r = spawnSync(process.execPath, [cli, 'download-assets', CACHE], { stdio: 'inherit', env });
     if (r.status !== 0)
       throw new Error('La descarga de los activos falló. Revisa la conexión y vuelve a intentar.');
   }

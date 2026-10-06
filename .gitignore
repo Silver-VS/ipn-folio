@@ -3,3 +3,12 @@ node_modules/
 dist/
 .DS_Store
 pruebas/compilacion/public/
+public/busytex/
+espejo-local/
+test-results/
+playwright-report/
+coverage/
+.cache-activos/
+.cache-banco/
+.env
+.env.local

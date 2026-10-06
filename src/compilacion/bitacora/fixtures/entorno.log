@@ -1,0 +1,4 @@
+(./principal.tex
+! LaTeX Error: Environment inventado undefined.
+l.12 \begin{inventado}
+)

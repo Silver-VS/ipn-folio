@@ -1,0 +1,15 @@
+(./principal.tex
+(/texmf/tex/latex/base/article.cls
+Class: article
+)
+(./capitulos/marco.tex
+(./capitulos/detalle.tex
+! Missing } inserted.
+l.3 texto
+)
+! Missing $ inserted.
+l.4 texto_1
+)
+! Undefined control sequence.
+l.5 \inexistente
+)

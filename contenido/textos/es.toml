@@ -1,0 +1,177 @@
+# SPDX-License-Identifier: CC0-1.0
+# Textos de interfaz de IPN Folio (español de México, tuteo; la voz editorial está en ipn-comun/contenido/VOZ.md).
+# Reglas: claves a-z0-9_ con puntos; variables {nombre}; plurales {n, plural, one {# x} other {# xs}}.
+# Los textos que también necesita IPN-tools viven en ipn-comun (comun.es.toml), no aquí.
+# Al cambiar un texto: sube `version` y anota el cambio en contenido/CAMBIOS.md.
+version = "2026.10.8"
+
+[app]
+# Nombre del producto: <title> de la página y encabezado. Es un nombre propio.
+nombre = "IPN Folio"
+# Lema bajo el nombre del producto, en la pantalla inicial.
+lema = "Tus apuntes. Tus reglas."
+# <meta name="description"> de la página; lo ven los buscadores y al compartir el enlace.
+descripcion = "Editor LaTeX y cuadernos académicos en tu navegador, sin servidores."
+# Aviso dentro de <noscript>, para quien tiene JavaScript desactivado.
+sin_js = "IPN Folio necesita JavaScript para funcionar. Actívalo en tu navegador y vuelve a cargar la página."
+
+[pie]
+# Enlace del pie al código fuente; {licencia} es el identificador de la licencia (p. ej. AGPL-3.0).
+codigo_fuente_licencia = "Código fuente ({licencia})"
+
+[inicio]
+# Nombre accesible de la región principal donde se mostrará el trabajo (aún vacía).
+espacio.aria = "Espacio de trabajo"
+
+[errores.latex.archivo_faltante]
+titulo = "Falta el archivo {archivo}"
+ayuda = "Agrega {archivo} al proyecto o corrige su nombre en el código. Si es un paquete, revisa que esté disponible para compilar."
+
+[errores.latex.imagen_faltante]
+titulo = "Falta la imagen {archivo}"
+ayuda = "Agrega la imagen {archivo} a la carpeta indicada o corrige su nombre en el código."
+
+[errores.latex.comando_indefinido]
+titulo = "No se reconoce el comando {comando}"
+ayuda = "Revisa cómo se escribe {comando} y que hayas cargado el paquete que lo define."
+
+[errores.latex.matematicas_delimitador]
+titulo = "Falta un delimitador de fórmula"
+ayuda = "Revisa que la fórmula esté entre signos de dólar o dentro de un entorno de matemáticas. Si escribes un guion bajo en texto, antepón una barra invertida."
+
+[errores.latex.llave_extra]
+titulo = "Hay una llave de cierre sin pareja"
+ayuda = "Revisa las llaves y los delimitadores de fórmulas cerca de la línea indicada."
+
+[errores.latex.llave_faltante]
+titulo = "Falta cerrar una llave"
+ayuda = "Agrega la llave de cierre correspondiente y revisa el comando anterior."
+
+[errores.latex.argumento_incompleto]
+titulo = "Un comando tiene un argumento sin cerrar"
+ayuda = "Revisa las llaves del comando anterior y cierra su argumento."
+
+[errores.latex.entorno_indefinido]
+titulo = "No se reconoce el entorno {entorno}"
+ayuda = "Revisa el nombre de {entorno} y que hayas cargado el paquete que lo define."
+
+[errores.latex.entorno_cierre]
+titulo = "El entorno {entorno} termina con {cierre}"
+ayuda = "Haz que el nombre del entorno de cierre coincida con {entorno}."
+
+[errores.latex.compilacion_detenida]
+titulo = "La compilación se detuvo"
+ayuda = "Revisa los problemas anteriores y corrígelos antes de volver a compilar."
+
+[errores.latex.compilacion_fatal]
+titulo = "No se pudo generar el PDF"
+ayuda = "Corrige los problemas anteriores y vuelve a compilar."
+
+[errores.latex.idioma_espanol_faltante]
+titulo = "Falta el idioma español para compilar"
+ayuda = "Folio descarga el idioma español cuando tienes conexión. Conecta el equipo y vuelve a compilar."
+
+[errores.latex.referencia_indefinida]
+titulo = "La referencia {referencia} no está definida"
+ayuda = "Revisa que exista una etiqueta con el nombre {referencia}. Si acabas de agregarla, vuelve a compilar."
+
+[errores.latex.cita_indefinida]
+titulo = "La cita {cita} no está definida"
+ayuda = "Revisa que {cita} exista en tu archivo de bibliografía y que su nombre coincida con el de la cita."
+
+[errores.latex.referencias_indefinidas]
+titulo = "Hay referencias sin definir"
+ayuda = "Revisa las referencias y citas indicadas en los avisos. Si acabas de agregarlas, vuelve a compilar."
+
+[errores.latex.repetir_pasada]
+titulo = "Hace falta volver a compilar"
+ayuda = "Vuelve a compilar para actualizar las referencias y los enlaces del documento."
+
+[errores.latex.formato_desbordado]
+titulo = "Una línea sobresale {puntos} puntos del margen"
+ayuda = "Revisa la línea indicada y ajusta el texto, la fórmula o la imagen para que quepa en el margen."
+
+[errores.latex.fuente_indefinida]
+titulo = "Una variante de fuente no está disponible"
+ayuda = "LaTeX usó otra variante de fuente. Revisa la apariencia del texto y los ajustes de tipografía del documento."
+
+[errores.latex.paquete_aviso]
+titulo = "El paquete {paquete} necesita revisión"
+ayuda = "Revisa el detalle del aviso y la configuración de {paquete} antes de volver a compilar."
+
+[errores.latex.paquete_error]
+titulo = "El paquete {paquete} informó un error"
+ayuda = "Revisa el detalle original: suele ser una opción mal escrita o un archivo que falta. Corrige la línea del documento que carga {paquete}."
+
+[errores.latex.bibliografia_vacia]
+titulo = "La bibliografía quedó vacía"
+ayuda = "Agrega al menos una cita en el documento y vuelve a compilar."
+
+[errores.latex.desconocido_sin_linea]
+titulo = "LaTeX encontró un problema"
+ayuda = "Revisa el detalle original para ubicar el problema en tu documento."
+
+[errores.latex.bibliografia_faltante]
+titulo = "Falta la bibliografía {archivo}"
+ayuda = "Agrega {archivo} al proyecto o corrige el nombre del archivo de bibliografía en el código."
+
+[errores.latex.bibliografia_sin_citas]
+titulo = "La bibliografía no tiene citas que procesar"
+ayuda = "Agrega una cita en el documento si quieres incluir la bibliografía."
+
+[errores.latex.bibliografia_campo_vacio]
+titulo = "La entrada {cita} tiene un campo vacío"
+ayuda_autor = "Completa el campo del autor de la entrada {cita} en tu archivo de bibliografía."
+ayuda_otro = "Completa el campo {campo} de la entrada {cita} en tu archivo de bibliografía."
+
+[errores.latex.bibliografia_entrada_faltante]
+titulo = "Falta la entrada bibliográfica {cita}"
+ayuda = "Agrega la entrada {cita} al archivo de bibliografía o corrige el nombre de la cita."
+
+[errores.latex.bibliografia_sintaxis]
+titulo = "Revisa la bibliografía en la línea {linea}"
+ayuda = "Revisa las comas, las llaves y los nombres de campo en la línea indicada."
+
+[errores.latex.indice_rechazadas]
+titulo = "{n, plural, one {# entrada del índice rechazada} other {# entradas del índice rechazadas}}"
+ayuda = "Revisa las entradas señaladas en el detalle de la bitácora del índice y vuelve a compilar."
+
+[errores.latex.indice_aviso]
+titulo = "El índice necesita revisión"
+ayuda = "Revisa el detalle del aviso y corrige la entrada indicada antes de volver a compilar."
+
+[errores.latex.desconocido]
+titulo = "LaTeX encontró un problema en la línea {linea}"
+ayuda = "Revisa el detalle original y el código de la línea indicada. Si no aparece una línea, revisa el último comando del documento."
+
+[almacen]
+# Nombre que recibe un proyecto importado desde un .zip cuyo nombre de archivo queda vacío.
+proyecto_sin_nombre = "Proyecto importado"
+
+[almacen.error]
+desconocido = "No se pudo guardar tu trabajo. Inténtalo de nuevo; si sigue fallando, descarga una copia en .zip."
+ruta_invalida = "El nombre de archivo «{ruta}» no es válido. Usa un nombre relativo, sin «..» ni letras de unidad, por ejemplo capitulos/introduccion.tex."
+nombre_invalido = "El nombre del proyecto no puede estar vacío. Escribe un nombre para continuar."
+proyecto_inexistente = "No encontramos ese proyecto. Vuelve a la lista de proyectos y ábrelo de nuevo."
+proyecto_en_papelera = "Ese proyecto está en la papelera. Restáuralo para poder editarlo."
+archivo_inexistente = "No encontramos el archivo «{ruta}». Revisa el nombre o actualiza la lista de archivos."
+destino_ocupado = "Ya existe un archivo o una carpeta llamada «{ruta}». Elige otro nombre."
+movimiento_invalido = "No se puede mover una carpeta dentro de sí misma («{ruta}»). Elige otro destino."
+almacenamiento_lleno = "Tu navegador se quedó sin espacio para guardar. Descarga una copia en .zip y libera espacio borrando proyectos que ya no uses."
+almacen_no_disponible = "Tu navegador no permite guardar proyectos en este dispositivo, así que se perderán al cerrar la pestaña. Descarga una copia en .zip con frecuencia o abre IPN Folio en otra ventana que no sea privada."
+zip_invalido = "No pudimos leer ese archivo .zip. Comprueba que no esté dañado y vuelve a intentarlo."
+zip_demasiado_grande = "El contenido de ese .zip es demasiado grande para abrirlo en el navegador. Quita los archivos pesados que no necesites y vuelve a intentarlo."
+
+[almacen.aviso]
+codificacion_convertida = "El archivo «{ruta}» no estaba en UTF-8; lo convertimos desde Windows-1252 (Latin-1). Si usa inputenc con latin1, cambia esa opción a utf8 o revisa los acentos."
+entrada_duplicada = "El .zip trae «{ruta}» más de una vez. Conservamos la última copia."
+
+[errores.motor]
+# Errores del motor de compilación (el orquestador los muestra según el código del error).
+cancelado = "Se canceló la compilación."
+worker = "El motor de compilación se detuvo de forma inesperada. Vuelve a compilar: se reiniciará solo."
+abortado = "El motor de compilación se detuvo al procesar el documento, por ejemplo por falta de memoria o un ciclo sin fin. Revisa tu último cambio y vuelve a compilar: el motor se reiniciará solo."
+peticion = "El motor de compilación no pudo completar la operación. Vuelve a intentarlo."
+no_listo = "El motor de compilación todavía no está listo. Espera a que termine de cargar y vuelve a intentarlo."
+sin_montar = "Primero hay que cargar los archivos del proyecto. Vuelve a compilar."
+ruta_no_permitida = "El proyecto tiene un archivo con una ruta que sale de su carpeta. Corrige su nombre y vuelve a compilar."

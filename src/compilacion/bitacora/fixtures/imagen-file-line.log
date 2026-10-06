@@ -1,0 +1,2 @@
+./capitulos/marco.tex:43: LaTeX Error: File `imagenes/senal.png' not found.
+l.43 \includegraphics{imagenes/senal.png}

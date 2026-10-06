@@ -1,0 +1,4 @@
+Scanning input file principal.idx...done (4 entries accepted, 2 rejected).
+## Warning (input = principal.idx, line = 6; output = principal.ind, line = 3):
+   Conflicting entries.
+Output written in principal.ind.

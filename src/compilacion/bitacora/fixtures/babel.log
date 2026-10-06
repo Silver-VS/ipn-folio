@@ -1,0 +1,4 @@
+(./principal.tex
+! Package babel Error: Unknown option `spanish'.
+l.4 \usepackage[spanish]{babel}
+)

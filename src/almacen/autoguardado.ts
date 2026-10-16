@@ -15,6 +15,8 @@ export interface OpcionesAutoguardado {
 }
 
 export interface Autoguardado {
+  /** Guarda los cambios del proyecto antes de renombrarlo y emitir su aviso de cambio. */
+  renombrarProyecto(proyectoId: string, nombre: string): Promise<void>;
   /** Anota el contenido más reciente de un archivo; se guarda solo. */
   programar(proyectoId: string, ruta: string, contenido: Contenido): void;
   /** Guarda de inmediato todo lo pendiente (y reintenta lo que falló). */
@@ -172,6 +174,12 @@ export function crearAutoguardado(almacen: Almacen, opciones: OpcionesAutoguarda
   const enBorrado: Array<{ proyectoId: string; base: string }> = [];
 
   const api: Autoguardado = {
+    async renombrarProyecto(proyectoId, nombre) {
+      await vaciarAfectadas(proyectoId);
+      if (afectadas(proyectoId).fallidos.length || afectadas(proyectoId).pendientes.length)
+        throw new ErrorAlmacen('guardado_pendiente', { ruta: nombre });
+      await almacen.renombrarProyecto(proyectoId, nombre);
+    },
     programar(proyectoId, ruta, contenido) {
       // Mientras se manda a la papelera, una pulsación no debe recrear el archivo que se está borrando.
       if (enBorrado.some((b) => b.proyectoId === proyectoId && estaBajo(ruta, b.base))) return;

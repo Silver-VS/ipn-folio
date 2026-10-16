@@ -16,7 +16,6 @@
   // El registro pertenece a las acciones DOM; no debe volver a disparar el efecto que reconstruye sus vistas.
   // eslint-disable-next-line svelte/prefer-svelte-reactivity
   const propias = new Map<HTMLElement, { ruta: string; vista: EditorView }>();
-  const saltos = new WeakMap<EditorView, number>();
 
   /** Una vista de CodeMirror por archivo abierto; se conserva el estado (cursor, historial) al cambiar de pestaña. */
   function montar(nodo: HTMLElement, ruta: string) {
@@ -65,14 +64,14 @@
   function marcarYSaltar(vista: EditorView, ruta: string) {
     vista.dispatch(setDiagnostics(vista.state, diagnosticos(vista.state, ruta, estado.problemas)));
     const salto = estado.salto;
-    if (salto?.ruta !== ruta || saltos.get(vista) === salto.n) return;
-    saltos.set(vista, salto.n);
+    if (salto?.ruta !== ruta) return;
     const linea = vista.state.doc.line(Math.max(1, Math.min(salto.linea, vista.state.doc.lines)));
     vista.dispatch({
       selection: { anchor: linea.from },
       effects: EditorView.scrollIntoView(linea.from, { y: 'center' }),
     });
     vista.focus();
+    estado.salto = undefined;
   }
 
   $effect(() => {

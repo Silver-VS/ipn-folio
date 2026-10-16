@@ -1,15 +1,49 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readdirSync, readFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, rmdirSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { expect, it } from 'vitest';
 import { validar } from '@ipn/comun/herramientas/lib/esquema.mjs';
 import { pluginPlantillasLocales } from './lib/plantillas-locales.mjs';
+
+it('el control de producción falla por cada marcador local en contenido o nombres', () => {
+  mkdirSync('test-results', { recursive: true });
+  const raiz = mkdtempSync(join('test-results', 'control-dist-'));
+  const dist = join(raiz, 'dist');
+  mkdirSync(dist);
+  const comprobar = () =>
+    spawnSync(process.execPath, [resolve('scripts/validar-dist.mjs')], {
+      cwd: raiz,
+      encoding: 'utf8',
+    });
+  try {
+    expect(comprobar().status).toBe(0);
+    for (const marcador of ['plantillas-locales', 'UpiiTeXis', 'TT_UPIITA']) {
+      const archivo = join(dist, 'prueba.js');
+      writeFileSync(archivo, `const ruta = '${marcador}';`, 'utf8');
+      const resultado = comprobar();
+      expect(resultado.status).toBe(1);
+      expect(resultado.stderr).toContain('referencia local en producción');
+      rmSync(archivo);
+      const carpeta = join(dist, marcador);
+      mkdirSync(carpeta);
+      expect(comprobar().status).toBe(1);
+      rmdirSync(carpeta);
+    }
+  } finally {
+    rmSync(raiz, { recursive: true, force: true });
+  }
+});
 
 it('valida el catálogo contra su esquema y rechaza rutas y propiedades ajenas', () => {
   const esquema = JSON.parse(readFileSync('public/plantillas/catalogo.schema.json', 'utf8'));
   const catalogo = JSON.parse(readFileSync('public/plantillas/catalogo.json', 'utf8'));
   expect(validar(catalogo, esquema)).toEqual([]);
+  expect(esquema.items.properties.archivos.items.pattern.startsWith('^(?!/)')).toBe(true);
+  for (const ruta of ['/etc/x.tex', '../privado.tex', 'C:/x.tex', 'carpeta\\x.tex']) {
+    expect(validar([{ ...catalogo[0], archivos: [ruta] }], esquema), ruta).toHaveLength(1);
+  }
   expect(validar([{ ...catalogo[0], archivos: ['../privado.tex'], extra: true }], esquema)).toHaveLength(2);
 });
 

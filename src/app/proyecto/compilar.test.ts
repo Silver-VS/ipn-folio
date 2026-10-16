@@ -27,12 +27,43 @@ async function preparar(instalada = true) {
   const falso = crearMotorFalso();
   const fabrica = vi.fn(() => falso.motor);
   const controlador = conectarCompilacion(estado, tienda, fabrica);
+  estado.actualizarPdf = controlador.solicitar;
   return { estado, tienda, falso, fabrica, controlador, almacen, auto };
 }
 
 afterEach(() => vi.useRealTimers());
 
 describe('integración guardar y compilar', () => {
+  it('Ctrl+S guarda antes de esperar una compilación que sigue en curso', async () => {
+    vi.useFakeTimers();
+    const p = await preparar();
+    let liberar!: () => void;
+    p.falso.motor.alEjecutar = () => new Promise<void>((resolve) => (liberar = resolve));
+    const primera = p.estado.guardarYa();
+    await vi.waitFor(() => expect(liberar).toBeTypeOf('function'));
+    p.estado.alEditar('main.tex', 'cambio durante compilación');
+    const segunda = p.estado.guardarYa();
+    // Sin avanzar los 400 ms del autoguardado ni terminar el motor.
+    for (let n = 0; n < 30; n++) await Promise.resolve();
+    const contenido = (await p.almacen.leer(p.estado.id, 'main.tex'))?.contenido;
+    p.falso.motor.alEjecutar = undefined;
+    liberar();
+    await Promise.all([primera, segunda]);
+    p.controlador.destruir();
+    expect(contenido).toBe('cambio durante compilación');
+  });
+
+  it('Actualizar PDF guarda otros archivos aunque un conflicto bloquee la compilación', async () => {
+    vi.useFakeTimers();
+    const p = await preparar();
+    p.estado.conflictos = ['otro.tex'];
+    p.estado.alEditar('main.tex', 'archivo sin conflicto');
+    await p.estado.guardarYa();
+    expect((await p.almacen.leer(p.estado.id, 'main.tex'))?.contenido).toBe('archivo sin conflicto');
+    expect(p.fabrica).not.toHaveBeenCalled();
+    p.controlador.destruir();
+  });
+
   it('la compilación automática empieza apagada y espera un segundo de calma al activarla', async () => {
     vi.useFakeTimers();
     const p = await preparar();

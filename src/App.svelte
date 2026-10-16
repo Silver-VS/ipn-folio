@@ -50,6 +50,8 @@
   );
 
   onMount(() => {
+    let indiceHistorial = Number(history.state?.folioIndice ?? 0);
+    history.replaceState({ ...history.state, folioIndice: indiceHistorial }, '');
     void Promise.all([servicios(), crearTienda()])
       .then(async ([servicio, tienda]) => {
         s = servicio;
@@ -71,10 +73,14 @@
     }
     const alCambiarHash = () => {
       if (location.hash === hashActual) return;
+      const destino = Number(history.state?.folioIndice ?? indiceHistorial + 1);
+      history.replaceState({ ...history.state, folioIndice: destino }, '');
       if (comprobarSalida && !comprobarSalida()) {
-        history.replaceState(null, '', `${location.pathname}${location.search}${hashActual}`);
+        // Restaurar la posición evita duplicar el proyecto al cancelar un enlace, Atrás o Adelante.
+        history.go(indiceHistorial - destino);
         return;
       }
+      indiceHistorial = destino;
       hashActual = location.hash;
       ruta = rutaDeHash(hashActual);
     };

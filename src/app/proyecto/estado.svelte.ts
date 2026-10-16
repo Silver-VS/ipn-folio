@@ -278,8 +278,8 @@ export class EstadoProyecto {
 
   /** Ctrl+S: guarda ya. La sesión 09 agrega la compilación. */
   async guardarYa(): Promise<void> {
+    await this.servicios.auto.guardarTodo();
     if (this.actualizarPdf) await this.actualizarPdf();
-    else await this.servicios.auto.guardarTodo();
   }
 
   irALinea(problema: Problema): void {

@@ -4,6 +4,25 @@ import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { editorActivo, esperarEditor, omitirBienvenida, textoDelEditor } from './ayudas';
 
+test('Inicio renombra en línea y otra pestaña recibe el nombre', async ({ page, context }) => {
+  await page.goto('/');
+  await omitirBienvenida(page);
+  await page.getByRole('button', { name: 'Crear un proyecto de ejemplo' }).click();
+  await esperarEditor(page);
+  const otra = await context.newPage();
+  await otra.goto(page.url());
+  await esperarEditor(otra);
+  await page.getByRole('link', { name: 'Inicio', exact: true }).click();
+  page.on('dialog', (dialogo) => dialogo.dismiss());
+  await page.getByRole('button', { name: 'Renombrar', exact: true }).click();
+  const campo = page.getByRole('textbox', { name: 'Nuevo nombre para Proyecto de ejemplo' });
+  await expect(campo).toBeFocused();
+  await campo.fill('Práctica biónica');
+  await campo.press('Enter');
+  await expect(page.getByRole('link', { name: 'Práctica biónica', exact: true })).toBeVisible();
+  await expect(otra.getByRole('heading', { name: 'Práctica biónica', exact: true })).toBeVisible();
+});
+
 test('Inicio crea una plantilla, exporta, importa y mueve a la papelera con Deshacer', async ({ page }) => {
   await page.goto('/');
   await omitirBienvenida(page);

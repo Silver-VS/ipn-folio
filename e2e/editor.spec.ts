@@ -227,6 +227,16 @@ test.describe('editor y archivos', () => {
     await expect(page).toHaveURL(new RegExp(hash.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'));
     expect(await textoDelEditor(page)).toContain('% mio');
     // El mismo guardia cubre recargar/cerrar la pestaña del navegador (beforeunload).
+    let confirmacionesAtras = 0;
+    const cancelarAtras = async (dialogo: import('@playwright/test').Dialog) => {
+      confirmacionesAtras++;
+      await dialogo.dismiss();
+    };
+    page.on('dialog', cancelarAtras);
+    await page.goBack();
+    await expect.poll(() => confirmacionesAtras).toBe(1);
+    page.off('dialog', cancelarAtras);
+    await expect(page).toHaveURL(new RegExp(hash.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'));
     expect(
       await page.evaluate(() => {
         const evento = new Event('beforeunload', { cancelable: true });

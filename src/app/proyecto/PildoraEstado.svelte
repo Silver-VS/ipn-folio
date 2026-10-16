@@ -22,6 +22,15 @@
   );
 </script>
 
+<span role="status" class="solo-lector">{texto}</span>
+<svelte:window
+  onkeydown={(e) => {
+    if (e.key !== 'Escape' || !desplegable.open) return;
+    e.preventDefault();
+    desplegable.open = false;
+    desplegable.querySelector('summary')?.focus();
+  }}
+/>
 <details bind:this={desplegable} class="pildora" data-compilacion={estado.compilacion}>
   <summary>{texto}</summary>
   <div class="popover">
@@ -36,6 +45,13 @@
 </details>
 
 <style>
+  .solo-lector {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
   .pildora {
     position: relative;
     max-width: 100%;

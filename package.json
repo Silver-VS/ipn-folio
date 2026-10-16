@@ -23,7 +23,7 @@
     "activos": "node scripts/activos.mjs",
     "iconos": "node scripts/iconos/generar.mjs",
     "contenido": "node scripts/textos.mjs && node scripts/codificacion.mjs && node scripts/contenido.mjs",
-    "verificar": "npm run contenido && npm run lint && npm run tipos && npm run test && npm run licencias && npm run build",
+    "verificar": "npm run contenido && npm run lint && npm run tipos && npm run test && npm run licencias && npm run build && node scripts/validar-dist.mjs",
     "espejo:generar": "node scripts/espejo/generar.mjs",
     "espejo:validar": "node scripts/espejo/validar.mjs",
     "espejo:servir": "node scripts/espejo/servir.mjs"

@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { exportarZip, textoDeError, type Proyecto } from '../almacen';
   import Importar from './inicio/Importar.svelte';
   import {
@@ -34,6 +34,9 @@
   let enPapelera = $state(0);
   let error = $state('');
   let recargaPendiente = false;
+  let renombrando = $state<string>();
+  let nombreNuevo = $state('');
+  let campoNombre = $state<HTMLInputElement>();
 
   async function recargar() {
     if (!s) return;
@@ -154,10 +157,18 @@
   }
 
   async function renombrar(p: Proyecto) {
-    const nombre = window.prompt(plano(t('plantillas.renombrar_pregunta', { nombre: p.nombre })), p.nombre);
-    if (!nombre?.trim() || !s) return;
-    await s.almacen.renombrarProyecto(p.id, nombre.trim());
+    if (!nombreNuevo.trim() || !s) return;
+    await s.auto.renombrarProyecto(p.id, nombreNuevo.trim());
+    renombrando = undefined;
     await recargar();
+  }
+
+  async function empezarRenombre(p: Proyecto) {
+    renombrando = p.id;
+    nombreNuevo = p.nombre;
+    await tick();
+    campoNombre?.focus();
+    campoNombre?.select();
   }
 
   async function ejecutarAviso() {
@@ -204,13 +215,39 @@
     <ul class="lista">
       {#each activos as p (p.id)}
         <li>
-          <a class="proyecto" href={hashDeProyecto(p.id)}>{p.nombre}</a>
+          {#if renombrando === p.id}
+            <form
+              onsubmit={(e) => {
+                e.preventDefault();
+                void ejecutar(() => renombrar(p));
+              }}
+            >
+              <input
+                bind:this={campoNombre}
+                bind:value={nombreNuevo}
+                aria-label={plano(t('plantillas.renombrar_pregunta', { nombre: p.nombre }))}
+                required
+                onkeydown={(e) => {
+                  if (e.key === 'Escape') {
+                    renombrando = undefined;
+                    void tick().then(() => document.getElementById(`renombrar-${p.id}`)?.focus());
+                  }
+                }}
+              />
+              <button class="boton" disabled={ocupado}>{t('archivos.renombrar')}</button>
+            </form>
+          {:else}
+            <a class="proyecto" href={hashDeProyecto(p.id)}>{p.nombre}</a>
+          {/if}
           <time datetime={new Date(p.modificado).toISOString()}
             >{new Date(p.modificado).toLocaleString('es-MX')}</time
           >
           <div class="acciones">
-            <button class="boton" disabled={ocupado} onclick={() => void ejecutar(() => renombrar(p))}
-              >{t('archivos.renombrar')}</button
+            <button
+              id="renombrar-{p.id}"
+              class="boton"
+              disabled={ocupado}
+              onclick={() => void empezarRenombre(p)}>{t('archivos.renombrar')}</button
             >
             <button class="boton" disabled={ocupado} onclick={() => void ejecutar(() => exportar(p))}
               >{t('plantillas.exportar')}</button

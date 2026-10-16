@@ -78,9 +78,31 @@ async function simularHoraDelSitio(
  * Espera a que la app ya tenga la hora del sitio. Si se borra antes, el elemento queda con fecha no confiable y se
  * vuelve a sellar con la primera hora confiable (D29): la prueba mediría otro plazo.
  */
-async function esperarHoraDelSitio(page: Page, sitio: { respondidas?: number }): Promise<void> {
-  await expect.poll(() => sitio.respondidas ?? 0).toBeGreaterThan(0);
-  await page.waitForTimeout(200);
+async function esperarHoraDelSitio(page: Page, sitio: { hora: number | 'sin-red' }): Promise<void> {
+  // Esta marca se escribe después de medir Y purgar; recibir HEAD no prueba que terminó ninguna de las dos.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          new Promise<number | undefined>((resolver, rechazar) => {
+            const abrir = indexedDB.open('ipn-folio');
+            abrir.onerror = () => rechazar(abrir.error);
+            abrir.onsuccess = () => {
+              const db = abrir.result;
+              const leer = db.transaction('ajustes').objectStore('ajustes').get('papelera.ultimaPurga');
+              leer.onerror = () => {
+                db.close();
+                rechazar(leer.error);
+              };
+              leer.onsuccess = () => {
+                db.close();
+                resolver(leer.result);
+              };
+            };
+          }),
+      ),
+    )
+    .toBeGreaterThanOrEqual(sitio.hora as number);
 }
 
 test.describe('papelera', () => {
@@ -228,9 +250,30 @@ test.describe('papelera', () => {
       await page.getByRole('link', { name: 'Proyecto de ejemplo' }).click();
       await esperarHoraDelSitio(page, sitio);
       await borrarDelArbol(page, isMobile, /referencias\.bib/);
-      // Recargar el mismo día asegura que la fecha quede sellada con la hora del sitio (T) aunque la primera medición
-      // no haya alcanzado a valer antes de borrar (pasaba en la CI).
-      await page.reload();
+      // No avanzar a T+20 hasta comprobar el sello que realmente quedó persistido en T.
+      await expect(page.getByRole('treeitem', { name: /referencias\.bib/ })).toHaveCount(0);
+      const sello = await page.evaluate(
+        () =>
+          new Promise<{ fecha: number; fechaConfiable: boolean }>((resolver, rechazar) => {
+            const abrir = indexedDB.open('ipn-folio');
+            abrir.onerror = () => rechazar(abrir.error);
+            abrir.onsuccess = () => {
+              const db = abrir.result;
+              const leer = db.transaction('papelera').objectStore('papelera').getAll();
+              leer.onerror = () => {
+                db.close();
+                rechazar(leer.error);
+              };
+              leer.onsuccess = () => {
+                db.close();
+                resolver(leer.result[0]);
+              };
+            };
+          }),
+      );
+      expect(sello.fechaConfiable).toBe(true);
+      expect(sello.fecha).toBeGreaterThanOrEqual(T);
+      expect(sello.fecha).toBeLessThan(T + DIA);
       await irAPapelera(page);
       await expect(page.getByRole('listitem').filter({ hasText: 'referencias.bib' })).toBeVisible();
       sitio.hora = T + 20 * DIA;

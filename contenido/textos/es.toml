@@ -3,7 +3,7 @@
 # Reglas: claves a-z0-9_ con puntos; variables {nombre}; plurales {n, plural, one {# x} other {# xs}}.
 # Los textos que también necesita IPN-tools viven en ipn-comun (comun.es.toml), no aquí.
 # Al cambiar un texto: sube `version` y anota el cambio en contenido/CAMBIOS.md.
-version = "2026.10.16"
+version = "2026.10.18"
 
 [app]
 # Nombre del producto: <title> de la página y encabezado. Es un nombre propio.
@@ -25,7 +25,11 @@ espacio.aria = "Espacio de trabajo"
 # Inicio mínimo (hasta que la sesión 09 haga el inicio real).
 proyectos = "Tus proyectos"
 sin_proyectos = "Aún no tienes proyectos en este equipo."
-crear_ejemplo = "Crear un proyecto de ejemplo"
+crear_ejemplo = "Proyecto de ejemplo"
+plantillas = "Plantillas"
+importar = "Importar"
+importar_boton = "Importar .tex, .zip o carpeta"
+importar_cancelar = "Cancelar"
 
 [plantillas]
 crear = "Crear un proyecto"
@@ -34,14 +38,15 @@ unidad = "Plantillas por unidad académica"
 ver_unidad = "Ver las de mi unidad"
 ver_todas = "Ver de otras unidades"
 usar = "Usar {nombre}"
+usar_boton = "Usar"
 proponer = "Proponer una plantilla"
-proponer_ayuda = "Prepara un archivo .zip con los archivos fuente y su licencia. La recepción de propuestas estará disponible más adelante; por ahora puedes importarlo en este equipo."
+proponer_ayuda = "Próximamente. Prepara un .zip con los archivos fuente y su licencia."
 exportar = "Exportar .zip"
 papelera = "Mover a la papelera"
 renombrar_pregunta = "Nuevo nombre para {nombre}"
 importar = "Importar .tex o .zip"
 carpeta = "Importar carpeta"
-soltar = "Arrastra aquí una carpeta o archivos .tex o .zip, o elígelos abajo."
+soltar = "O suelta aquí tus archivos o carpeta."
 importados_ignorados = "Se omitieron {n, plural, one {# archivo auxiliar o no compatible} other {# archivos auxiliares o no compatibles}}."
 error_catalogo = "No se pudieron cargar las plantillas. Recarga la página para intentarlo de nuevo."
 
@@ -480,6 +485,7 @@ aria = "Avisos"
 
 [inicio.ejemplo]
 nombre = "Proyecto de ejemplo"
+descripcion = "Documento con capítulos, fórmulas y bibliografía para empezar."
 
 # --- PWA, instalación por herramientas y descargas (sesión 07) ---
 # Los tamaños nunca se escriben a mano: {megas} sale de src/herramientas/tamanos.gen.json (medido por `npm run activos`).
@@ -538,10 +544,10 @@ persistencia_no = "El navegador podría borrar los datos de Folio si falta espac
 
 [descarga]
 aviso.titulo = "Antes de crear tu primer PDF"
-aviso.cuerpo = "Para crear el PDF, Folio necesita descargar el compilador de LaTeX: unos {megas} MB, una sola vez. Después puedes compilar en este equipo sin conexión."
-aviso.datos_moviles = "Si usas datos móviles, puedes esperar a tener Wi-Fi. Mientras tanto, puedes crear tu proyecto y escribir. Para generar el PDF necesitas completar la descarga."
-aviso.ahora = "Descargar ahora (unos {megas} MB)"
-aviso.esperar = "Esperar a tener Wi-Fi"
+aviso.cuerpo = "Descarga única de unos {megas} MB. Después compilas sin conexión."
+aviso.datos_moviles = "Puedes escribir mientras esperas a tener Wi-Fi."
+aviso.ahora = "Descargar"
+aviso.esperar = "Más tarde"
 en_curso = "Descargando el compilador de LaTeX · {cargados} de {megas} MB"
 en_pausa = "Descarga en pausa · {cargados} de {megas} MB"
 ayuda = "Puedes seguir trabajando mientras tanto"

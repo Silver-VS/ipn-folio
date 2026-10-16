@@ -6,10 +6,8 @@
  */
 :root {
   /* D24: interfaz en Noto Sans; editor y código en JetBrains Mono (ligaduras apagadas), con Noto Sans Math de respaldo. */
-  --ipn-fuente-texto:
-    'Noto Sans', 'Noto Sans Math', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --ipn-fuente-mono:
-    'JetBrains Mono', 'Noto Sans Mono', 'Noto Sans Math', ui-monospace, Consolas, monospace;
+  --ipn-fuente-texto: 'Noto Sans', 'Noto Sans Math', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ipn-fuente-mono: 'JetBrains Mono', 'Noto Sans Mono', 'Noto Sans Math', ui-monospace, Consolas, monospace;
 
   /* Colores de sintaxis del editor (diseño v2: comando, argumento, matemáticas, comentario). */
   --ipn-sintaxis-comando: var(--ipn-acento);
@@ -23,4 +21,9 @@
   --ipn-radio-s: calc(var(--ipn-radio) / 2);
   --ipn-objetivo-tactil: calc(var(--ipn-esp-7) - var(--ipn-esp-1));
   --ipn-alto-barra: var(--ipn-esp-7);
+  --ipn-ancho-inicio: 64rem;
+  --ipn-ancho-tarjeta: 16rem;
+  --ipn-borde-fino: 1px;
+  --ipn-foco-ancho: 0.1875rem;
+  --ipn-foco-separacion: 0.125rem;
 }

@@ -7,7 +7,7 @@ import { editorActivo, esperarEditor, omitirBienvenida, textoDelEditor } from '.
 test('Inicio renombra en línea y otra pestaña recibe el nombre', async ({ page, context }) => {
   await page.goto('/');
   await omitirBienvenida(page);
-  await page.getByRole('button', { name: 'Crear un proyecto de ejemplo' }).click();
+  await page.getByRole('button', { name: 'Usar Proyecto de ejemplo' }).click();
   await esperarEditor(page);
   const otra = await context.newPage();
   await otra.goto(page.url());

@@ -138,7 +138,7 @@ test.describe('PWA', () => {
     await page.goto('/');
     await esperarControl(page);
     await omitirBienvenida(page);
-    await page.getByRole('button', { name: 'Crear un proyecto de ejemplo' }).click();
+    await page.getByRole('button', { name: 'Usar Proyecto de ejemplo' }).click();
     await page.waitForURL(/#\/proyecto\//);
     await page.goto('/#/');
     await expect(page.getByRole('link', { name: 'Proyecto de ejemplo' })).toBeVisible();

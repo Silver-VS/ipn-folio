@@ -142,6 +142,8 @@ test.describe('fuentes y accesibilidad de la pantalla de proyecto', () => {
 
   for (const esquema of ['light', 'dark'] as const) {
     test(`axe no reporta violaciones graves en la pantalla de proyecto (${esquema})`, async ({ page }) => {
+      // Abrir el proyecto y analizar con axe en WebKit puede pasar de 30 s en CI.
+      test.slow();
       await page.emulateMedia({ colorScheme: esquema });
       await abrirProyectoDeEjemplo(page);
       await esperarEditor(page);

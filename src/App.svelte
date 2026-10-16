@@ -1,23 +1,47 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { acerca } from './acerca';
+  import Inicio from './app/Inicio.svelte';
+  import { rutaDeHash, type Ruta } from './app/ruta';
   import { t } from './textos/t';
+
+  let ruta = $state<Ruta>(rutaDeHash(location.hash));
+  // La pantalla de proyecto (CodeMirror, paneles) se descarga solo al abrir un proyecto: el inicio queda ligero.
+  let cargaProyecto: Promise<typeof import('./app/proyecto/Proyecto.svelte')> | undefined;
+  const cargarProyecto = () => (cargaProyecto ??= import('./app/proyecto/Proyecto.svelte'));
+
+  onMount(() => {
+    const alCambiarHash = () => (ruta = rutaDeHash(location.hash));
+    window.addEventListener('hashchange', alCambiarHash);
+    return () => window.removeEventListener('hashchange', alCambiarHash);
+  });
 </script>
 
-<div class="cascaron">
-  <header class="encabezado">
-    <h1 class="marca">{t('app.nombre')}</h1>
-    <p class="lema">{t('app.lema')}</p>
-  </header>
+{#if ruta.pantalla === 'proyecto'}
+  {#await cargarProyecto() then modulo}
+    {#key ruta.id}
+      <modulo.default id={ruta.id} />
+    {/key}
+  {/await}
+{:else}
+  <div class="cascaron">
+    <header class="encabezado">
+      <h1 class="marca">{t('app.nombre')}</h1>
+      <p class="lema">{t('app.lema')}</p>
+    </header>
 
-  <main id="espacio-de-trabajo" aria-label={t('inicio.espacio.aria')}></main>
+    <main id="espacio-de-trabajo" aria-label={t('inicio.espacio.aria')}>
+      <Inicio />
+    </main>
 
-  <footer class="pie">
-    <a href={acerca.REPO_URL} rel="noopener"
-      >{t('pie.codigo_fuente_licencia', { licencia: acerca.LICENCIA })}</a
-    >
-  </footer>
-</div>
+    <footer class="pie">
+      <a href={acerca.REPO_URL} rel="noopener"
+        >{t('pie.codigo_fuente_licencia', { licencia: acerca.LICENCIA })}</a
+      >
+    </footer>
+  </div>
+{/if}
 
 <style>
   .cascaron {

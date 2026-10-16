@@ -1,7 +1,7 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.10";
+export const VERSION_TEXTOS = "2026.10.12";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
@@ -24,6 +24,25 @@ export const TEXTOS_FOLIO = {
   "app.lema": "Tus apuntes. Tus reglas.",
   "app.nombre": "IPN Folio",
   "app.sin_js": "IPN Folio necesita JavaScript para funcionar. Actívalo en tu navegador y vuelve a cargar la página.",
+  "archivos.arbol_aria": "Árbol de archivos",
+  "archivos.aria": "Archivos del proyecto",
+  "archivos.barra_aria": "Acciones de archivos",
+  "archivos.borrado": "Se borró {ruta}.",
+  "archivos.borrar": "Borrar",
+  "archivos.confirmar_borrado": "¿Quieres borrar la carpeta {ruta} y todos sus archivos? Puedes restaurarlos con Deshacer mientras el aviso siga abierto.",
+  "archivos.deshacer": "Deshacer",
+  "archivos.error.ya_existe": "Ya existe un archivo llamado {ruta}. Elige otro nombre.",
+  "archivos.nuevo": "Nuevo archivo",
+  "archivos.nuevo_ayuda": "Puedes incluir una carpeta, por ejemplo capitulos/introduccion.tex. Presiona Intro para crearlo o Esc para cancelar.",
+  "archivos.nuevo_etiqueta": "Nombre del archivo nuevo",
+  "archivos.principal": "principal",
+  "archivos.renombrar": "Renombrar",
+  "archivos.renombrar_aria": "Nuevo nombre para {nombre}",
+  "archivos.soltar": "Suelta aquí los archivos para agregarlos al proyecto",
+  "archivos.subidos": "{n, plural, one {Se agregó # archivo al proyecto.} other {Se agregaron # archivos al proyecto.}}",
+  "archivos.subir": "Subir archivos",
+  "archivos.vacio": "Este proyecto aún no tiene archivos. Crea uno o arrastra aquí los que quieras agregar.",
+  "compacto.pestanas_aria": "Paneles del proyecto",
   "compilacion.paso.bibliografia": "bibliografía",
   "compilacion.paso.final": "pasada final",
   "compilacion.paso.glosario": "glosario",
@@ -32,6 +51,46 @@ export const TEXTOS_FOLIO = {
   "compilacion.paso.pasada": "nueva pasada",
   "compilacion.paso.primera": "primera pasada",
   "compilacion.paso.progreso": "Paso {n} de {total}: {nombre}",
+  "distribucion.editor_arriba": "Editor arriba, PDF abajo",
+  "distribucion.en_ventana": "Abrir {panel} en otra ventana",
+  "distribucion.enfocada": "Escritura enfocada",
+  "distribucion.lado_a_lado": "Editor y PDF lado a lado",
+  "distribucion.menu": "Distribución",
+  "distribucion.restablecer": "Restablecer distribución",
+  "distribucion.solo_editor": "Solo editor",
+  "distribucion.usar_global": "Usar esta distribución en los proyectos nuevos",
+  "editor.aria_texto": "Texto de {ruta}",
+  "editor.borrado_en_otra": "Otra pestaña borró {ruta}. Lo que ves aquí sigue en pantalla; se volverá a crear si lo guardas.",
+  "editor.cerrar_pestana": "Cerrar {nombre}",
+  "editor.cm.anterior": "anterior",
+  "editor.cm.buscar": "Buscar",
+  "editor.cm.caracter_control": "Carácter de control",
+  "editor.cm.cerrar": "cerrar",
+  "editor.cm.codigo_plegado": "código plegado",
+  "editor.cm.coincidencia_actual": "Coincidencia actual: {texto}, en la línea {linea}.",
+  "editor.cm.desplegar": "Desplegar línea",
+  "editor.cm.desplegar_corto": "desplegar",
+  "editor.cm.ir": "ir",
+  "editor.cm.ir_a_linea": "Ir a la línea",
+  "editor.cm.lineas_desplegadas": "Se desplegaron las líneas de {desde} a {hasta}.",
+  "editor.cm.lineas_plegadas": "Se plegaron las líneas de {desde} a {hasta}.",
+  "editor.cm.mayusculas": "distinguir mayúsculas",
+  "editor.cm.palabra": "palabra completa",
+  "editor.cm.plegar": "Plegar línea",
+  "editor.cm.reemplazar": "Reemplazar",
+  "editor.cm.reemplazar_todas": "reemplazar todas",
+  "editor.cm.reemplazar_una": "reemplazar",
+  "editor.cm.reemplazo_en_linea": "Se reemplazó la coincidencia de la línea $",
+  "editor.cm.reemplazos": "Se reemplazaron $ coincidencias",
+  "editor.cm.regexp": "expresión regular",
+  "editor.cm.siguiente": "siguiente",
+  "editor.cm.todas": "todas",
+  "editor.conflicto": "Otra pestaña cambió {ruta}, pero aquí tienes cambios sin guardar. No se reemplazó tu texto.",
+  "editor.conflicto_conservar": "Conservar mi versión",
+  "editor.conflicto_usar_otra": "Cargar la versión de la otra pestaña",
+  "editor.imagen_alt": "Vista previa de {ruta}",
+  "editor.pestanas_aria": "Archivos abiertos",
+  "editor.sin_archivos": "Abre un archivo del panel Archivos para empezar a escribir.",
   "errores.latex.archivo_faltante.ayuda": "Agrega {archivo} al proyecto o corrige su nombre en el código. Si es un paquete, revisa que esté disponible para compilar.",
   "errores.latex.archivo_faltante.titulo": "Falta el archivo {archivo}",
   "errores.latex.argumento_incompleto.ayuda": "Revisa las llaves del comando anterior y cierra su argumento.",
@@ -108,8 +167,72 @@ export const TEXTOS_FOLIO = {
   "errores.motor.ruta_no_permitida": "El proyecto tiene un archivo con una ruta que sale de su carpeta. Corrige su nombre y vuelve a compilar.",
   "errores.motor.sin_montar": "Primero hay que cargar los archivos del proyecto. Vuelve a compilar.",
   "errores.motor.worker": "El motor de compilación se detuvo de forma inesperada. Vuelve a compilar: se reiniciará solo.",
+  "guardado.error": "No se pudo guardar. Lo intentaremos de nuevo; mientras tanto, descarga una copia en .zip.",
+  "guardado.guardando": "Guardando…",
+  "guardado.hace_minutos": "Guardado en este equipo hace {minutos} min",
+  "guardado.hace_segundos": "Guardado en este equipo hace {segundos} s",
+  "guardado.todo": "Todo guardado en este equipo",
+  "inicio.crear_ejemplo": "Crear un proyecto de ejemplo",
+  "inicio.ejemplo.nombre": "Proyecto de ejemplo",
   "inicio.espacio.aria": "Espacio de trabajo",
-  "pie.codigo_fuente_licencia": "Código fuente ({licencia})"
+  "inicio.papelera": "Papelera",
+  "inicio.proyectos": "Tus proyectos",
+  "inicio.restaurar": "Restaurar",
+  "inicio.sin_proyectos": "Aún no tienes proyectos en este equipo.",
+  "mensajes.aria": "Avisos",
+  "paleta.aria": "Buscar o ejecutar un comando",
+  "paleta.boton": "Buscar o ejecutar un comando · Ctrl K",
+  "paleta.campo": "Escribe lo que buscas",
+  "paleta.marcador": "Buscar o ejecutar un comando",
+  "paleta.vacia": "Aún no hay comandos disponibles. Pronto podrás buscar proyectos y acciones desde aquí.",
+  "paneles.abrir_en_ventana": "Abrir este panel en otra ventana",
+  "paneles.archivos": "Archivos",
+  "paneles.cerrar_pestana": "Ocultar el panel {titulo}",
+  "paneles.cerrar_pestana_sin_titulo": "Ocultar el panel",
+  "paneles.editor": "Editor",
+  "paneles.msg.abierto": "Se abrió el panel {titulo}",
+  "paneles.msg.acoplado": "El panel {titulo} volvió a la distribución",
+  "paneles.msg.cerrado": "Se ocultó el panel {titulo}",
+  "paneles.msg.en_ventana": "El panel {titulo} se abrió en otra ventana",
+  "paneles.msg.flotante": "El panel {titulo} flota sobre los demás",
+  "paneles.msg.maximizado": "El panel {titulo} ocupa todo el espacio",
+  "paneles.msg.movimiento_cancelado": "Se canceló el movimiento del panel",
+  "paneles.msg.movimiento_no_permitido": "No se puede mover el panel ahí",
+  "paneles.msg.restaurado": "El panel {titulo} volvió a su tamaño",
+  "paneles.pdf": "PDF",
+  "paneles.problemas": "Qué revisar",
+  "paneles.salida": "Salida",
+  "paneles.ventana_bloqueada": "Tu navegador bloqueó la ventana nueva. Permite las ventanas emergentes de este sitio e inténtalo de nuevo.",
+  "pdf.abrir": "Abrir un PDF…",
+  "pdf.acercar": "Acercar",
+  "pdf.ajustar_ancho": "Ajustar al ancho",
+  "pdf.alejar": "Alejar",
+  "pdf.aria": "Vista del PDF",
+  "pdf.barra_aria": "Controles del PDF",
+  "pdf.de_total": "de {total}",
+  "pdf.descargar": "Descargar PDF",
+  "pdf.error_abrir": "No se pudo abrir ese PDF. Comprueba que el archivo no esté dañado.",
+  "pdf.pagina": "Página",
+  "pdf.pagina_aria": "Página {n} de {total}",
+  "pdf.vacio": "Aquí aparecerá el PDF de tu proyecto. Mientras tanto, puedes abrir un PDF de tu equipo para consultarlo.",
+  "pdf.vista_aria": "Páginas del PDF",
+  "pdf.zoom": "{porcentaje} %",
+  "pie.codigo_fuente_licencia": "Código fuente ({licencia})",
+  "problemas.aviso": "Aviso",
+  "problemas.donde_linea": "{ruta}, línea {linea}",
+  "problemas.error": "Error",
+  "problemas.vacio": "Sin errores ni avisos",
+  "proyecto.abriendo": "Abriendo tu proyecto…",
+  "proyecto.espacio_aria": "Espacio de trabajo del proyecto",
+  "proyecto.menu": "Proyecto",
+  "proyecto.mover_a_papelera": "Mover el proyecto a la papelera",
+  "proyecto.no_encontrado_ayuda": "Puede que esté en la papelera o que se haya borrado de este navegador. Vuelve al inicio para ver tus proyectos.",
+  "proyecto.no_encontrado_titulo": "No encontramos ese proyecto",
+  "proyecto.no_se_puede_abrir": "No se puede mostrar {ruta} en el editor. Solo se abren archivos de texto e imágenes.",
+  "proyecto.tema": "Tema",
+  "proyecto.volver": "Inicio",
+  "salida.registro_aria": "Registro de la compilación",
+  "salida.vacio": "Aquí aparecerá el registro de la compilación."
 } as const;
 
 export const TEXTOS_COMUN: Readonly<Record<string, string>> = {
@@ -138,7 +261,21 @@ export interface VariablesPorClave {
   "almacen.error.destino_ocupado": { ruta: string | number };
   "almacen.error.movimiento_invalido": { ruta: string | number };
   "almacen.error.ruta_invalida": { ruta: string | number };
+  "archivos.borrado": { ruta: string | number };
+  "archivos.confirmar_borrado": { ruta: string | number };
+  "archivos.error.ya_existe": { ruta: string | number };
+  "archivos.renombrar_aria": { nombre: string | number };
+  "archivos.subidos": { n: string | number };
   "compilacion.paso.progreso": { n: string | number; nombre: string | number; total: string | number };
+  "distribucion.en_ventana": { panel: string | number };
+  "editor.aria_texto": { ruta: string | number };
+  "editor.borrado_en_otra": { ruta: string | number };
+  "editor.cerrar_pestana": { nombre: string | number };
+  "editor.cm.coincidencia_actual": { linea: string | number; texto: string | number };
+  "editor.cm.lineas_desplegadas": { desde: string | number; hasta: string | number };
+  "editor.cm.lineas_plegadas": { desde: string | number; hasta: string | number };
+  "editor.conflicto": { ruta: string | number };
+  "editor.imagen_alt": { ruta: string | number };
   "errores.latex.archivo_faltante.ayuda": { archivo: string | number };
   "errores.latex.archivo_faltante.titulo": { archivo: string | number };
   "errores.latex.bibliografia_campo_vacio.ayuda_autor": { cita: string | number };
@@ -171,5 +308,20 @@ export interface VariablesPorClave {
   "errores.latex.paquete_error.titulo": { paquete: string | number };
   "errores.latex.referencia_indefinida.ayuda": { referencia: string | number };
   "errores.latex.referencia_indefinida.titulo": { referencia: string | number };
+  "guardado.hace_minutos": { minutos: string | number };
+  "guardado.hace_segundos": { segundos: string | number };
+  "paneles.cerrar_pestana": { titulo: string | number };
+  "paneles.msg.abierto": { titulo: string | number };
+  "paneles.msg.acoplado": { titulo: string | number };
+  "paneles.msg.cerrado": { titulo: string | number };
+  "paneles.msg.en_ventana": { titulo: string | number };
+  "paneles.msg.flotante": { titulo: string | number };
+  "paneles.msg.maximizado": { titulo: string | number };
+  "paneles.msg.restaurado": { titulo: string | number };
+  "pdf.de_total": { total: string | number };
+  "pdf.pagina_aria": { n: string | number; total: string | number };
+  "pdf.zoom": { porcentaje: string | number };
   "pie.codigo_fuente_licencia": { licencia: string | number };
+  "problemas.donde_linea": { linea: string | number; ruta: string | number };
+  "proyecto.no_se_puede_abrir": { ruta: string | number };
 }

@@ -13,7 +13,8 @@ declare module '@ipn/comun/js/texto.js' {
 declare module '@ipn/comun/js/tema.js' {
   export const MODOS: string[];
   export const CLAVE_ALMACEN: string;
-  export function aplicarTema(modo: string, opciones?: { raiz?: HTMLElement; almacen?: Storage }): void;
+  /** Aplica el modo y devuelve el modo aplicado. */
+  export function aplicarTema(modo: string, opciones?: { raiz?: HTMLElement; almacen?: Storage }): string;
   export function leerTema(opciones?: { almacen?: Storage }): string;
   export function iniciarTema(opciones?: Record<string, unknown>): unknown;
   export function esOscuro(opciones?: Record<string, unknown>): boolean;

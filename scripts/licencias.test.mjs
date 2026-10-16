@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from 'vitest';
-import { evaluar } from './licencias.mjs';
+import { evaluar, licenciaVerificada } from './licencias.mjs';
 
 describe('evaluar (licencias)', () => {
+  it('la excepción de binarios opcionales solo acepta la versión verificada', () => {
+    expect(licenciaVerificada('@napi-rs/canvas-linux-x64-gnu', '1.0.10')).toBe('MIT');
+    expect(licenciaVerificada('@napi-rs/canvas-linux-x64-gnu', '1.0.11')).toBe('');
+    expect(licenciaVerificada('@napi-rs/canvas-linux-x64-gnu', '?')).toBe('');
+  });
   it('acepta licencias compatibles y expresiones OR con una opción permitida', () => {
     expect(evaluar('MIT')).toBe('permitida');
     expect(evaluar('CC0-1.0')).toBe('permitida');

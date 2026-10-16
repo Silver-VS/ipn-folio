@@ -2,10 +2,9 @@
 import { ErrorAlmacen } from './errores';
 import type { ArchivoProyecto, Contenido, InfoArchivo, TipoArchivo } from './tipos';
 
+export const EXTENSIONES_LATEX = new Set(['tex', 'sty', 'cls', 'ltx', 'dtx']);
 const EXTENSIONES_TEXTO = new Set([
-  'tex',
-  'sty',
-  'cls',
+  ...EXTENSIONES_LATEX,
   'bib',
   'bst',
   'cfg',
@@ -15,6 +14,10 @@ const EXTENSIONES_TEXTO = new Set([
   'ist',
   'txt',
   'md',
+  'csv',
+  'dat',
+  'm',
+  'py',
 ]);
 
 // Caracteres de control (U+0000–U+001F y U+007F) no permitidos en nombres.

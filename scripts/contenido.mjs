@@ -56,6 +56,30 @@ function pluralValido(clave, plantilla, vars) {
  * }
  * Devuelve { errores: string[], avisos: string[] }.
  */
+/**
+ * Quita las expresiones de Svelte `{...}` (con llaves anidadas y cadenas) para que una flecha `=>` o un `>` dentro de
+ * una expresión no corte la etiqueta al buscar texto suelto.
+ */
+export function sinExpresiones(marcado) {
+  let salida = '';
+  let nivel = 0;
+  let comilla = '';
+  for (const c of marcado) {
+    if (nivel === 0) {
+      if (c === '{') nivel = 1;
+      else salida += c;
+      continue;
+    }
+    if (comilla) {
+      if (c === comilla) comilla = '';
+    } else if (c === '"' || c === "'" || c === '`') comilla = c;
+    else if (c === '{') nivel++;
+    else if (c === '}' && --nivel === 0) salida += ' ';
+  }
+  if (nivel > 0 || comilla) throw new Error('expresión sin cerrar');
+  return salida;
+}
+
 export function revisar(e) {
   const errores = [];
   const avisos = [];
@@ -126,7 +150,15 @@ export function revisar(e) {
       .replace(/<script[\s\S]*?<\/script>/g, '')
       .replace(/<style[\s\S]*?<\/style>/g, '')
       .replace(/<!--[\s\S]*?-->/g, '');
-    const texto = marcado.replace(/<[^>]*>/g, ' ').replace(/\{[^}]*\}/g, ' ');
+    // Las entidades (&times;, &#9662;) son símbolos, no texto traducible.
+    let sinExp;
+    try {
+      sinExp = sinExpresiones(marcado);
+    } catch (error) {
+      errores.push(`${archivo}: ${error.message}`);
+      continue;
+    }
+    const texto = sinExp.replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;|&#\d+;/gi, ' ');
     if (/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]{2,}/.test(texto))
       errores.push(`${archivo}: hay texto escrito en la plantilla; muévelo a es.toml y pídelo con t()`);
     for (const m of marcado.matchAll(/\s(aria-label|title|alt|placeholder)="([^"{]+)"/g))

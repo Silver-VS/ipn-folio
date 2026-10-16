@@ -25,6 +25,17 @@ export const PERMITIDAS = new Set([
   'AGPL-3.0-or-later',
 ]);
 
+/**
+ * Paquetes opcionales de otras plataformas: npm no los instala aquí y no hay package.json que leer.
+ * Licencia verificada en el registro de npm (`npm view <paquete> license`); no entran al build del navegador.
+ */
+const VERIFICADAS_NO_INSTALADAS = [
+  { patron: /^@napi-rs\/canvas-[a-z0-9-]+$/, version: '1.0.10', licencia: 'MIT', nota: 'binarios opcionales de pdfjs-dist (solo Node)' },
+];
+
+export const licenciaVerificada = (nombre, version) =>
+  VERIFICADAS_NO_INSTALADAS.find((v) => v.patron.test(nombre) && v.version === version)?.licencia ?? '';
+
 /** Parte `texto` por el operador (OR / AND) solo en el nivel superior, fuera de paréntesis. */
 function dividir(texto, operador) {
   const partes = [];
@@ -117,11 +128,15 @@ function recolectar(nodo, acumulado) {
   for (const [dep, hijo] of Object.entries(nodo.dependencies ?? {})) {
     const ruta =
       hijo.path && existsSync(join(hijo.path, 'package.json')) ? hijo.path : join(RAIZ, 'node_modules', dep);
-    const clave = `${dep}@${hijo.version ?? '?'}`;
+    const padre = nodo.path && existsSync(join(nodo.path, 'package.json')) ? JSON.parse(readFileSync(join(nodo.path, 'package.json'), 'utf8')) : {};
+    const version = hijo.version ?? padre.optionalDependencies?.[dep] ?? '?';
+    const clave = `${dep}@${version}`;
     if (acumulado.has(clave)) continue;
     const archivo = join(ruta, 'package.json');
-    const licencia = existsSync(archivo) ? licenciaDe(JSON.parse(readFileSync(archivo, 'utf8'))) : '';
-    acumulado.set(clave, { nombre: dep, version: hijo.version ?? '?', licencia });
+    const licencia = existsSync(archivo)
+      ? licenciaDe(JSON.parse(readFileSync(archivo, 'utf8')))
+      : licenciaVerificada(dep, version);
+    acumulado.set(clave, { nombre: dep, version, licencia });
     recolectar(hijo, acumulado);
   }
   return acumulado;

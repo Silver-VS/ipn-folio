@@ -3,7 +3,7 @@
 # Reglas: claves a-z0-9_ con puntos; variables {nombre}; plurales {n, plural, one {# x} other {# xs}}.
 # Los textos que también necesita IPN-tools viven en ipn-comun (comun.es.toml), no aquí.
 # Al cambiar un texto: sube `version` y anota el cambio en contenido/CAMBIOS.md.
-version = "2026.10.10"
+version = "2026.10.12"
 
 [app]
 # Nombre del producto: <title> de la página y encabezado. Es un nombre propio.
@@ -22,6 +22,12 @@ codigo_fuente_licencia = "Código fuente ({licencia})"
 [inicio]
 # Nombre accesible de la región principal donde se mostrará el trabajo (aún vacía).
 espacio.aria = "Espacio de trabajo"
+# Inicio mínimo (hasta que la sesión 09 haga el inicio real).
+proyectos = "Tus proyectos"
+sin_proyectos = "Aún no tienes proyectos en este equipo."
+crear_ejemplo = "Crear un proyecto de ejemplo"
+papelera = "Papelera"
+restaurar = "Restaurar"
 
 [errores.latex.archivo_faltante]
 titulo = "Falta el archivo {archivo}"
@@ -203,3 +209,176 @@ pasada = "nueva pasada"
 final = "pasada final"
 # Avance de la compilación; {nombre} es uno de los nombres anteriores.
 progreso = "Paso {n} de {total}: {nombre}"
+
+# --- Pantalla de proyecto (sesión 08) ---
+
+[proyecto]
+# Enlace para volver a la lista de proyectos.
+volver = "Inicio"
+# Estado mientras se abre el proyecto.
+abriendo = "Abriendo tu proyecto…"
+no_encontrado_titulo = "No encontramos ese proyecto"
+no_encontrado_ayuda = "Puede que esté en la papelera o que se haya borrado de este navegador. Vuelve al inicio para ver tus proyectos."
+# Nombre accesible de la región principal de la pantalla de proyecto.
+espacio_aria = "Espacio de trabajo del proyecto"
+# Menú del proyecto y su opción para mandarlo a la papelera.
+menu = "Proyecto"
+mover_a_papelera = "Mover el proyecto a la papelera"
+# Menú para elegir tema claro, oscuro o el del sistema.
+tema = "Tema"
+# Al abrir un archivo que no es de texto ni imagen; {ruta} es el nombre del archivo.
+no_se_puede_abrir = "No se puede mostrar {ruta} en el editor. Solo se abren archivos de texto e imágenes."
+
+[guardado]
+guardando = "Guardando…"
+todo = "Todo guardado en este equipo"
+# {segundos} y {minutos}: tiempo desde el último guardado.
+hace_segundos = "Guardado en este equipo hace {segundos} s"
+hace_minutos = "Guardado en este equipo hace {minutos} min"
+error = "No se pudo guardar. Lo intentaremos de nuevo; mientras tanto, descarga una copia en .zip."
+
+[paneles]
+# Títulos de los paneles (pestañas y menús).
+archivos = "Archivos"
+editor = "Editor"
+pdf = "PDF"
+problemas = "Qué revisar"
+salida = "Salida"
+abrir_en_ventana = "Abrir este panel en otra ventana"
+# {titulo}: nombre del panel; nombre accesible del botón que oculta su pestaña.
+cerrar_pestana = "Ocultar el panel {titulo}"
+cerrar_pestana_sin_titulo = "Ocultar el panel"
+ventana_bloqueada = "Tu navegador bloqueó la ventana nueva. Permite las ventanas emergentes de este sitio e inténtalo de nuevo."
+# Avisos para lectores de pantalla al acomodar los paneles; {titulo} es el nombre del panel.
+msg.abierto = "Se abrió el panel {titulo}"
+msg.cerrado = "Se ocultó el panel {titulo}"
+msg.maximizado = "El panel {titulo} ocupa todo el espacio"
+msg.restaurado = "El panel {titulo} volvió a su tamaño"
+msg.flotante = "El panel {titulo} flota sobre los demás"
+msg.acoplado = "El panel {titulo} volvió a la distribución"
+msg.en_ventana = "El panel {titulo} se abrió en otra ventana"
+msg.movimiento_cancelado = "Se canceló el movimiento del panel"
+msg.movimiento_no_permitido = "No se puede mover el panel ahí"
+
+[distribucion]
+menu = "Distribución"
+lado_a_lado = "Editor y PDF lado a lado"
+editor_arriba = "Editor arriba, PDF abajo"
+solo_editor = "Solo editor"
+enfocada = "Escritura enfocada"
+restablecer = "Restablecer distribución"
+usar_global = "Usar esta distribución en los proyectos nuevos"
+# {panel}: nombre del panel.
+en_ventana = "Abrir {panel} en otra ventana"
+
+[compacto]
+# Nombre accesible de la barra inferior de pestañas en pantallas angostas.
+pestanas_aria = "Paneles del proyecto"
+
+[archivos]
+aria = "Archivos del proyecto"
+barra_aria = "Acciones de archivos"
+arbol_aria = "Árbol de archivos"
+nuevo = "Nuevo archivo"
+subir = "Subir archivos"
+renombrar = "Renombrar"
+borrar = "Borrar"
+confirmar_borrado = "¿Quieres borrar la carpeta {ruta} y todos sus archivos? Puedes restaurarlos con Deshacer mientras el aviso siga abierto."
+nuevo_etiqueta = "Nombre del archivo nuevo"
+nuevo_ayuda = "Puedes incluir una carpeta, por ejemplo capitulos/introduccion.tex. Presiona Intro para crearlo o Esc para cancelar."
+# {nombre}: nombre actual del archivo.
+renombrar_aria = "Nuevo nombre para {nombre}"
+principal = "principal"
+vacio = "Este proyecto aún no tiene archivos. Crea uno o arrastra aquí los que quieras agregar."
+soltar = "Suelta aquí los archivos para agregarlos al proyecto"
+# {n}: cantidad de archivos agregados.
+subidos = "{n, plural, one {Se agregó # archivo al proyecto.} other {Se agregaron # archivos al proyecto.}}"
+# {ruta}: archivo o carpeta borrados; el botón deshace el borrado.
+borrado = "Se borró {ruta}."
+deshacer = "Deshacer"
+error.ya_existe = "Ya existe un archivo llamado {ruta}. Elige otro nombre."
+
+[editor]
+sin_archivos = "Abre un archivo del panel Archivos para empezar a escribir."
+pestanas_aria = "Archivos abiertos"
+# {nombre}: nombre del archivo cuya pestaña se cierra.
+cerrar_pestana = "Cerrar {nombre}"
+# Nombre accesible del área de texto; {ruta} es el archivo.
+aria_texto = "Texto de {ruta}"
+# Texto alternativo de la vista previa de una imagen del proyecto; {ruta} es el archivo.
+imagen_alt = "Vista previa de {ruta}"
+# Cambios hechos en otra pestaña del navegador mientras aquí hay cambios sin guardar; {ruta} es el archivo.
+conflicto = "Otra pestaña cambió {ruta}, pero aquí tienes cambios sin guardar. No se reemplazó tu texto."
+conflicto_usar_otra = "Cargar la versión de la otra pestaña"
+conflicto_conservar = "Conservar mi versión"
+borrado_en_otra = "Otra pestaña borró {ruta}. Lo que ves aquí sigue en pantalla; se volverá a crear si lo guardas."
+
+# Textos internos de CodeMirror (búsqueda, plegado, lectores de pantalla).
+[editor.cm]
+buscar = "Buscar"
+reemplazar = "Reemplazar"
+siguiente = "siguiente"
+anterior = "anterior"
+todas = "todas"
+mayusculas = "distinguir mayúsculas"
+regexp = "expresión regular"
+palabra = "palabra completa"
+reemplazar_una = "reemplazar"
+reemplazar_todas = "reemplazar todas"
+cerrar = "cerrar"
+ir_a_linea = "Ir a la línea"
+ir = "ir"
+# El signo de pesos se sustituye por el número que pone CodeMirror.
+reemplazo_en_linea = "Se reemplazó la coincidencia de la línea $"
+reemplazos = "Se reemplazaron $ coincidencias"
+coincidencia_actual = "Coincidencia actual: {texto}, en la línea {linea}."
+lineas_plegadas = "Se plegaron las líneas de {desde} a {hasta}."
+lineas_desplegadas = "Se desplegaron las líneas de {desde} a {hasta}."
+plegar = "Plegar línea"
+desplegar = "Desplegar línea"
+codigo_plegado = "código plegado"
+desplegar_corto = "desplegar"
+caracter_control = "Carácter de control"
+
+[pdf]
+aria = "Vista del PDF"
+barra_aria = "Controles del PDF"
+vista_aria = "Páginas del PDF"
+abrir = "Abrir un PDF…"
+pagina = "Página"
+# {total}: número de páginas del PDF («de 58»).
+de_total = "de {total}"
+# {n} de {total}: nombre accesible de cada página dibujada.
+pagina_aria = "Página {n} de {total}"
+alejar = "Alejar"
+acercar = "Acercar"
+zoom = "{porcentaje} %"
+ajustar_ancho = "Ajustar al ancho"
+descargar = "Descargar PDF"
+vacio = "Aquí aparecerá el PDF de tu proyecto. Mientras tanto, puedes abrir un PDF de tu equipo para consultarlo."
+error_abrir = "No se pudo abrir ese PDF. Comprueba que el archivo no esté dañado."
+
+[problemas]
+vacio = "Sin errores ni avisos"
+error = "Error"
+aviso = "Aviso"
+donde_linea = "{ruta}, línea {linea}"
+
+[salida]
+vacio = "Aquí aparecerá el registro de la compilación."
+registro_aria = "Registro de la compilación"
+
+[paleta]
+boton = "Buscar o ejecutar un comando · Ctrl K"
+aria = "Buscar o ejecutar un comando"
+campo = "Escribe lo que buscas"
+marcador = "Buscar o ejecutar un comando"
+vacia = "Aún no hay comandos disponibles. Pronto podrás buscar proyectos y acciones desde aquí."
+
+[mensajes]
+aria = "Avisos"
+
+# --- Inicio mínimo (hasta que la sesión 09 haga el inicio real) ---
+
+[inicio.ejemplo]
+nombre = "Proyecto de ejemplo"

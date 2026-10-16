@@ -33,6 +33,12 @@ export default tseslint.config(
     languageOptions: { parserOptions: { parser: tseslint.parser } },
   },
   {
+    // Los `Map`/`Set` de estas clases y componentes son datos auxiliares que se reemplazan enteros o que no deben
+    // disparar reactividad (vistas de CodeMirror, conjuntos que se reasignan): `SvelteSet`/`SvelteMap` no aportan nada.
+    files: ['src/app/proyecto/estado.svelte.ts', 'src/app/paneles/PanelArchivos.svelte'],
+    rules: { 'svelte/prefer-svelte-reactivity': 'off' },
+  },
+  {
     // Ningún color fijo ni nombres de variables antiguos en el código: solo tokens --ipn-*.
     files: ['src/**/*.{svelte,ts}'],
     rules: {

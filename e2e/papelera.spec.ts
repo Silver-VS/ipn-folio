@@ -59,15 +59,28 @@ async function irAPapelera(page: Page): Promise<void> {
 }
 
 /** Responde la petición de hora del sitio con la cabecera `Date` que tenga `sitio.hora`, o la aborta. */
-async function simularHoraDelSitio(page: Page, sitio: { hora: number | 'sin-red' }): Promise<void> {
+async function simularHoraDelSitio(
+  page: Page,
+  sitio: { hora: number | 'sin-red'; respondidas?: number },
+): Promise<void> {
   await page.route('**/version.json', async (ruta) => {
     if (sitio.hora === 'sin-red') return ruta.abort('failed');
+    sitio.respondidas = (sitio.respondidas ?? 0) + 1;
     return ruta.fulfill({
       status: 200,
       headers: { date: new Date(sitio.hora).toUTCString(), 'content-type': 'application/json' },
       body: '{}',
     });
   });
+}
+
+/**
+ * Espera a que la app ya tenga la hora del sitio. Si se borra antes, el elemento queda con fecha no confiable y se
+ * vuelve a sellar con la primera hora confiable (D29): la prueba mediría otro plazo.
+ */
+async function esperarHoraDelSitio(page: Page, sitio: { respondidas?: number }): Promise<void> {
+  await expect.poll(() => sitio.respondidas ?? 0).toBeGreaterThan(0);
+  await page.waitForTimeout(200);
 }
 
 test.describe('papelera', () => {
@@ -157,10 +170,11 @@ test.describe('papelera', () => {
       page,
       isMobile,
     }) => {
-      const sitio = { hora: T as number | 'sin-red' };
+      const sitio: { hora: number | 'sin-red'; respondidas?: number } = { hora: T };
       await simularHoraDelSitio(page, sitio);
       await page.clock.install({ time: T });
       await abrirProyectoDeEjemplo(page);
+      await esperarHoraDelSitio(page, sitio);
       await borrarDelArbol(page, isMobile, /referencias\.bib/);
       await expect(page.getByRole('treeitem', { name: /referencias\.bib/ })).toHaveCount(0);
       await irAPapelera(page);
@@ -204,7 +218,7 @@ test.describe('papelera', () => {
       page,
       isMobile,
     }) => {
-      const sitio = { hora: T as number | 'sin-red' };
+      const sitio: { hora: number | 'sin-red'; respondidas?: number } = { hora: T };
       await simularHoraDelSitio(page, sitio);
       await page.clock.install({ time: T });
       await abrirProyectoDeEjemplo(page);
@@ -212,6 +226,7 @@ test.describe('papelera', () => {
       await page.getByLabel('Borrar automáticamente después de').selectOption('90');
       await page.evaluate(() => (location.hash = '#/'));
       await page.getByRole('link', { name: 'Proyecto de ejemplo' }).click();
+      await esperarHoraDelSitio(page, sitio);
       await borrarDelArbol(page, isMobile, /referencias\.bib/);
       sitio.hora = T + 20 * DIA;
       await page.clock.setSystemTime(T + 20 * DIA);

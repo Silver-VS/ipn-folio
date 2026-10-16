@@ -1,0 +1,11 @@
+[
+  {
+    "id": "reporte-practica",
+    "nombre": "Reporte de práctica",
+    "unidad": "ipn",
+    "descripcion": "Datos de la práctica, objetivo, desarrollo, resultados y conclusiones",
+    "archivos": ["main.tex", "desarrollo.tex", "referencias.bib", "LICENCIA"],
+    "licencia": "CC0-1.0",
+    "origen": "repo"
+  }
+]

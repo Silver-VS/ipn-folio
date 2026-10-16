@@ -5,6 +5,7 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { pluginPwa, pluginVersionJson } from '../../scripts/lib/pwa.mjs';
+import { pluginEspejoEstatico } from '../../scripts/lib/espejo-vite.mjs';
 import { URL_ESPEJO } from '../config';
 
 const raiz = fileURLToPath(new URL('../..', import.meta.url));
@@ -12,7 +13,7 @@ const raiz = fileURLToPath(new URL('../..', import.meta.url));
 export default defineConfig({
   root: raiz,
   base: '/',
-  plugins: [pluginVersionJson(new URL('../../', import.meta.url)), pluginPwa(false)],
+  plugins: [pluginVersionJson(new URL('../../', import.meta.url)), pluginEspejoEstatico(), pluginPwa(false)],
   worker: { format: 'iife' },
   // El service worker solo guarda las respuestas del espejo cuya dirección conoce desde la compilación.
   define: { 'import.meta.env.VITE_ESPEJO_URL': JSON.stringify(URL_ESPEJO) },

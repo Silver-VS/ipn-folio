@@ -25,8 +25,55 @@
   import { EstadoProyecto } from './estado.svelte';
   import Mensajes from './Mensajes.svelte';
   import Paleta from './Paleta.svelte';
+  import { tienda } from '../../herramientas/tienda.svelte';
+  import type { TiendaHerramientas } from '../../herramientas/tienda.svelte';
+  import PanelDescarga from '../avisos/PanelDescarga.svelte';
+  import PildoraEstado from './PildoraEstado.svelte';
+  import { conectarCompilacion } from './compilar';
 
-  let { id }: { id: string } = $props();
+  let { id, alProtegerSalida }: { id: string; alProtegerSalida: (comprobar?: () => boolean) => void } =
+    $props();
+  let herramientas = $state.raw<TiendaHerramientas>();
+
+  $effect(() => {
+    const e = estado;
+    if (!e) return;
+    let vivo = true;
+    let controlador: ReturnType<typeof conectarCompilacion> | undefined;
+    void tienda()
+      .then(async (t) => {
+        const automatica = await e.servicios.almacen.leerAjuste<boolean>('compilacionAutomatica');
+        if (!vivo) return;
+        e.compilacionAutomatica = automatica === true;
+        herramientas = t;
+        controlador = conectarCompilacion(e, t);
+        e.actualizarPdf = controlador.solicitar;
+      })
+      .catch((error: unknown) => {
+        if (!vivo) return;
+        console.error('Folio: no se pudo conectar la compilación', { proyecto: e.id, error });
+        e.avisar('error', t('flujo.fallo_preparacion'));
+      });
+    alProtegerSalida(() => !e.conflictos.length || window.confirm(t('flujo.salir_conflicto')));
+    const antesDeSalir = (evento: BeforeUnloadEvent) => {
+      if (!e.conflictos.length) return;
+      evento.preventDefault();
+      evento.returnValue = '';
+    };
+    window.addEventListener('beforeunload', antesDeSalir);
+    return () => {
+      vivo = false;
+      e.actualizarPdf = undefined;
+      controlador?.destruir();
+      alProtegerSalida();
+      window.removeEventListener('beforeunload', antesDeSalir);
+    };
+  });
+
+  $effect(() => {
+    if (!estado?.salto || !espacio) return;
+    if (!espacio.visible('editor')) espacio.alternarPanel('editor');
+  });
 
   let estado = $state.raw<EstadoProyecto>();
   let cargando = $state(true);
@@ -125,7 +172,9 @@
     if (estado.ultimoGuardado === undefined) return t('guardado.todo');
     const segundos = Math.max(0, Math.floor((ahora - estado.ultimoGuardado) / 1000));
     const minutos = Math.floor(segundos / 60);
-    return segundos < 60 ? t('guardado.hace_segundos', { segundos }) : t('guardado.hace_minutos', { minutos });
+    return segundos < 60
+      ? t('guardado.hace_segundos', { segundos })
+      : t('guardado.hace_minutos', { minutos });
   });
 
   // ---------- menús ----------
@@ -247,6 +296,23 @@
         {textoGuardado}
       </p>
       <div class="acciones">
+        <button type="button" class="boton" disabled={!herramientas} onclick={() => void estado!.guardarYa()}
+          >{t('flujo.actualizar')}</button
+        >
+        <PildoraEstado {estado} />
+        <label class="automatica"
+          ><input
+            type="checkbox"
+            bind:checked={estado.compilacionAutomatica}
+            onchange={(evento) => {
+              const valor = evento.currentTarget.checked;
+              estado!.compilacionAutomatica = valor;
+              void estado!.servicios.almacen
+                .guardarAjuste('compilacionAutomatica', valor)
+                .catch((e: unknown) => estado!.avisarError(e));
+            }}
+          />{t('flujo.automatica')}</label
+        >
         <button type="button" class="boton" onclick={() => (estado!.paletaAbierta = true)}
           >{t('paleta.boton')}</button
         >
@@ -257,6 +323,9 @@
         <Menu etiqueta={t('proyecto.tema')} elementos={elementosTema} />
       </div>
     </header>
+    {#if herramientas && (herramientas.pregunta || herramientas.error || herramientas.latex.estado === 'descargando')}
+      <PanelDescarga tienda={herramientas} />
+    {/if}
 
     <main class="espacio" aria-label={t('proyecto.espacio_aria')}>
       {#if modo === 'amplio'}
@@ -272,6 +341,13 @@
 </div>
 
 <style>
+  .automatica {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ipn-esp-2);
+    min-height: var(--ipn-objetivo-tactil);
+    font-size: var(--ipn-tamano-s);
+  }
   .proyecto {
     display: flex;
     flex-direction: column;

@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { existsSync } from 'node:fs';
 import { defineConfig, devices } from '@playwright/test';
-import { PUERTO_BANCO, PUERTO_DESARROLLO, PUERTO_ESPEJO } from './e2e/config';
+import { PUERTO_BANCO, PUERTO_DESARROLLO, PUERTO_ESPEJO, URL_ESPEJO } from './e2e/config';
 
 const PUERTO = Number(process.env.FOLIO_PUERTO_E2E ?? 4173);
 // Banco de compilación (e2e/banco): lo empaqueta y sirve Vite (build propio) y solo se levanta si hay activos de BusyTeX.
 const hayActivos = existsSync('public/busytex/busytex.wasm');
 // Espejo de TeX Live (sesión 04): las pruebas de español, glosarios e índices con nombre lo necesitan; se levanta solo si existe.
 const hayEspejo = existsSync('espejo-local');
+if (hayEspejo) process.env.VITE_ESPEJO_URL ??= URL_ESPEJO;
 
 // Tres perfiles: escritorio (Chromium), móvil (Chromium emulando un teléfono) y WebKit (motor de Safari).
 // Los navegadores se buscan en PLAYWRIGHT_BROWSERS_PATH (en este equipo: D:\Tools\playwright-browsers).

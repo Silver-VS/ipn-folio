@@ -4,6 +4,17 @@ import { crearAlmacenMemoria } from './almacen-memoria';
 import { crearAutoguardado } from './autoguardado';
 
 describe('autoguardado', () => {
+  it('renombrar un proyecto guarda primero y emite el cambio para otras pestañas', async () => {
+    const { almacen, p } = await preparar();
+    const auto = crearAutoguardado(almacen);
+    const cambios = vi.fn();
+    almacen.al('cambio-proyecto', cambios);
+    auto.programar(p.id, 'main.tex', 'último texto');
+    await auto.renombrarProyecto(p.id, 'Nombre con acentos: práctica');
+    expect((await almacen.leer(p.id, 'main.tex'))?.contenido).toBe('último texto');
+    expect((await almacen.obtenerProyecto(p.id))?.nombre).toBe('Nombre con acentos: práctica');
+    expect(cambios).toHaveBeenCalledWith({ tipo: 'cambio-proyecto', proyectoId: p.id });
+  });
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 

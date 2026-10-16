@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 
 const RAIZ = fileURLToPath(new URL('.', import.meta.url));
 const PROHIBIDO =
-  /almacen\s*\.\s*(escribir|renombrar|moverAPapelera|moverArchivosAPapelera|restaurar|restaurarDePapelera|borrarDefinitivo|vaciarPapelera|purgarCaducados|borrar)\s*\(/;
+  /almacen\s*\.\s*(escribir|renombrar|renombrarProyecto|moverAPapelera|moverArchivosAPapelera|restaurar|restaurarDePapelera|borrarDefinitivo|vaciarPapelera|purgarCaducados|borrar)\s*\(/;
 
 function fuentes(dir: string): string[] {
   const salida: string[] = [];

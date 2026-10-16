@@ -69,6 +69,7 @@
 </script>
 
 <section class="pdf" aria-label={t('pdf.aria')}>
+  {#if estado.pdfAnterior}<p role="status">{t('flujo.pdf_anterior')}</p>{/if}
   <div class="barra" role="toolbar" aria-label={t('pdf.barra_aria')}>
     <button type="button" class="boton" onclick={() => selector?.click()}>{t('pdf.abrir')}</button>
     <input
@@ -84,14 +85,7 @@
       {@const porcentaje = Math.round(info.zoom * 100)}
       <label class="pagina">
         <span class="etiqueta">{t('pdf.pagina')}</span>
-        <input
-          class="campo"
-          type="number"
-          min="1"
-          max={info.total}
-          value={info.pagina}
-          onchange={irA}
-        />
+        <input class="campo" type="number" min="1" max={info.total} value={info.pagina} onchange={irA} />
         <span>{t('pdf.de_total', { total: info.total })}</span>
       </label>
       <button type="button" class="boton icono" aria-label={t('pdf.alejar')} onclick={() => visor?.alejar()}

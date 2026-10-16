@@ -16,6 +16,11 @@
   import { t } from './textos/t';
 
   let ruta = $state<Ruta>(rutaDeHash(location.hash));
+  let hashActual = location.hash;
+  let comprobarSalida: (() => boolean) | undefined;
+  const protegerSalida = (comprobar?: () => boolean) => {
+    comprobarSalida = comprobar;
+  };
   // La pantalla de proyecto (CodeMirror, paneles) se descarga solo al abrir un proyecto: el inicio queda ligero.
   let cargaProyecto: Promise<typeof import('./app/proyecto/Proyecto.svelte')> | undefined;
   const cargarProyecto = () => (cargaProyecto ??= import('./app/proyecto/Proyecto.svelte'));
@@ -45,6 +50,8 @@
   );
 
   onMount(() => {
+    let indiceHistorial = Number(history.state?.folioIndice ?? 0);
+    history.replaceState({ ...history.state, folioIndice: indiceHistorial }, '');
     void Promise.all([servicios(), crearTienda()])
       .then(async ([servicio, tienda]) => {
         s = servicio;
@@ -64,7 +71,19 @@
         },
       });
     }
-    const alCambiarHash = () => (ruta = rutaDeHash(location.hash));
+    const alCambiarHash = () => {
+      if (location.hash === hashActual) return;
+      const destino = Number(history.state?.folioIndice ?? indiceHistorial + 1);
+      history.replaceState({ ...history.state, folioIndice: destino }, '');
+      if (comprobarSalida && !comprobarSalida()) {
+        // Restaurar la posición evita duplicar el proyecto al cancelar un enlace, Atrás o Adelante.
+        history.go(indiceHistorial - destino);
+        return;
+      }
+      indiceHistorial = destino;
+      hashActual = location.hash;
+      ruta = rutaDeHash(hashActual);
+    };
     window.addEventListener('hashchange', alCambiarHash);
     return () => window.removeEventListener('hashchange', alCambiarHash);
   });
@@ -82,7 +101,7 @@
 {:else if ruta.pantalla === 'proyecto'}
   {#await cargarProyecto() then modulo}
     {#key ruta.id}
-      <modulo.default id={ruta.id} />
+      <modulo.default id={ruta.id} alProtegerSalida={protegerSalida} />
     {/key}
   {:catch}
     <p role="alert">{t('pwa.error_carga')}</p>

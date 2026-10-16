@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "nombre", "unidad", "descripcion", "archivos", "licencia", "origen"],
+    "properties": {
+      "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+      "nombre": { "type": "string", "minLength": 1 },
+      "unidad": { "type": "string", "minLength": 1 },
+      "descripcion": { "type": "string", "minLength": 1 },
+      "archivos": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": { "type": "string", "pattern": "^(?!/)(?!.*(?:\\\\|\\.\\.|:))[A-Za-z0-9_./-]+$" }
+      },
+      "licencia": { "type": "string", "enum": ["CC0-1.0"] },
+      "origen": { "type": "string", "enum": ["repo", "local"] }
+    }
+  }
+}

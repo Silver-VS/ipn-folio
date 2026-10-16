@@ -2,7 +2,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { acerca } from './acerca';
+  import AvisoCiclo from './app/AvisoCiclo.svelte';
   import Inicio from './app/Inicio.svelte';
+  import Papelera from './app/papelera/Papelera.svelte';
   import { rutaDeHash, type Ruta } from './app/ruta';
   import { t } from './textos/t';
 
@@ -18,6 +20,8 @@
   });
 </script>
 
+<AvisoCiclo />
+
 {#if ruta.pantalla === 'proyecto'}
   {#await cargarProyecto() then modulo}
     {#key ruta.id}
@@ -32,7 +36,11 @@
     </header>
 
     <main id="espacio-de-trabajo" aria-label={t('inicio.espacio.aria')}>
-      <Inicio />
+      {#if ruta.pantalla === 'papelera'}
+        <Papelera />
+      {:else}
+        <Inicio />
+      {/if}
     </main>
 
     <footer class="pie">

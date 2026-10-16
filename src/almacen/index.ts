@@ -30,7 +30,7 @@ export { crearAutoguardado } from './autoguardado';
 export type { Autoguardado, EstadoAutoguardado, VentanaProtegible } from './autoguardado';
 export { crearAvisos, conectarAvisos } from './avisos';
 export { crearRelojConfiable, medirHora } from './hora';
-export type { RelojConfiable } from './hora';
+export type { FetchHora, RelojConfiable } from './hora';
 export type { Aviso, Avisos } from './avisos';
 export { exportarZip, importarZip, detectarPrincipal } from './zip';
 export { pedirPersistencia, espacio } from './persistencia';

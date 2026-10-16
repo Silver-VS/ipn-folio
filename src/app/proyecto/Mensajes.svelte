@@ -3,12 +3,17 @@
   import { t } from '../../textos/t';
   import type { EstadoProyecto } from './estado.svelte';
 
-  let { estado }: { estado: EstadoProyecto } = $props();
+  // `compacto`: los avisos se quedan sobre la barra de pestañas del teléfono, no encima de ella.
+  let { estado, compacto = false }: { estado: EstadoProyecto; compacto?: boolean } = $props();
 </script>
 
-<div class="mensajes" role="region" aria-label={t('mensajes.aria')}>
+<div class="mensajes" class:compacto role="region" aria-label={t('mensajes.aria')}>
   {#each ['polite', 'assertive'] as prioridad (prioridad)}
-    <div aria-live={prioridad === 'polite' ? 'polite' : 'assertive'} aria-relevant="additions text">
+    <div
+      role={prioridad === 'polite' ? 'status' : undefined}
+      aria-live={prioridad === 'polite' ? 'polite' : 'assertive'}
+      aria-relevant="additions text"
+    >
       {#each estado.mensajes.filter((m) => (m.tipo === 'error') === (prioridad === 'assertive')) as mensaje (mensaje.id)}
         <div class="mensaje {mensaje.tipo}">
           <p class="texto">{mensaje.texto}</p>
@@ -59,6 +64,10 @@
     color: var(--ipn-texto);
     font-size: var(--ipn-tamano-s);
     pointer-events: auto;
+  }
+
+  .mensajes.compacto {
+    bottom: calc(var(--ipn-objetivo-tactil) + var(--ipn-esp-3) * 2);
   }
 
   .mensajes > div {

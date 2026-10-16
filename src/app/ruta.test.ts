@@ -4,7 +4,14 @@ import { hashDeProyecto, rutaDeHash } from './ruta';
 
 describe('ruta por hash', () => {
   it('sin hash o con uno desconocido es el inicio', () => {
-    for (const h of ['', '#', '#/', '#/otra', '#/proyecto', '#/proyecto/']) expect(rutaDeHash(h), h).toEqual({ pantalla: 'inicio' });
+    for (const h of ['', '#', '#/', '#/otra', '#/proyecto', '#/proyecto/'])
+      expect(rutaDeHash(h), h).toEqual({ pantalla: 'inicio' });
+  });
+
+  it('#/papelera abre la papelera (con o sin barra final)', () => {
+    expect(rutaDeHash('#/papelera')).toEqual({ pantalla: 'papelera' });
+    expect(rutaDeHash('#/papelera/')).toEqual({ pantalla: 'papelera' });
+    expect(rutaDeHash('#/papeleras')).toEqual({ pantalla: 'inicio' });
   });
 
   it('#/proyecto/<id> abre el proyecto (con o sin barra final)', () => {

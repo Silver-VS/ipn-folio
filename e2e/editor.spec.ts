@@ -61,6 +61,8 @@ test.describe('editor y archivos', () => {
     await page.getByRole('treeitem', { name: /ideas\.tex/ }).click();
     await page.getByRole('button', { name: 'Borrar', exact: true }).click();
     await expect(page.getByRole('treeitem', { name: /ideas\.tex/ })).toHaveCount(0);
+    // Sin confirmación: va a la papelera y el aviso lo dice una sola vez, con el plazo.
+    await expect(page.getByText('Se movió notas/ideas.tex a la papelera. Tienes 30 días para recuperarlo.')).toBeVisible();
     await page.getByRole('button', { name: 'Deshacer' }).click();
     await expect(page.getByRole('treeitem', { name: /ideas\.tex/ })).toBeVisible();
   });
@@ -219,9 +221,14 @@ test.describe('editor y archivos', () => {
     await page.getByRole('button', { name: 'Proyecto', exact: true }).click();
     await page.getByRole('menuitem', { name: 'Mover el proyecto a la papelera' }).click();
     await expect(page).toHaveURL(/#\/$/);
-    await expect(page.getByRole('heading', { name: 'Papelera' })).toBeVisible();
-    await page.getByRole('button', { name: 'Restaurar' }).click();
+    await expect(
+      page.getByText('Se movió el proyecto Proyecto de ejemplo a la papelera. Tienes 30 días para recuperarlo.'),
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Papelera (1)' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Proyecto de ejemplo' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Deshacer' }).click();
     await expect(page.getByRole('link', { name: 'Proyecto de ejemplo' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Papelera (0)' })).toBeVisible();
   });
 
   test('cerrar y reabrir lee la otra pestaña y un archivo recreado no conserva texto viejo', async ({
@@ -295,26 +302,25 @@ test.describe('editor y archivos', () => {
     await expect.poll(() => textoDelEditor(page)).toMatch(/^amplio compacto amplio otra vez /);
   });
 
-  test('Supr sobre una carpeta pide confirmación y cancelar conserva los archivos', async ({ page }) => {
+  test('Supr sobre una carpeta la manda a la papelera sin confirmar y Deshacer la devuelve completa', async ({
+    page,
+  }) => {
     await abrirProyectoDeEjemplo(page);
     await page.getByRole('button', { name: 'Nuevo archivo' }).click();
     await page.getByLabel('Nombre del archivo nuevo').fill('notas/apuntes.tex');
     await page.keyboard.press('Enter');
     const carpeta = page.getByRole('treeitem', { name: 'notas', exact: true });
-    const dialogo = page.waitForEvent('dialog');
+    let aparecioDialogo = false;
+    page.on('dialog', () => (aparecioDialogo = true));
     await carpeta.focus();
-    const pulsacion = carpeta.press('Delete');
-    const confirmar = await dialogo;
-    expect(confirmar.message()).toContain('notas');
-    await confirmar.dismiss();
-    await pulsacion;
-    await expect(page.getByRole('treeitem', { name: /apuntes\.tex/ })).toBeVisible();
-    page.once('dialog', (d) => void d.accept());
     await carpeta.press('Delete');
     await expect(page.getByRole('treeitem', { name: /apuntes\.tex/ })).toHaveCount(0);
+    expect(aparecioDialogo).toBe(false);
     await expect(page.getByRole('treeitem', { name: /main\.tex/ })).toBeFocused();
     await page.getByRole('button', { name: 'Deshacer' }).click();
     await expect(page.getByRole('treeitem', { name: /apuntes\.tex/ })).toBeVisible();
+    // El foco vuelve al árbol, a la fila restaurada.
+    await expect(page.getByRole('treeitem', { name: /apuntes\.tex/ })).toBeFocused();
   });
 
   test('las regiones vivas existen antes de insertar el aviso de borrado', async ({ page }) => {
@@ -327,7 +333,7 @@ test.describe('editor y archivos', () => {
     await expect(assertive).toBeEmpty();
     await page.getByRole('treeitem', { name: /referencias\.bib/ }).click();
     await page.getByRole('button', { name: 'Borrar', exact: true }).click();
-    await expect(polite).toContainText('Se borró referencias.bib.');
+    await expect(polite).toContainText('Se movió referencias.bib a la papelera.');
     await expect(assertive).toBeEmpty();
   });
 

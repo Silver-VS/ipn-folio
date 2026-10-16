@@ -16,6 +16,9 @@
   import { t } from './textos/t';
 
   let ruta = $state<Ruta>(rutaDeHash(location.hash));
+  let hashActual = location.hash;
+  let comprobarSalida: (() => boolean) | undefined;
+  const protegerSalida = (comprobar?: () => boolean) => { comprobarSalida = comprobar; };
   // La pantalla de proyecto (CodeMirror, paneles) se descarga solo al abrir un proyecto: el inicio queda ligero.
   let cargaProyecto: Promise<typeof import('./app/proyecto/Proyecto.svelte')> | undefined;
   const cargarProyecto = () => (cargaProyecto ??= import('./app/proyecto/Proyecto.svelte'));
@@ -64,7 +67,15 @@
         },
       });
     }
-    const alCambiarHash = () => (ruta = rutaDeHash(location.hash));
+    const alCambiarHash = () => {
+      if (location.hash === hashActual) return;
+      if (comprobarSalida && !comprobarSalida()) {
+        history.replaceState(null, '', `${location.pathname}${location.search}${hashActual}`);
+        return;
+      }
+      hashActual = location.hash;
+      ruta = rutaDeHash(hashActual);
+    };
     window.addEventListener('hashchange', alCambiarHash);
     return () => window.removeEventListener('hashchange', alCambiarHash);
   });
@@ -82,7 +93,7 @@
 {:else if ruta.pantalla === 'proyecto'}
   {#await cargarProyecto() then modulo}
     {#key ruta.id}
-      <modulo.default id={ruta.id} />
+      <modulo.default id={ruta.id} alProtegerSalida={protegerSalida} />
     {/key}
   {:catch}
     <p role="alert">{t('pwa.error_carga')}</p>

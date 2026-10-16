@@ -1,6 +1,8 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <script lang="ts">
   import { EditorView } from '@codemirror/view';
+  import { setDiagnostics } from '@codemirror/lint';
+  import { diagnosticos } from '../../editor/marcas';
   import { tick, untrack } from 'svelte';
   import { aTexto } from '../../almacen/rutas';
   import { crearEstadoEditor } from '../../editor/crear-editor';
@@ -40,6 +42,7 @@
       const vista = new EditorView({ state: guardado, parent: nodo, root: nodo.ownerDocument });
       propias.set(nodo, { ruta, vista });
       estado.vistas.set(ruta, vista);
+      marcarYSaltar(vista, ruta);
     })();
     return {
       destroy() {
@@ -57,6 +60,23 @@
       },
     };
   }
+
+  function marcarYSaltar(vista: EditorView, ruta: string) {
+    vista.dispatch(setDiagnostics(vista.state, diagnosticos(vista.state, ruta, estado.problemas)));
+    const salto = estado.salto;
+    if (salto?.ruta !== ruta) return;
+    const linea = vista.state.doc.line(Math.max(1, Math.min(salto.linea, vista.state.doc.lines)));
+    vista.dispatch({ selection: { anchor: linea.from }, effects: EditorView.scrollIntoView(linea.from, { y: 'center' }) });
+    vista.focus();
+  }
+
+  $effect(() => {
+    void estado.problemas;
+    void estado.salto;
+    void tick().then(() => {
+      for (const { ruta, vista } of propias.values()) marcarYSaltar(vista, ruta);
+    });
+  });
 
   async function elegir(ruta: string) {
     estado.activarArchivo(ruta);

@@ -3,7 +3,7 @@
 # Reglas: claves a-z0-9_ con puntos; variables {nombre}; plurales {n, plural, one {# x} other {# xs}}.
 # Los textos que también necesita IPN-tools viven en ipn-comun (comun.es.toml), no aquí.
 # Al cambiar un texto: sube `version` y anota el cambio en contenido/CAMBIOS.md.
-version = "2026.10.14"
+version = "2026.10.15"
 
 [app]
 # Nombre del producto: <title> de la página y encabezado. Es un nombre propio.
@@ -26,6 +26,21 @@ espacio.aria = "Espacio de trabajo"
 proyectos = "Tus proyectos"
 sin_proyectos = "Aún no tienes proyectos en este equipo."
 crear_ejemplo = "Crear un proyecto de ejemplo"
+
+[flujo]
+actualizar = "Actualizar PDF"
+actualizando = "Actualizando PDF…"
+sin_compilar = "PDF sin generar"
+listo = "PDF actualizado · {segundos} s"
+avisos = "PDF actualizado · Revisa {n, plural, one {# aviso} other {# avisos}}"
+error = "No se pudo actualizar el PDF · Revisa los problemas"
+que_revisar = "Qué revisar"
+ir_linea = "Ir a la línea"
+ver_detalle = "Ver detalle"
+pdf_anterior = "Estás viendo la última versión del PDF que compiló sin errores. Corrige los problemas y actualiza el PDF."
+resolver_conflicto = "Conserva tu versión o carga la de la otra pestaña antes de cerrar el archivo o actualizar el PDF."
+salir_conflicto = "Hay cambios locales en conflicto con otra pestaña. Si sales, perderás tu versión local. ¿Quieres salir?"
+fallo_preparacion = "No se pudo preparar el PDF. Comprueba que tus cambios estén guardados y vuelve a actualizarlo."
 
 [papelera]
 # Vista única de lo que se borra (proyectos, carpetas y archivos). Se queda ahí hasta que caduca o se borra a propósito.

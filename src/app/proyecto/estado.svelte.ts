@@ -43,6 +43,8 @@ export interface Problema {
   texto: string;
   ruta?: string;
   linea?: number;
+  accion?: string;
+  original?: string;
 }
 
 export interface PdfMostrado {
@@ -81,6 +83,12 @@ export class EstadoProyecto {
   pdf = $state.raw<PdfMostrado | undefined>();
   problemas = $state.raw<Problema[]>([]);
   salida = $state('');
+  compilacion = $state<'sin-compilar' | 'compilando' | 'listo' | 'avisos' | 'error'>('sin-compilar');
+  progresoCompilacion = $state('');
+  duracionCompilacion = $state('');
+  pdfAnterior = $state(false);
+  salto = $state.raw<{ ruta: string; linea: number; n: number } | undefined>();
+  actualizarPdf?: () => Promise<void>;
   paletaAbierta = $state(false);
   pestanaCompacta = $state<PestanaCompacta>('editor');
   /** Sube cada vez que un panel pasa a otra ventana del navegador o vuelve: los paneles se vuelven a medir. */
@@ -209,6 +217,10 @@ export class EstadoProyecto {
   }
 
   cerrarArchivo(ruta: string): void {
+    if (this.conflictos.includes(ruta)) {
+      this.avisar('aviso', t('flujo.resolver_conflicto'));
+      return;
+    }
     const i = this.abiertos.indexOf(ruta);
     if (i < 0) return;
     const quedan = this.abiertos.filter((r) => r !== ruta);
@@ -262,7 +274,15 @@ export class EstadoProyecto {
 
   /** Ctrl+S: guarda ya. La sesión 09 agrega la compilación. */
   async guardarYa(): Promise<void> {
-    await this.servicios.auto.guardarTodo();
+    if (this.actualizarPdf) await this.actualizarPdf();
+    else await this.servicios.auto.guardarTodo();
+  }
+
+  irALinea(problema: Problema): void {
+    if (!problema.ruta || !problema.linea) return;
+    this.abrirArchivo(problema.ruta);
+    this.seleccionarPestanaCompacta('editor');
+    this.salto = { ruta: problema.ruta, linea: problema.linea, n: (this.salto?.n ?? 0) + 1 };
   }
 
   // ---------- operaciones del árbol (todas por el autoguardado) ----------

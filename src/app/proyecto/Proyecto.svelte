@@ -25,8 +25,46 @@
   import { EstadoProyecto } from './estado.svelte';
   import Mensajes from './Mensajes.svelte';
   import Paleta from './Paleta.svelte';
+  import { tienda } from '../../herramientas/tienda.svelte';
+  import type { TiendaHerramientas } from '../../herramientas/tienda.svelte';
+  import PanelDescarga from '../avisos/PanelDescarga.svelte';
+  import PildoraEstado from './PildoraEstado.svelte';
+  import { conectarCompilacion } from './compilar';
 
-  let { id }: { id: string } = $props();
+  let { id, alProtegerSalida }: { id: string; alProtegerSalida: (comprobar?: () => boolean) => void } = $props();
+  let herramientas = $state.raw<TiendaHerramientas>();
+
+  $effect(() => {
+    const e = estado;
+    if (!e) return;
+    let vivo = true;
+    let controlador: ReturnType<typeof conectarCompilacion> | undefined;
+    void tienda().then((t) => {
+      if (!vivo) return;
+      herramientas = t;
+      controlador = conectarCompilacion(e, t);
+      e.actualizarPdf = controlador.solicitar;
+    });
+    alProtegerSalida(() => !e.conflictos.length || window.confirm(t('flujo.salir_conflicto')));
+    const antesDeSalir = (evento: BeforeUnloadEvent) => {
+      if (!e.conflictos.length) return;
+      evento.preventDefault();
+      evento.returnValue = '';
+    };
+    window.addEventListener('beforeunload', antesDeSalir);
+    return () => {
+      vivo = false;
+      e.actualizarPdf = undefined;
+      controlador?.destruir();
+      alProtegerSalida();
+      window.removeEventListener('beforeunload', antesDeSalir);
+    };
+  });
+
+  $effect(() => {
+    if (!estado?.salto || !espacio) return;
+    if (!espacio.visible('editor')) espacio.alternarPanel('editor');
+  });
 
   let estado = $state.raw<EstadoProyecto>();
   let cargando = $state(true);
@@ -247,6 +285,8 @@
         {textoGuardado}
       </p>
       <div class="acciones">
+        <button type="button" class="boton" disabled={!herramientas} onclick={() => void estado!.guardarYa()}>{t('flujo.actualizar')}</button>
+        <PildoraEstado {estado} />
         <button type="button" class="boton" onclick={() => (estado!.paletaAbierta = true)}
           >{t('paleta.boton')}</button
         >
@@ -257,6 +297,9 @@
         <Menu etiqueta={t('proyecto.tema')} elementos={elementosTema} />
       </div>
     </header>
+    {#if herramientas && (herramientas.pregunta || herramientas.error || herramientas.latex.estado === 'descargando')}
+      <PanelDescarga tienda={herramientas} />
+    {/if}
 
     <main class="espacio" aria-label={t('proyecto.espacio_aria')}>
       {#if modo === 'amplio'}

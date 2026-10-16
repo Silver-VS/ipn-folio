@@ -69,6 +69,7 @@
 </script>
 
 <section class="pdf" aria-label={t('pdf.aria')}>
+  {#if estado.pdfAnterior}<p role="status">{t('flujo.pdf_anterior')}</p>{/if}
   <div class="barra" role="toolbar" aria-label={t('pdf.barra_aria')}>
     <button type="button" class="boton" onclick={() => selector?.click()}>{t('pdf.abrir')}</button>
     <input

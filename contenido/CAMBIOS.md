@@ -57,6 +57,7 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 
 ## 2026.10.13
 
+- 2026-10-16 · `pwa.*`, `herramientas.*`, `descarga.*`, `ajustes.*`, `bienvenida.*` · (nuevas) aviso de actualización, catálogo de herramientas, descargas con progreso y reglas de red, Ajustes › Herramientas y bienvenida de primer uso; los tamaños van como `{megas}`, sin cifras fijas · Claude Sonnet (sesión 07).
 - 2026-10-16 · `papelera.*` · (nuevas) vista única de la papelera: encabezado, caducidad, avisos de tamaño, restaurar, borrar definitivamente, vaciar y avisos de restauración (D29) · Claude Sonnet (sesión 11).
 - 2026-10-16 · `archivos.borrado` · «Se borró {ruta}.» → «Se movió {ruta} a la papelera. Tienes {dias} días para recuperarlo.» (único aviso de caducidad, al mandar a la papelera) · Claude Sonnet (sesión 11).
 - 2026-10-16 · `editor.borrado_en_otra` · «Otra pestaña borró {ruta}…» → «Se movió {ruta} a la papelera desde otra pestaña…» · Claude Sonnet (sesión 11).

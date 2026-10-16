@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Banco de pruebas del motor: expone `window.banco` para que Playwright compile fixtures o una carpeta
 // con el orquestador (sesión 06). Parámetro de la URL: ?espejo=<URL del espejo de TeX Live> (opcional).
+import { crearAlmacen } from '../../src/almacen';
 import { Motor } from '../../src/compilacion/motor';
+import { crearInstaladorReal } from '../../src/herramientas/servicio';
+import type { ProgresoInstalacion } from '../../src/herramientas/instalador';
+import { registrarServiceWorker } from '../../src/pwa/registro';
 import { Orquestador } from '../../src/compilacion/orquestador/orquestador';
 import type { EventoOrquestador } from '../../src/compilacion/orquestador/orquestador';
 import type { ArchivoProyecto } from '../../src/compilacion/tipos';
@@ -200,6 +204,86 @@ const banco = {
   },
 
   progreso: () => progreso,
+
+  /** Registra el service worker del producto (/sw.js) y espera a que controle esta página. */
+  async registrarSW() {
+    await registrarServiceWorker({ url: '/sw.js', alHaberActualizacion: () => undefined });
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) {
+      await new Promise<void>((resolver) =>
+        navigator.serviceWorker.addEventListener('controllerchange', () => resolver(), { once: true }),
+      );
+    }
+    return true;
+  },
+
+  /** Instala «Documentos LaTeX» con el instalador real; devuelve la evidencia (bytes, fases, estado, espacio). */
+  async instalarLatex() {
+    const { almacen } = await crearAlmacen({ nombreBD: 'banco-pwa' });
+    const instalador = crearInstaladorReal(almacen, '/busytex');
+    const avances: ProgresoInstalacion[] = [];
+    const t0 = performance.now();
+    await instalador.instalar('latex', (p) => avances.push(p));
+    const estado = await instalador.estado('latex');
+    const e = await navigator.storage.estimate();
+    return {
+      ms: Math.round(performance.now() - t0),
+      estado,
+      fases: [...new Set(avances.map((a) => a.fase))],
+      ultimo: avances.at(-1) ?? null,
+      persistente: await navigator.storage.persisted(),
+      usoBytes: e.usage ?? 0,
+    };
+  },
+
+  /** Proyectos del almacén del banco (para comprobar que quitar LaTeX no los toca). */
+  async proyectos(crear?: string) {
+    const { almacen } = await crearAlmacen({ nombreBD: 'banco-pwa' });
+    if (crear)
+      await almacen.crearProyecto({ nombre: crear }, [
+        { ruta: 'main.tex', contenido: '\\documentclass{article}' },
+      ]);
+    return (await almacen.listarProyectos('activos')).map((p) => p.nombre);
+  },
+
+  /** Bases de IndexedDB del sitio (Emscripten guarda el paquete de datos en EM_PRELOAD_CACHE). */
+  async basesIndexedDb() {
+    return (await indexedDB.databases()).map((b) => b.name ?? '');
+  },
+
+  async quitarLatex() {
+    const { almacen } = await crearAlmacen({ nombreBD: 'banco-pwa' });
+    const instalador = crearInstaladorReal(almacen, '/busytex');
+    await instalador.quitar('latex');
+    return instalador.estado('latex');
+  },
+
+  /** Contenido de las cachés de Cache API: { nombre: [rutas] }. */
+  async cachesFolio() {
+    const salida: Record<string, string[]> = {};
+    for (const nombre of await caches.keys()) {
+      const cache = await caches.open(nombre);
+      salida[nombre] = (await cache.keys()).map((r) => new URL(r.url).pathname);
+    }
+    return salida;
+  },
+
+  /**
+   * Pide `url` con un XHR SÍNCRONO desde un worker (como hace kpathsea en el worker de BusyTeX).
+   * Devuelve estado y tamaño, y si la respuesta llegó por el service worker (lo dice el propio SW con una cabecera).
+   */
+  async xhrSincronoDesdeWorker(url: string) {
+    const codigo = `onmessage = (e) => { const x = new XMLHttpRequest(); x.open('GET', e.data, false); x.overrideMimeType('text/plain; charset=x-user-defined'); try { x.send(); postMessage({ estado: x.status, tamano: x.responseText.length }); } catch (err) { postMessage({ error: String(err) }); } };`;
+    const blob = new Blob([codigo], { type: 'text/javascript' });
+    const worker = new Worker(URL.createObjectURL(blob));
+    return new Promise<{ estado?: number; tamano?: number; error?: string }>((resolver) => {
+      worker.onmessage = (e) => {
+        worker.terminate();
+        resolver(e.data);
+      };
+      worker.postMessage(url);
+    });
+  },
 };
 
 declare global {

@@ -8,6 +8,17 @@ import { pathToFileURL } from 'node:url';
 import { configurar, reiniciar, registrar, t as formatear } from '@ipn/comun/js/texto.js';
 import { RAIZ, leerTextosComun, leerTextosFolio, leerVetadas, variablesDe } from './lib/textos.mjs';
 
+/** Un tamaño escrito a mano («90 MB», «1,5 GB»): los textos piden {megas} al manifiesto de tamaños medidos. */
+const TAMANO_FIJO = /\d[\d.,]*\s?(?:MB|MiB|GB|GiB)\b/;
+
+// Quita los comentarios de código (de línea, de bloque y de HTML) para revisar solo las cadenas y el marcado.
+export function sinComentarios(codigo) {
+  return String(codigo)
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/(^|[^:'"`])\/\/.*$/gm, '$1');
+}
+
 const CLAVE_VALIDA = /^[a-z0-9_]+(\.[a-z0-9_]+)+$/;
 const VERSION_VALIDA = /^\d{4}\.\d{2}\.\d+$/;
 
@@ -110,6 +121,8 @@ export function revisar(e) {
         );
     }
     if (gritaTodo(texto)) errores.push(`es.toml: «${clave}» está en MAYÚSCULAS`);
+    if (TAMANO_FIJO.test(texto))
+      errores.push(`es.toml: «${clave}» escribe un tamaño fijo; usa {megas} (se mide con npm run activos)`);
     for (const m of texto.matchAll(/<a\s[^>]*href\s*=\s*"([^"]*)"/gi))
       enlaces.push({ origen: `es.toml «${clave}»`, href: m[1] });
   }
@@ -174,6 +187,15 @@ export function revisar(e) {
       errores.push(`${origen}: el enlace «${href}» no apunta a un archivo existente`);
   }
 
+  for (const { archivo, contenido } of e.fuentes ?? []) {
+    const cadenas = sinComentarios(contenido);
+    const m = TAMANO_FIJO.exec(cadenas);
+    if (m)
+      errores.push(
+        `${archivo}: tamaño fijo «${m[0]}» en el código; los tamaños salen del manifiesto medido ({megas})`,
+      );
+  }
+
   for (const { archivo, contenido } of e.estilos ?? []) {
     if (/--(bg|sf|sf2|ac|acs|acx|tx|mu|ln|wa|was|er|ers|in|ins|oks)(?![\w-])/.test(contenido))
       errores.push(archivo + ': usa los tokens --ipn-*, no los nombres antiguos (--bg, --sf, --ac…)');
@@ -218,6 +240,7 @@ export function reunir(raiz = RAIZ) {
       !r.endsWith('.d.ts'),
   );
   const usos = [];
+  const fuentes = [];
   const dinamicos = [];
   const svelte = [];
   const ids = new Set();
@@ -227,6 +250,7 @@ export function reunir(raiz = RAIZ) {
 
   for (const ruta of codigo) {
     const contenido = readFileSync(ruta, 'utf8');
+    fuentes.push({ archivo: rel(ruta), contenido });
     for (const m of contenido.matchAll(LLAMADA)) {
       if (!m[2]) dinamicos.push({ archivo: rel(ruta) });
       else
@@ -261,6 +285,7 @@ export function reunir(raiz = RAIZ) {
     usos,
     dinamicos,
     svelte,
+    fuentes,
     estilos,
     enlaces,
     existeId: (id) => ids.has(id),

@@ -132,11 +132,29 @@ export class Adaptador {
       globalThis.fetch = fetchOriginal;
     }
     this.pipeline = pipeline;
-    const modulo = await pipeline.Module;
-    const versiones = (await pipeline.on_initialized_promise) as Record<string, string> | undefined;
-    if (espejo) modulo.ENV['TEXLIVE_REMOTE_ENDPOINT'] = espejo;
-    this.modulo = modulo;
-    return versiones ?? modulo.applet_versions ?? {};
+    let alFallarPaquete!: (evento: PromiseRejectionEvent) => void;
+    const paqueteIncompatible = new Promise<never>((_, rechazar) => {
+      alFallarPaquete = (evento) => {
+        const error: unknown = evento.reason;
+        if (error instanceof Error && error.message.includes('folio-version:')) {
+          evento.preventDefault();
+          rechazar(error);
+        }
+      };
+    });
+    // El preRun asíncrono de Emscripten no propaga su rechazo a Module y conserva una dependencia pendiente.
+    // Observar solo nuestra validación evita que un paquete incompatible deje la instalación esperando para siempre.
+    globalThis.addEventListener('unhandledrejection', alFallarPaquete);
+    try {
+      const modulo = await Promise.race([pipeline.Module, paqueteIncompatible]);
+      const versiones = (await Promise.race([pipeline.on_initialized_promise, paqueteIncompatible])) as
+        Record<string, string> | undefined;
+      if (espejo) modulo.ENV['TEXLIVE_REMOTE_ENDPOINT'] = espejo;
+      this.modulo = modulo;
+      return versiones ?? modulo.applet_versions ?? {};
+    } finally {
+      globalThis.removeEventListener('unhandledrejection', alFallarPaquete);
+    }
   }
 
   /** Tamaños esperados (de `activos.json`) para que el progreso conozca el total desde el principio. */

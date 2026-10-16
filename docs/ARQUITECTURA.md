@@ -17,9 +17,10 @@ aplicación (D3). Lo único que hospeda es archivos.
 | Compilación LaTeX | BusyTeX (TeX Live 2026, WebAssembly) dentro de un Web Worker, para no bloquear la interfaz | Probado en `pruebas/compilacion/` |
 | Paquetes de datos de TeX Live | `basic` se precarga una vez (la primera descarga, con el WASM, son ~128 MB sin comprimir; menos con compresión del servidor, por medir en el hospedaje real); el resto se pide bajo demanda | Probado |
 | Espejo estático de TeX Live | Archivos que BusyTeX no trae (español de `babel`, Montserrat, `bbding`, `fourier`…), servidos con `GET <endpoint>/<formato>/<archivo>` (D8) | Planeado (la prueba lo emuló con un servidor local) |
-| Caché local | Paquetes de datos en IndexedDB; archivos del espejo en Cache API u OPFS para trabajar sin conexión | Paquetes de datos: probado. Caché de archivos del espejo: Planeado |
+| Caché local | Paquete de datos `basic` en IndexedDB (lo guarda Emscripten); activos de BusyTeX en la caché `folio-busytex-<versión>` y archivos del espejo en `folio-espejo-v1` (Cache API, vía service worker) para trabajar sin conexión | Probado (el XHR síncrono del worker pasa por el service worker) |
 | Orquestador de compilación | Decide qué paquetes cargar y encadena pasadas de TeX, BibTeX, `makeindex` y nomenclatura, con errores en español | Prototipo en la prueba; versión de producto: Planeado |
-| PWA y escritorio | Uso sin conexión (PWA) y compiladores nativos (Tauri 2) | Planeado |
+| PWA | Service worker propio (`vite-plugin-pwa`, `injectManifest`): precaché del cascarón, instalación por herramientas con progreso, pausa y regla de «Solo con Wi-Fi» | Probado en Chromium y WebKit |
+| Escritorio | Compiladores nativos (Tauri 2) | Planeado |
 
 ## Compilación LaTeX
 

@@ -4,10 +4,14 @@
   import { textoDeError, type Proyecto } from '../almacen';
   import { plano } from '../textos/plano';
   import { t } from '../textos/t';
+  import type { TiendaHerramientas } from '../herramientas/tienda.svelte';
+  import AvisoDescarga from './avisos/AvisoDescarga.svelte';
   import { avisoInicio } from './aviso-inicio.svelte';
   import { crearProyectoDeEjemplo } from './ejemplo/crear-ejemplo';
   import { HASH_PAPELERA, hashDeProyecto } from './ruta';
   import { servicios, type Servicios } from './servicios';
+
+  let { tienda }: { tienda: TiendaHerramientas } = $props();
 
   // Inicio mínimo: lista de proyectos, uno de ejemplo ficticio y el enlace a la papelera. El inicio real (plantillas,
   // importar) es de la sesión 09.
@@ -84,6 +88,7 @@
 </script>
 
 <section class="inicio" aria-labelledby="titulo-proyectos">
+  <AvisoDescarga {tienda} />
   <!-- La región existe desde el inicio, vacía (ver Papelera.svelte). -->
   <div role="status">
     {#if avisoInicio.actual}

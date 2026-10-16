@@ -3,7 +3,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { abrirProyectoDeEjemplo } from './ayudas';
+import { abrirProyectoDeEjemplo, omitirBienvenida } from './ayudas';
 
 const DIA = 86_400_000;
 
@@ -150,6 +150,8 @@ test.describe('papelera', () => {
     const T = new Date('2027-03-01T12:00:00Z').getTime();
     // Con carga (tres perfiles en paralelo) estos escenarios tardan ~30 s: margen amplio.
     test.describe.configure({ timeout: 60_000 });
+    // La hora del sitio se simula con page.route; en WebKit esa ruta no ve lo que pide el service worker (sesión 07).
+    test.use({ serviceWorkers: 'block' });
 
     test('a los 32 días con hora del sitio y reloj adelantados, el elemento ya no está y no hay aviso', async ({
       page,
@@ -332,6 +334,8 @@ test.describe('papelera', () => {
           const graves = violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
           expect(graves, JSON.stringify(graves, null, 2)).toEqual([]);
         };
+        await page.goto('/');
+        await omitirBienvenida(page);
         await page.goto('/#/papelera');
         await expect(page.getByText(/La papelera está vacía/)).toBeVisible();
         await revisar();

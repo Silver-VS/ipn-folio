@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import desarrollo from '../config/desarrollo.json';
 import produccion from '../config/produccion.json';
 import { acerca } from './acerca';
+import { RUTA_HORA } from './pwa/nombres';
 
 const entornos = { desarrollo, produccion };
 
@@ -41,9 +42,11 @@ describe('acerca', () => {
       expect(p.avisoFraccionUso).toBeLessThanOrEqual(1);
     });
 
-    it('la URL de la hora es relativa al sitio (mismo origen) y el archivo existe en public/', () => {
+    it('la URL de la hora es relativa al sitio (mismo origen) y apunta al archivo que el service worker deja pasar', () => {
       expect(p.urlHora).toMatch(/^\.\/[\w.-]+$/);
-      expect(existsSync(join(process.cwd(), 'public', p.urlHora))).toBe(true);
+      // El build emite ese archivo (scripts/lib/pwa.mjs) o está en public/.
+      const enPublic = existsSync(join(process.cwd(), 'public', p.urlHora));
+      expect(enPublic || p.urlHora === `./${RUTA_HORA}`).toBe(true);
     });
   });
 

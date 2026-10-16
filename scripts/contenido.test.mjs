@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { describe, expect, it } from 'vitest';
-import { revisar, sinExpresiones } from './contenido.mjs';
+import { revisar, sinComentarios, sinExpresiones } from './contenido.mjs';
 
 function base(cambios = {}) {
   return {
@@ -44,6 +44,25 @@ describe('revisar (contenido)', () => {
     const estilo = (contenido) => base({ estilos: [{ archivo: 'src/X.svelte', contenido }] });
     expect(revisar(estilo('#add { margin: 0; }')).errores).toEqual([]);
     expect(revisar(estilo('a { color: #add; }')).errores.join(' ')).toMatch(/color fijo/);
+  });
+
+  it('un tamaño fijo en un texto o en el código es un error; {megas} no', () => {
+    const conTexto = (texto) =>
+      base({
+        folio: { version: '2026.10.1', textos: { 'app.nombre': texto, 'archivo.error.titulo': '{archivo}' } },
+      });
+    for (const texto of ['Descarga unos 90 MB', 'Pesa 1,5 GB', 'Son 128MB']) {
+      expect(revisar(conTexto(texto)).errores.join(' '), texto).toMatch(/tamaño fijo/);
+    }
+    expect(revisar(conTexto('Descarga unos {megas} MB')).errores.join(' ')).not.toMatch(/tamaño fijo/);
+    const codigo = (contenido) => base({ fuentes: [{ archivo: 'src/X.ts', contenido }] });
+    expect(revisar(codigo("const a = 'unos 90 MB';")).errores.join(' ')).toMatch(/src\/X.ts: tamaño fijo/);
+    // Los comentarios pueden citar cifras medidas; el código no.
+    const comentado = ['// pesa ~128 MB', '/* 90 MB */', 'const a = 1;'].join(String.fromCharCode(10));
+    expect(revisar(codigo(comentado)).errores).toEqual([]);
+    expect(sinComentarios(['a // 5 MB', "b = 'http://x'"].join(String.fromCharCode(10)))).toContain(
+      "'http://x'",
+    );
   });
 
   it('acepta un contenido correcto', () => {

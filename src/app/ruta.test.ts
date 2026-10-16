@@ -8,6 +8,11 @@ describe('ruta por hash', () => {
       expect(rutaDeHash(h), h).toEqual({ pantalla: 'inicio' });
   });
 
+  it('#/ajustes abre los ajustes (con o sin barra final)', () => {
+    expect(rutaDeHash('#/ajustes')).toEqual({ pantalla: 'ajustes' });
+    expect(rutaDeHash('#/ajustes/')).toEqual({ pantalla: 'ajustes' });
+  });
+
   it('#/papelera abre la papelera (con o sin barra final)', () => {
     expect(rutaDeHash('#/papelera')).toEqual({ pantalla: 'papelera' });
     expect(rutaDeHash('#/papelera/')).toEqual({ pantalla: 'papelera' });

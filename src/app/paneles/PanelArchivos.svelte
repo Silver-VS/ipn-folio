@@ -1,8 +1,10 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <script lang="ts">
-  import { tick } from 'svelte';
+  import { tick, untrack } from 'svelte';
   import { plano } from '../../textos/plano';
   import { t } from '../../textos/t';
+  import { nombreDe } from '../papelera/restauracion';
+  import { HASH_PAPELERA } from '../ruta';
   import {
     aplanarVisibles,
     carpetasDe,
@@ -24,6 +26,7 @@
   let arrastrando = $state(false);
   let selector = $state<HTMLInputElement>();
   let lista = $state<HTMLElement>();
+  let papeleraAbierta = $state(false);
 
   const arbol = $derived(construirArbol(estado.archivos));
   const visibles = $derived(aplanarVisibles(arbol, expandidas));
@@ -36,6 +39,15 @@
     if (!ruta) return;
     const faltan = carpetasDe(ruta).filter((c) => !expandidas.has(c));
     if (faltan.length) expandidas = new Set([...expandidas, ...faltan]);
+  });
+
+  // Tras «Deshacer» o «Restaurar», el foco vuelve a la fila restaurada (su carpeta se expande si hace falta).
+  $effect(() => {
+    const pedido = estado.enfocarArbol;
+    if (!pedido) return;
+    const faltan = untrack(() => carpetasDe(pedido.ruta).filter((c) => !expandidas.has(c)));
+    if (faltan.length) expandidas = new Set([...untrack(() => expandidas), ...faltan]);
+    void enfocar(pedido.ruta);
   });
 
   function carpetaDestino(): string {
@@ -66,8 +78,7 @@
   }
 
   async function borrar(n: NodoArbol) {
-    if (n.tipo === 'carpeta' && !window.confirm(plano(t('archivos.confirmar_borrado', { ruta: n.ruta }))))
-      return;
+    // Sin confirmación: mandar a la papelera se puede deshacer (D29).
     const i = visibles.findIndex((fila) => fila.ruta === n.ruta);
     await estado.borrarArchivo(n.ruta);
     await tick();
@@ -314,6 +325,41 @@
       {/each}
     </ul>
   {/if}
+  <div class="papelera">
+    <div class="papelera-barra">
+      <button
+        type="button"
+        class="boton despliegue"
+        aria-expanded={papeleraAbierta}
+        aria-controls="papelera-proyecto-{estado.id}"
+        onclick={() => (papeleraAbierta = !papeleraAbierta)}
+        >{t('papelera.del_proyecto', { n: estado.papelera.length })}</button
+      >
+      <a class="boton" href={HASH_PAPELERA}>{t('papelera.ver.boton')}</a>
+    </div>
+    {#if papeleraAbierta}
+      <div id="papelera-proyecto-{estado.id}" class="papelera-lista">
+        {#if estado.papelera.length === 0}
+          <p class="vacio">{t('papelera.del_proyecto_vacia')}</p>
+        {:else}
+          <ul>
+            {#each estado.papelera as e (e.id)}
+              {@const nombre = nombreDe(e)}
+              <li class="papelera-fila">
+                <span class="nombre">{nombre}</span>
+                <button
+                  type="button"
+                  class="boton"
+                  aria-label={plano(t('papelera.restaurar.aria', { nombre }))}
+                  onclick={() => void estado.restaurarDePapelera(e)}>{t('papelera.restaurar.boton')}</button
+                >
+              </li>
+            {/each}
+          </ul>
+        {/if}
+      </div>
+    {/if}
+  </div>
   {#if arrastrando}
     <div class="soltar" aria-hidden="true">{t('archivos.soltar')}</div>
   {/if}
@@ -462,6 +508,48 @@
 
   .renombre {
     min-height: calc(var(--ipn-objetivo-tactil) - var(--ipn-esp-2));
+  }
+
+  .papelera {
+    flex: none;
+    border-top: 1px solid var(--ipn-linea);
+  }
+
+  .papelera-barra {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ipn-esp-1);
+    padding: var(--ipn-esp-2);
+  }
+
+  .boton.despliegue {
+    flex: 1 1 auto;
+    text-align: start;
+  }
+
+  a.boton {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .papelera-lista {
+    max-height: 40%;
+    overflow: auto;
+  }
+
+  .papelera-lista ul {
+    margin: 0;
+    padding: 0 var(--ipn-esp-2) var(--ipn-esp-2);
+    list-style: none;
+  }
+
+  .papelera-fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ipn-esp-2);
+    min-height: var(--ipn-objetivo-tactil);
   }
 
   .arrastrando {

@@ -2,16 +2,18 @@
 // Estado de la pantalla de proyecto: proyecto abierto, archivos, pestañas, estado de guardado, mensajes y PDF.
 // Runas de Svelte 5 en una clase; sin store global.
 //
-// Contrato del autoguardado (HANDOFF 02): renombrar, borrar y mandar a la papelera pasan SIEMPRE por `auto`
-// (`renombrar`, `borrar`, `moverAPapelera`, `descartar`), nunca por `almacen.*`: así un cambio pendiente no
-// resucita la ruta vieja.
+// Contrato del autoguardado (HANDOFF 02): renombrar, borrar, restaurar y mandar a la papelera pasan SIEMPRE por `auto`
+// (`renombrar`, `borrar`, `moverAPapelera`, `restaurarDePapelera`, `descartar`), nunca por `almacen.*`: así un
+// cambio pendiente no resucita la ruta vieja. Borrar es mandar a la papelera (D29): se puede deshacer.
 import type { EditorState } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
+import { acerca } from '../../acerca';
 import {
   normalizarRuta,
   textoDeError,
   tipoPorRuta,
   type Aviso,
+  type ElementoPapelera,
   type EstadoAutoguardado,
   type InfoArchivo,
   type Proyecto,
@@ -20,6 +22,8 @@ import { aTexto, estaBajo } from '../../almacen/rutas';
 import { reemplazarTextoExterno } from '../../editor/crear-editor';
 import { plano } from '../../textos/plano';
 import { t } from '../../textos/t';
+import { leerDias } from '../papelera/purga';
+import { textoRestaurado } from '../papelera/restauracion';
 import type { Servicios } from '../servicios';
 import { esImagen, moverBajo, nombreDe, nombreUnico, unirRuta } from './arbol';
 
@@ -63,6 +67,10 @@ export class EstadoProyecto {
 
   proyecto = $state.raw<Proyecto>(null as unknown as Proyecto);
   archivos = $state.raw<InfoArchivo[]>([]);
+  /** Archivos y carpetas de ESTE proyecto que están en la papelera (lo más reciente primero). */
+  papelera = $state.raw<ElementoPapelera[]>([]);
+  /** Pide al árbol de archivos que enfoque una fila (p. ej. tras «Deshacer»); `n` cambia en cada petición. */
+  enfocarArbol = $state.raw<{ ruta: string; n: number } | undefined>();
   abiertos = $state<string[]>([]);
   activo = $state<string | undefined>();
   guardado = $state<EstadoAutoguardado>('guardado');
@@ -102,6 +110,7 @@ export class EstadoProyecto {
     if (!proyecto || proyecto.enPapelera) return undefined;
     const estado = new EstadoProyecto(servicios, proyecto);
     await estado.refrescarArchivos();
+    await estado.refrescarPapelera();
     await estado.restaurarPestanas();
     estado.conectar();
     return estado;
@@ -127,6 +136,9 @@ export class EstadoProyecto {
       almacen.al('cambio-archivo', (e) => {
         if (e.proyectoId === this.id && !this.conocidas.has(e.ruta)) this.pedirRefresco();
       }),
+      almacen.al('cambio-papelera', (e) => {
+        if (e.elemento.proyectoId === this.id) void this.refrescarPapelera();
+      }),
     );
   }
 
@@ -146,6 +158,16 @@ export class EstadoProyecto {
     if (this.destruido) return;
     this.archivos = lista;
     this.conocidas = new Set(lista.map((a) => a.ruta));
+  }
+
+  /** Vuelve a leer la papelera de este proyecto (sin los proyectos enteros: esos viven en el inicio). */
+  async refrescarPapelera(): Promise<void> {
+    try {
+      const todos = await this.servicios.almacen.listarPapelera();
+      if (!this.destruido) this.papelera = todos.filter((e) => e.proyectoId === this.id && e.clase !== 'proyecto');
+    } catch {
+      /* la lista de la papelera es una comodidad: si falla, la vista Papelera lo dirá */
+    }
   }
 
   private pedirRefresco(): void {
@@ -290,40 +312,43 @@ export class EstadoProyecto {
     }
   }
 
-  /** Borra un archivo o carpeta; el aviso conserva «Deshacer» hasta que se cierre (no sobrevive a una recarga). */
+  /**
+   * Manda un archivo o carpeta a la papelera (D29). Sin confirmación: es reversible. El aviso trae «Deshacer», que
+   * restaura desde la papelera (sobrevive a recargar) y se queda hasta que se cierre.
+   */
   async borrarArchivo(ruta: string): Promise<void> {
     try {
-      await this.servicios.auto.guardarTodo();
-      // guardarTodo conserva los fallidos: no borrar una versión que todavía no se pudo guardar.
-      if (this.servicios.auto.estado === 'error') return;
-      const victimas = this.archivos.filter((a) => estaBajo(a.ruta, ruta));
-      const guardadas = (
-        await Promise.all(victimas.map((v) => this.servicios.almacen.leer(this.id, v.ruta)))
-      ).filter((a): a is NonNullable<typeof a> => !!a);
-      await this.servicios.auto.borrar(this.id, ruta);
+      // `auto.borrar` guarda antes lo pendiente (la papelera conserva la última versión) y no borra si algo no se pudo guardar.
+      const elemento = await this.servicios.auto.borrar(this.id, ruta);
       for (const r of this.abiertos.filter((x) => estaBajo(x, ruta))) this.cerrarArchivo(r);
       for (const r of [...this.sucios]) if (estaBajo(r, ruta)) this.sucios.delete(r);
-      await Promise.all([this.refrescarArchivos(), this.recargarProyecto()]);
-      this.avisar('info', plano(t('archivos.borrado', { ruta })), {
+      await Promise.all([this.refrescarArchivos(), this.recargarProyecto(), this.refrescarPapelera()]);
+      const dias = await leerDias(this.servicios.almacen, acerca.papelera);
+      this.avisar('info', plano(t('archivos.borrado', { ruta, dias })), {
         etiqueta: t('archivos.deshacer'),
-        ejecutar: () =>
-          void this.restaurarBorrados(guardadas.map((a) => ({ ruta: a.ruta, contenido: a.contenido }))),
+        ejecutar: () => void this.restaurarDePapelera(elemento, true),
       });
     } catch (e) {
       this.avisarError(e);
     }
   }
 
-  private async restaurarBorrados(
-    lista: Array<{ ruta: string; contenido: string | Uint8Array }>,
-  ): Promise<void> {
+  /**
+   * Devuelve un elemento de la papelera de este proyecto a su lugar. Con `deshacer` solo avisa si tuvo que cambiarle
+   * el nombre; desde la lista de la papelera siempre dice qué se restauró.
+   */
+  async restaurarDePapelera(elemento: ElementoPapelera, deshacer = false): Promise<void> {
     try {
-      for (const a of lista) this.servicios.auto.programar(this.id, a.ruta, a.contenido);
-      await this.servicios.auto.guardarTodo();
-      await this.refrescarArchivos();
-      if (lista[0] && lista.length === 1) this.abrirArchivo(lista[0].ruta);
+      const r = await this.servicios.auto.restaurarDePapelera(elemento.id);
+      await Promise.all([this.refrescarArchivos(), this.recargarProyecto(), this.refrescarPapelera()]);
+      const primera = r.rutas[0];
+      const cambioNombre = !!primera && primera.final !== primera.original;
+      if (!deshacer || cambioNombre) this.avisar('info', textoRestaurado(elemento, r));
+      if (elemento.clase === 'archivo' && primera) this.abrirArchivo(primera.final);
+      if (primera) this.enfocarArbol = { ruta: primera.final, n: (this.enfocarArbol?.n ?? 0) + 1 };
     } catch (e) {
       this.avisarError(e);
+      await this.refrescarPapelera();
     }
   }
 
@@ -360,7 +385,12 @@ export class EstadoProyecto {
   // ---------- cambios hechos en otra pestaña ----------
 
   private async alAvisoExterno(a: Aviso): Promise<void> {
-    if (this.destruido || a.proyectoId !== this.id) return;
+    if (this.destruido) return;
+    if (a.tipo === 'cambio-papelera') {
+      if (a.elemento.proyectoId === this.id) await this.refrescarPapelera();
+      return;
+    }
+    if (a.proyectoId !== this.id) return;
     if (a.tipo === 'cambio-proyecto') {
       await this.recargarProyecto();
       return;

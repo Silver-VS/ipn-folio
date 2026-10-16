@@ -13,6 +13,12 @@ describe('ruta por hash', () => {
     expect(rutaDeHash('#/ajustes/')).toEqual({ pantalla: 'ajustes' });
   });
 
+  it('#/papelera abre la papelera (con o sin barra final)', () => {
+    expect(rutaDeHash('#/papelera')).toEqual({ pantalla: 'papelera' });
+    expect(rutaDeHash('#/papelera/')).toEqual({ pantalla: 'papelera' });
+    expect(rutaDeHash('#/papeleras')).toEqual({ pantalla: 'inicio' });
+  });
+
   it('#/proyecto/<id> abre el proyecto (con o sin barra final)', () => {
     expect(rutaDeHash('#/proyecto/abc123')).toEqual({ pantalla: 'proyecto', id: 'abc123' });
     expect(rutaDeHash('#/proyecto/abc123/')).toEqual({ pantalla: 'proyecto', id: 'abc123' });

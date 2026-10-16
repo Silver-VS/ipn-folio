@@ -2,9 +2,12 @@
 <script lang="ts">
   import { aplicarTema, leerTema, MODOS } from '@ipn/comun/js/tema.js';
   import { onMount } from 'svelte';
+  import { acerca } from '../../acerca';
+  import { idDeProyecto } from '../../almacen/papelera';
   import { instalarAtajosGlobales } from '../../editor/atajos';
   import { plano } from '../../textos/plano';
   import { t } from '../../textos/t';
+  import { avisoInicio } from '../aviso-inicio.svelte';
   import Menu, { type ElementoMenu } from '../Menu.svelte';
   import { crearEspacio, type Espacio } from '../paneles/espacio';
   import {
@@ -17,6 +20,7 @@
   } from '../paneles/distribuciones';
   import EspacioCompacto from '../paneles/EspacioCompacto.svelte';
   import { observarModo, type ModoEspacio } from '../paneles/modo';
+  import { leerDias } from '../papelera/purga';
   import { servicios, type Servicios } from '../servicios';
   import { EstadoProyecto } from './estado.svelte';
   import Mensajes from './Mensajes.svelte';
@@ -195,11 +199,24 @@
 
   async function moverAPapelera() {
     if (!estado) return;
+    const abierto = estado;
+    const { id: proyectoId, proyecto } = abierto;
     try {
-      await estado.moverAPapelera();
+      await abierto.moverAPapelera();
+      // Sin confirmación (D29): el inicio muestra el aviso con «Deshacer», que se queda hasta cerrarlo.
+      const dias = await leerDias(abierto.servicios.almacen, acerca.papelera);
+      avisoInicio.mostrar({
+        texto: plano(t('proyecto.movido_a_papelera', { nombre: proyecto.nombre, dias })),
+        accion: {
+          etiqueta: t('archivos.deshacer'),
+          ejecutar: async () => {
+            await abierto.servicios.auto.restaurarDePapelera(idDeProyecto(proyectoId));
+          },
+        },
+      });
       location.hash = '#/';
     } catch (e) {
-      estado.avisarError(e);
+      abierto.avisarError(e);
     }
   }
 </script>
@@ -250,7 +267,7 @@
     </main>
 
     <Paleta {estado} />
-    <Mensajes {estado} />
+    <Mensajes {estado} compacto={modo !== 'amplio'} />
   {/if}
 </div>
 

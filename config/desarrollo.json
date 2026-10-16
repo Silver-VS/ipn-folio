@@ -2,5 +2,14 @@
   "REPO_URL": "https://github.com/Silver-VS/ipn-folio",
   "LICENCIA": "AGPL-3.0",
   "base": "./",
-  "version": "0.0.1-desarrollo"
+  "version": "0.0.1-desarrollo",
+  "papelera": {
+    "diasPorOmision": 30,
+    "opcionesDias": [7, 30, 90],
+    "margenDias": 1,
+    "intervaloPurgaHoras": 6,
+    "avisoMegas": 100,
+    "avisoFraccionUso": 0.25,
+    "urlHora": "./version.json"
+  }
 }

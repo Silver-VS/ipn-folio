@@ -2,11 +2,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { acerca } from './acerca';
+  import AvisoCiclo from './app/AvisoCiclo.svelte';
   import Inicio from './app/Inicio.svelte';
   import Ajustes from './app/ajustes/Ajustes.svelte';
   import AvisoActualizacion from './app/avisos/AvisoActualizacion.svelte';
   import Bienvenida from './app/bienvenida/Bienvenida.svelte';
   import { bienvenidaVista } from './app/bienvenida/preferencias';
+  import Papelera from './app/papelera/Papelera.svelte';
   import { HASH_AJUSTES, rutaDeHash, type Ruta } from './app/ruta';
   import { servicios, type Servicios } from './app/servicios';
   import { tienda as crearTienda, type TiendaHerramientas } from './herramientas/tienda.svelte';
@@ -69,6 +71,7 @@
 </script>
 
 <p class="anuncio" role="status" aria-live="polite">{anuncio}</p>
+<AvisoCiclo />
 {#if activarActualizacion}
   <AvisoActualizacion activar={activarActualizacion} recargar={requiereRecarga} />
 {/if}
@@ -102,6 +105,8 @@
         <Ajustes tienda={herramientas} />
       {:else if fase === 'bienvenida' && s && herramientas}
         <Bienvenida almacen={s.almacen} tienda={herramientas} alTerminar={() => (fase = 'listo')} />
+      {:else if fase === 'listo' && ruta.pantalla === 'papelera'}
+        <Papelera />
       {:else if fase === 'listo' && herramientas}
         <Inicio tienda={herramientas} />
       {/if}

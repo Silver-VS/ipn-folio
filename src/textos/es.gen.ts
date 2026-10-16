@@ -1,7 +1,7 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.13";
+export const VERSION_TEXTOS = "2026.10.14";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
@@ -10,18 +10,27 @@ export const TEXTOS_FOLIO = {
   "ajustes.solo_wifi.titulo": "Descargar solo con Wi-Fi",
   "ajustes.titulo": "Ajustes",
   "ajustes.volver": "Volver al inicio",
+  "almacen.aviso.bloqueada": "Cierra las otras pestañas de IPN Folio para terminar de actualizar.",
+  "almacen.aviso.cerrada": "El navegador cerró la conexión con tus proyectos. Recarga la página para seguir.",
   "almacen.aviso.codificacion_convertida": "El archivo «{ruta}» no estaba en UTF-8; lo convertimos desde Windows-1252 (Latin-1). Si usa inputenc con latin1, cambia esa opción a utf8 o revisa los acentos.",
   "almacen.aviso.entrada_duplicada": "El .zip trae «{ruta}» más de una vez. Conservamos la última copia.",
+  "almacen.aviso.recargar": "Recargar",
+  "almacen.aviso.version_nueva": "IPN Folio se actualizó en otra pestaña. Recarga esta para seguir; tus cambios ya se guardaron.",
+  "almacen.aviso.version_nueva_sin_guardar": "IPN Folio se actualizó en otra pestaña. Recarga esta para seguir; los últimos cambios de esta pestaña pueden no haberse guardado.",
   "almacen.error.almacen_no_disponible": "Tu navegador no permite guardar proyectos en este dispositivo, así que se perderán al cerrar la pestaña. Descarga una copia en .zip con frecuencia o abre IPN Folio en otra ventana que no sea privada.",
-  "almacen.error.almacenamiento_lleno": "Tu navegador se quedó sin espacio para guardar. Descarga una copia en .zip y libera espacio borrando proyectos que ya no uses.",
+  "almacen.error.almacenamiento_lleno": "Tu navegador se quedó sin espacio para guardar. Descarga una copia en .zip, vacía la papelera y libera espacio borrando proyectos que ya no uses.",
+  "almacen.error.apertura_fallida": "No pudimos abrir tus proyectos guardados en este navegador. Recarga la página; si sigue fallando, no borres los datos del sitio y descarga una copia en .zip si puedes.",
   "almacen.error.archivo_inexistente": "No encontramos el archivo «{ruta}». Revisa el nombre o actualiza la lista de archivos.",
   "almacen.error.desconocido": "No se pudo guardar tu trabajo. Inténtalo de nuevo; si sigue fallando, descarga una copia en .zip.",
   "almacen.error.destino_ocupado": "Ya existe un archivo o una carpeta llamada «{ruta}». Elige otro nombre.",
+  "almacen.error.elemento_inexistente": "Ese elemento ya no está en la papelera. Actualiza la vista para ver lo que queda.",
+  "almacen.error.guardado_pendiente": "No pudimos guardar los últimos cambios de «{ruta}», así que no lo borramos. Inténtalo de nuevo; si sigue fallando, descarga una copia en .zip.",
   "almacen.error.movimiento_invalido": "No se puede mover una carpeta dentro de sí misma («{ruta}»). Elige otro destino.",
   "almacen.error.nombre_invalido": "El nombre del proyecto no puede estar vacío. Escribe un nombre para continuar.",
   "almacen.error.proyecto_en_papelera": "Ese proyecto está en la papelera. Restáuralo para poder editarlo.",
   "almacen.error.proyecto_inexistente": "No encontramos ese proyecto. Vuelve a la lista de proyectos y ábrelo de nuevo.",
   "almacen.error.ruta_invalida": "El nombre de archivo «{ruta}» no es válido. Usa un nombre relativo, sin «..» ni letras de unidad, por ejemplo capitulos/introduccion.tex.",
+  "almacen.error.version_nueva": "Hay una versión más nueva de IPN Folio abierta. Recarga la página.",
   "almacen.error.zip_demasiado_grande": "El contenido de ese .zip es demasiado grande para abrirlo en el navegador. Quita los archivos pesados que no necesites y vuelve a intentarlo.",
   "almacen.error.zip_invalido": "No pudimos leer ese archivo .zip. Comprueba que no esté dañado y vuelve a intentarlo.",
   "almacen.proyecto_sin_nombre": "Proyecto importado",
@@ -32,9 +41,8 @@ export const TEXTOS_FOLIO = {
   "archivos.arbol_aria": "Árbol de archivos",
   "archivos.aria": "Archivos del proyecto",
   "archivos.barra_aria": "Acciones de archivos",
-  "archivos.borrado": "Se borró {ruta}.",
+  "archivos.borrado": "Se movió {ruta} a la papelera. Tienes {dias, plural, one {# día} other {# días}} para recuperarlo.",
   "archivos.borrar": "Borrar",
-  "archivos.confirmar_borrado": "¿Quieres borrar la carpeta {ruta} y todos sus archivos? Puedes restaurarlos con Deshacer mientras el aviso siga abierto.",
   "archivos.deshacer": "Deshacer",
   "archivos.error.ya_existe": "Ya existe un archivo llamado {ruta}. Elige otro nombre.",
   "archivos.nuevo": "Nuevo archivo",
@@ -109,7 +117,7 @@ export const TEXTOS_FOLIO = {
   "distribucion.solo_editor": "Solo editor",
   "distribucion.usar_global": "Usar esta distribución en los proyectos nuevos",
   "editor.aria_texto": "Texto de {ruta}",
-  "editor.borrado_en_otra": "Otra pestaña borró {ruta}. Lo que ves aquí sigue en pantalla; se volverá a crear si lo guardas.",
+  "editor.borrado_en_otra": "Se movió {ruta} a la papelera desde otra pestaña. Si sigues escribiendo, se volverá a crear.",
   "editor.cerrar_pestana": "Cerrar {nombre}",
   "editor.cm.anterior": "anterior",
   "editor.cm.buscar": "Buscar",
@@ -264,9 +272,7 @@ export const TEXTOS_FOLIO = {
   "inicio.crear_ejemplo": "Crear un proyecto de ejemplo",
   "inicio.ejemplo.nombre": "Proyecto de ejemplo",
   "inicio.espacio.aria": "Espacio de trabajo",
-  "inicio.papelera": "Papelera",
   "inicio.proyectos": "Tus proyectos",
-  "inicio.restaurar": "Restaurar",
   "inicio.sin_proyectos": "Aún no tienes proyectos en este equipo.",
   "mensajes.aria": "Avisos",
   "paleta.aria": "Buscar o ejecutar un comando",
@@ -292,6 +298,39 @@ export const TEXTOS_FOLIO = {
   "paneles.problemas": "Qué revisar",
   "paneles.salida": "Salida",
   "paneles.ventana_bloqueada": "Tu navegador bloqueó la ventana nueva. Permite las ventanas emergentes de este sitio e inténtalo de nuevo.",
+  "papelera.abrir_proyecto": "Abrir proyecto",
+  "papelera.aviso_tamano": "La papelera ocupa {megas} MB de tu navegador. Vacíala o borra definitivamente lo que ya no necesites.",
+  "papelera.borrar_definitivo.aria": "Borrar definitivamente {nombre}",
+  "papelera.borrar_definitivo.boton": "Borrar definitivamente",
+  "papelera.borrar_definitivo.confirmar": "¿Borrar definitivamente {nombre}? No se puede deshacer.",
+  "papelera.caducidad.confirmar_boton": "Cambiar y borrar",
+  "papelera.caducidad.confirmar_menos": "Con {dias, plural, one {# día} other {# días}}, {n, plural, one {se borraría ahora # elemento} other {se borrarían ahora # elementos}} de la papelera. No se puede deshacer.",
+  "papelera.caducidad.etiqueta": "Borrar automáticamente después de",
+  "papelera.caducidad.opcion": "{dias} días",
+  "papelera.cancelar.boton": "Cancelar",
+  "papelera.cargando": "Abriendo la papelera…",
+  "papelera.clase.archivo": "Archivo",
+  "papelera.clase.carpeta": "Carpeta",
+  "papelera.clase.proyecto": "Proyecto",
+  "papelera.de_proyecto": "De {proyecto}",
+  "papelera.del_proyecto": "Papelera de este proyecto ({n})",
+  "papelera.del_proyecto_vacia": "No hay nada de este proyecto en la papelera.",
+  "papelera.enlace": "Papelera ({n})",
+  "papelera.incluye_borrados": "Incluye {n, plural, one {# elemento borrado antes} other {# elementos borrados antes}}",
+  "papelera.lista_aria": "Elementos de la papelera",
+  "papelera.ocupa": "Ocupa {megas} MB",
+  "papelera.restaurado": "Se restauró {ruta}.",
+  "papelera.restaurado_como": "Se restauró como {ruta_final} porque {ruta} ya existía.",
+  "papelera.restaurado_proyecto": "Se restauró el proyecto {nombre}.",
+  "papelera.restaurar.aria": "Restaurar {nombre}",
+  "papelera.restaurar.boton": "Restaurar",
+  "papelera.se_borrara": "Se borrará {cuando}",
+  "papelera.se_borro": "Se borró {fecha}",
+  "papelera.titulo": "Papelera",
+  "papelera.vacia": "La papelera está vacía. Lo que borres se queda aquí {dias, plural, one {# día} other {# días}} antes de borrarse para siempre.",
+  "papelera.vaciar.boton": "Vaciar papelera",
+  "papelera.vaciar.confirmar": "¿Vaciar la papelera? Se {n, plural, one {borrará definitivamente # elemento} other {borrarán definitivamente # elementos}}. No se puede deshacer.",
+  "papelera.ver.boton": "Ver toda la papelera",
   "pdf.abrir": "Abrir un PDF…",
   "pdf.acercar": "Acercar",
   "pdf.ajustar_ancho": "Ajustar al ancho",
@@ -315,6 +354,7 @@ export const TEXTOS_FOLIO = {
   "proyecto.espacio_aria": "Espacio de trabajo del proyecto",
   "proyecto.menu": "Proyecto",
   "proyecto.mover_a_papelera": "Mover el proyecto a la papelera",
+  "proyecto.movido_a_papelera": "Se movió el proyecto {nombre} a la papelera. Tienes {dias, plural, one {# día} other {# días}} para recuperarlo.",
   "proyecto.no_encontrado_ayuda": "Puede que esté en la papelera o que se haya borrado de este navegador. Vuelve al inicio para ver tus proyectos.",
   "proyecto.no_encontrado_titulo": "No encontramos ese proyecto",
   "proyecto.no_se_puede_abrir": "No se puede mostrar {ruta} en el editor. Solo se abren archivos de texto e imágenes.",
@@ -354,10 +394,10 @@ export interface VariablesPorClave {
   "almacen.aviso.entrada_duplicada": { ruta: string | number };
   "almacen.error.archivo_inexistente": { ruta: string | number };
   "almacen.error.destino_ocupado": { ruta: string | number };
+  "almacen.error.guardado_pendiente": { ruta: string | number };
   "almacen.error.movimiento_invalido": { ruta: string | number };
   "almacen.error.ruta_invalida": { ruta: string | number };
-  "archivos.borrado": { ruta: string | number };
-  "archivos.confirmar_borrado": { ruta: string | number };
+  "archivos.borrado": { dias: string | number; ruta: string | number };
   "archivos.error.ya_existe": { ruta: string | number };
   "archivos.renombrar_aria": { nombre: string | number };
   "archivos.subidos": { n: string | number };
@@ -426,10 +466,29 @@ export interface VariablesPorClave {
   "paneles.msg.flotante": { titulo: string | number };
   "paneles.msg.maximizado": { titulo: string | number };
   "paneles.msg.restaurado": { titulo: string | number };
+  "papelera.aviso_tamano": { megas: string | number };
+  "papelera.borrar_definitivo.aria": { nombre: string | number };
+  "papelera.borrar_definitivo.confirmar": { nombre: string | number };
+  "papelera.caducidad.confirmar_menos": { dias: string | number; n: string | number };
+  "papelera.caducidad.opcion": { dias: string | number };
+  "papelera.de_proyecto": { proyecto: string | number };
+  "papelera.del_proyecto": { n: string | number };
+  "papelera.enlace": { n: string | number };
+  "papelera.incluye_borrados": { n: string | number };
+  "papelera.ocupa": { megas: string | number };
+  "papelera.restaurado": { ruta: string | number };
+  "papelera.restaurado_como": { ruta: string | number; ruta_final: string | number };
+  "papelera.restaurado_proyecto": { nombre: string | number };
+  "papelera.restaurar.aria": { nombre: string | number };
+  "papelera.se_borrara": { cuando: string | number };
+  "papelera.se_borro": { fecha: string | number };
+  "papelera.vacia": { dias: string | number };
+  "papelera.vaciar.confirmar": { n: string | number };
   "pdf.de_total": { total: string | number };
   "pdf.pagina_aria": { n: string | number; total: string | number };
   "pdf.zoom": { porcentaje: string | number };
   "pie.codigo_fuente_licencia": { licencia: string | number };
   "problemas.donde_linea": { linea: string | number; ruta: string | number };
+  "proyecto.movido_a_papelera": { dias: string | number; nombre: string | number };
   "proyecto.no_se_puede_abrir": { ruta: string | number };
 }

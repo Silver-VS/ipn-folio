@@ -58,3 +58,14 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 ## 2026.10.13
 
 - 2026-10-16 · `pwa.*`, `herramientas.*`, `descarga.*`, `ajustes.*`, `bienvenida.*` · (nuevas) aviso de actualización, catálogo de herramientas, descargas con progreso y reglas de red, Ajustes › Herramientas y bienvenida de primer uso; los tamaños van como `{megas}`, sin cifras fijas · Claude Sonnet (sesión 07).
+- 2026-10-16 · `papelera.*` · (nuevas) vista única de la papelera: encabezado, caducidad, avisos de tamaño, restaurar, borrar definitivamente, vaciar y avisos de restauración (D29) · Claude Sonnet (sesión 11).
+- 2026-10-16 · `archivos.borrado` · «Se borró {ruta}.» → «Se movió {ruta} a la papelera. Tienes {dias} días para recuperarlo.» (único aviso de caducidad, al mandar a la papelera) · Claude Sonnet (sesión 11).
+- 2026-10-16 · `editor.borrado_en_otra` · «Otra pestaña borró {ruta}…» → «Se movió {ruta} a la papelera desde otra pestaña…» · Claude Sonnet (sesión 11).
+- 2026-10-16 · `proyecto.movido_a_papelera` · (nueva) aviso con «Deshacer» al mandar un proyecto a la papelera · Claude Sonnet (sesión 11).
+- 2026-10-16 · `almacen.error.guardado_pendiente`, `elemento_inexistente`, `version_nueva`; `almacen.aviso.version_nueva`, `bloqueada`, `cerrada`, `recargar` · (nuevas) errores y avisos de la papelera y del ciclo de vida de la base entre pestañas (M4) · Claude Sonnet (sesión 11).
+- 2026-10-16 · `almacen.error.almacenamiento_lleno` · agrega «vacía la papelera» a la acción sugerida · Claude Sonnet (sesión 11).
+- 2026-10-16 · `archivos.confirmar_borrado`, `inicio.papelera`, `inicio.restaurar` · retiradas: mandar a la papelera no pide confirmación y la papelera tiene su propia vista · Claude Sonnet (sesión 11).
+
+## 2026.10.14
+
+- 2026-10-16 · `almacen.error.apertura_fallida`, `almacen.aviso.version_nueva_sin_guardar` · (nuevas) fallo al abrir o migrar la base y aviso de actualización cuando no alcanzó a guardar lo pendiente · Claude Sonnet (sesión 11, arreglos).

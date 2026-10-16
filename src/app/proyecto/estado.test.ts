@@ -2,9 +2,15 @@
 // Lógica de la pantalla de proyecto sobre un almacén real en memoria y el autoguardado de verdad (reloj falso).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { crearAlmacenMemoria, crearAutoguardado, crearAvisos, conectarAvisos } from '../../almacen';
-import type { Almacen } from '../../almacen';
+import type { Almacen, RelojConfiable } from '../../almacen';
 import type { Servicios } from '../servicios';
 import { EstadoProyecto } from './estado.svelte';
+
+const sinHora: RelojConfiable = {
+  horaConfiable: () => undefined,
+  medir: async () => false,
+  medirSiToca: async () => false,
+};
 
 async function montar(): Promise<{
   almacen: Almacen;
@@ -21,7 +27,7 @@ async function montar(): Promise<{
   const auto = crearAutoguardado(almacen, { espera: 400, maximo: 2000 });
   const avisos = crearAvisos({ nombreCanal: `prueba-${proyecto.id}` });
   conectarAvisos(almacen, avisos);
-  const servicios: Servicios = { almacen, persistente: true, auto, avisos, cerrar: () => {} };
+  const servicios: Servicios = { almacen, persistente: true, auto, avisos, reloj: sinHora, cerrar: () => {} };
   const estado = await EstadoProyecto.abrir(servicios, proyecto.id);
   if (!estado) throw new Error('no abrió');
   return { almacen, servicios, estado, id: proyecto.id };
@@ -86,7 +92,7 @@ describe('EstadoProyecto', () => {
     expect(estado.proyecto.principal).toBe('tesis.tex');
   });
 
-  it('borrar con un cambio pendiente descarta lo pendiente (no se vuelve a crear) y «Deshacer» lo restaura', async () => {
+  it('borrar con un cambio pendiente deja la última versión en la papelera (no se vuelve a crear) y «Deshacer» la restaura', async () => {
     const { almacen, estado, id } = await montar();
     estado.abrirArchivo('referencias.bib');
     estado.alEditar('referencias.bib', '@book{pendiente}');
@@ -99,6 +105,40 @@ describe('EstadoProyecto', () => {
     aviso?.accion?.ejecutar();
     await vi.advanceTimersByTimeAsync(1000);
     expect((await almacen.leer(id, 'referencias.bib'))?.contenido).toBe('@book{pendiente}');
+  });
+
+  it('el aviso de borrado dice cuántos días hay para recuperarlo', async () => {
+    const { estado } = await montar();
+    await estado.borrarArchivo('referencias.bib');
+    expect(estado.mensajes.at(-1)?.texto).toBe(
+      'Se movió referencias.bib a la papelera. Tienes 30 días para recuperarlo.',
+    );
+  });
+
+  it('lo borrado sigue en la papelera después de recargar y se restaura con los mismos bytes', async () => {
+    const { almacen, servicios, estado, id } = await montar();
+    await estado.borrarArchivo('capitulos');
+    expect(estado.papelera.map((e) => e.ruta)).toEqual(['capitulos']);
+    const otra = (await EstadoProyecto.abrir(servicios, id))!;
+    expect(otra.papelera.map((e) => e.ruta)).toEqual(['capitulos']);
+    await otra.restaurarDePapelera(otra.papelera[0]!);
+    expect(otra.papelera).toEqual([]);
+    expect(otra.archivos.map((a) => a.ruta)).toContain('capitulos/uno.tex');
+    expect((await almacen.leer(id, 'capitulos/uno.tex'))?.contenido).toBe('uno');
+    expect(otra.mensajes.at(-1)?.texto).toBe('Se restauró capitulos.');
+    expect(otra.enfocarArbol?.ruta).toBe('capitulos/uno.tex');
+  });
+
+  it('restaurar con la ruta ocupada lo dice y no pisa nada', async () => {
+    const { almacen, estado, id } = await montar();
+    await estado.borrarArchivo('referencias.bib');
+    await almacen.escribir(id, 'referencias.bib', 'nuevo');
+    await estado.restaurarDePapelera(estado.papelera[0]!);
+    expect((await almacen.leer(id, 'referencias.bib'))?.contenido).toBe('nuevo');
+    expect((await almacen.leer(id, 'referencias (2).bib'))?.contenido).toBe('@book{a}');
+    expect(estado.mensajes.at(-1)?.texto).toBe(
+      'Se restauró como referencias (2).bib porque referencias.bib ya existía.',
+    );
   });
 
   it('borrar una carpeta quita todo lo que cuelga de ella', async () => {

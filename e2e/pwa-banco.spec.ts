@@ -5,6 +5,8 @@
 //  - sin conexión: recargar el banco y compilar «hola»
 //  - quitar LaTeX libera cachés e IndexedDB sin tocar proyectos
 // Se salta sin los activos de BusyTeX (`npm run activos`). Solo escritorio: el motor pesa ~128 MB.
+import { get } from 'node:http';
+import { gunzipSync, brotliDecompressSync } from 'node:zlib';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import type { Server } from 'node:http';
 import { tmpdir } from 'node:os';
@@ -18,6 +20,30 @@ import { PUERTO_ESPEJO, TAMANOS, URL_ESPEJO, urlBanco } from './config';
 const hayActivos = existsSync('public/busytex/busytex.wasm');
 const hayEspejo = existsSync('espejo-local');
 const BANCO = urlBanco();
+
+/** Pide el archivo aceptando gzip/br y cuenta los bytes tal como llegan por la red (antes de descomprimir). */
+function descargarContandoBytes(
+  url: string,
+): Promise<{ cuerpo: number; enRed: number; codificacion: string }> {
+  return new Promise((resolver, rechazar) => {
+    get(url, { headers: { 'Accept-Encoding': 'gzip, br' } }, (res) => {
+      const trozos: Buffer[] = [];
+      res.on('data', (t: Buffer) => trozos.push(t));
+      res.on('error', rechazar);
+      res.on('end', () => {
+        const crudo = Buffer.concat(trozos);
+        const codificacion = String(res.headers['content-encoding'] ?? 'ninguna');
+        const cuerpo =
+          codificacion === 'gzip'
+            ? gunzipSync(crudo).byteLength
+            : codificacion === 'br'
+              ? brotliDecompressSync(crudo).byteLength
+              : crudo.byteLength;
+        resolver({ cuerpo, enRed: crudo.byteLength, codificacion });
+      });
+    }).on('error', rechazar);
+  });
+}
 
 test.describe('service worker con BusyTeX real', () => {
   test.skip(!hayActivos, 'No hay activos de BusyTeX en public/busytex/ (corre npm run activos).');
@@ -119,11 +145,9 @@ test.describe('service worker con BusyTeX real', () => {
     medidas['persistente'] = r.persistente;
   });
 
-  test('tamaños medidos de cada archivo: sin comprimir y lo que viaja con compresión', async ({
-    request,
-  }) => {
-    // Lo que descarga un cliente que acepta gzip/br; `vite preview` comprime, así que sirve de referencia (el
-    // hospedaje real puede variar). El cuerpo que devuelve la API ya viene descomprimido.
+  test('tamaños medidos de cada archivo: sin comprimir y lo que viaja con compresión', async () => {
+    // Bytes tal como llegan por la red a un cliente que acepta gzip/br. `vite preview` solo comprime los tipos de
+    // texto (no .wasm ni .data); el hospedaje real puede variar, así que son una referencia.
     const raiz = new URL(BANCO).origin;
     const archivos = [
       'busytex.js',
@@ -137,19 +161,10 @@ test.describe('service worker con BusyTeX real', () => {
     let viaja = 0;
     const detalle: Record<string, { sinComprimir: number; viaja: number; codificacion: string }> = {};
     for (const nombre of archivos) {
-      const respuesta = await request.get(`${raiz}/busytex/${nombre}`, {
-        headers: { 'Accept-Encoding': 'gzip, br' },
-      });
-      const cuerpo = (await respuesta.body()).byteLength;
-      const encabezados = respuesta.headers();
-      const enviado = Number(encabezados['content-length'] ?? cuerpo);
-      detalle[nombre] = {
-        sinComprimir: cuerpo,
-        viaja: enviado,
-        codificacion: encabezados['content-encoding'] ?? 'ninguna',
-      };
+      const { cuerpo, enRed, codificacion } = await descargarContandoBytes(`${raiz}/busytex/${nombre}`);
+      detalle[nombre] = { sinComprimir: cuerpo, viaja: enRed, codificacion };
       sinComprimir += cuerpo;
-      viaja += enviado;
+      viaja += enRed;
     }
     medidas['tamanosPorArchivo'] = detalle;
     medidas['sinComprimirBytes'] = sinComprimir;

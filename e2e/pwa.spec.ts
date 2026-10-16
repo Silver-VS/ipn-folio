@@ -98,10 +98,36 @@ test.describe('PWA', () => {
     expect(guardado).toBeNull();
   });
 
+  test('el precaché guarda el cascarón completo (HTML, JS, CSS, fuentes e íconos) y nada de BusyTeX', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await esperarControl(page);
+    const urls = await page.evaluate(async () => {
+      const salida: string[] = [];
+      for (const nombre of await caches.keys()) {
+        if (!nombre.startsWith('workbox-precache')) continue;
+        for (const r of await (await caches.open(nombre)).keys()) salida.push(new URL(r.url).pathname);
+      }
+      return salida;
+    });
+    expect(urls.some((u) => u.endsWith('/index.html') || u.endsWith('/'))).toBe(true);
+    expect(urls.filter((u) => u.endsWith('.js')).length).toBeGreaterThan(2);
+    expect(urls.some((u) => u.endsWith('.css'))).toBe(true);
+    expect(urls.some((u) => u.endsWith('.woff2'))).toBe(true);
+    expect(urls.some((u) => u.endsWith('icono-512.png'))).toBe(true);
+    expect(urls.filter((u) => u.includes('/busytex/'))).toEqual([]);
+    expect(urls.filter((u) => u.endsWith('version.json'))).toEqual([]);
+  });
+
   test('sin conexión, tras una visita, la app abre y muestra los proyectos guardados', async ({
     page,
     context,
+    browserName,
   }) => {
+    // Playwright no emula bien «sin conexión» con service worker en WebKit: recargar da un error interno del
+    // propio navegador de pruebas antes de que el service worker responda. Chromium sí lo prueba de verdad.
+    test.skip(browserName === 'webkit', 'WebKit de Playwright: error interno al recargar sin conexión.');
     await page.goto('/');
     await esperarControl(page);
     await omitirBienvenida(page);
@@ -120,5 +146,36 @@ test.describe('PWA', () => {
     await page.getByRole('link', { name: 'Proyecto de ejemplo' }).click();
     await expect(page.locator('.vista:not([hidden]) .cm-content')).toBeVisible();
     await context.setOffline(false);
+  });
+
+  test('navigator.connection en cada navegador de pruebas: se registra y, sin «type», la app pregunta', async ({
+    page,
+    browserName,
+  }, testInfo) => {
+    await page.goto('/');
+    const datos = await page.evaluate(() => {
+      const c = (
+        navigator as Navigator & {
+          connection?: { type?: string; effectiveType?: string; saveData?: boolean };
+        }
+      ).connection;
+      return c
+        ? {
+            existe: true,
+            type: c.type ?? null,
+            effectiveType: c.effectiveType ?? null,
+            saveData: c.saveData ?? null,
+          }
+        : { existe: false, type: null, effectiveType: null, saveData: null };
+    });
+    testInfo.annotations.push({
+      type: 'navigator.connection',
+      description: `${browserName}: ${JSON.stringify(datos)}`,
+    });
+    console.log(`navigator.connection (${testInfo.project.name}/${browserName}):`, JSON.stringify(datos));
+    await page.getByRole('button', { name: 'Descargar ahora' }).click();
+    if (datos.type === 'wifi' || datos.type === 'ethernet') return; // descargaría; no es el caso de estos navegadores
+    // Sin tipo de red (Safari/WebKit, Firefox y Chromium de escritorio) o con datos móviles: no descarga sin preguntar.
+    await expect(page.getByRole('alertdialog')).toBeVisible();
   });
 });

@@ -3,7 +3,14 @@
   import { onMount } from 'svelte';
   import { acerca } from './acerca';
   import Inicio from './app/Inicio.svelte';
-  import { rutaDeHash, type Ruta } from './app/ruta';
+  import Ajustes from './app/ajustes/Ajustes.svelte';
+  import AvisoActualizacion from './app/avisos/AvisoActualizacion.svelte';
+  import Bienvenida from './app/bienvenida/Bienvenida.svelte';
+  import { bienvenidaVista } from './app/bienvenida/preferencias';
+  import { HASH_AJUSTES, rutaDeHash, type Ruta } from './app/ruta';
+  import { servicios, type Servicios } from './app/servicios';
+  import { tienda as crearTienda, type TiendaHerramientas } from './herramientas/tienda.svelte';
+  import { registrarServiceWorker } from './pwa/registro';
   import { t } from './textos/t';
 
   let ruta = $state<Ruta>(rutaDeHash(location.hash));
@@ -11,12 +18,31 @@
   let cargaProyecto: Promise<typeof import('./app/proyecto/Proyecto.svelte')> | undefined;
   const cargarProyecto = () => (cargaProyecto ??= import('./app/proyecto/Proyecto.svelte'));
 
+  // Bienvenida de primer uso: hasta saber si ya se vio, el espacio de trabajo queda vacío (sin parpadeo).
+  let fase = $state<'cargando' | 'bienvenida' | 'listo'>('cargando');
+  let s = $state.raw<Servicios>();
+  let herramientas = $state.raw<TiendaHerramientas>();
+  let activarActualizacion = $state.raw<(() => void) | undefined>();
+
   onMount(() => {
+    void Promise.all([servicios(), crearTienda()]).then(async ([servicio, tienda]) => {
+      s = servicio;
+      herramientas = tienda;
+      fase = (await bienvenidaVista(servicio.almacen)) ? 'listo' : 'bienvenida';
+    });
+    // El service worker solo se registra en el sitio construido; en desarrollo estorbaría a la recarga en caliente.
+    if (import.meta.env.PROD) {
+      void registrarServiceWorker({ alHaberActualizacion: (activar) => (activarActualizacion = activar) });
+    }
     const alCambiarHash = () => (ruta = rutaDeHash(location.hash));
     window.addEventListener('hashchange', alCambiarHash);
     return () => window.removeEventListener('hashchange', alCambiarHash);
   });
 </script>
+
+{#if activarActualizacion}
+  <AvisoActualizacion activar={activarActualizacion} />
+{/if}
 
 {#if ruta.pantalla === 'proyecto'}
   {#await cargarProyecto() then modulo}
@@ -27,12 +53,23 @@
 {:else}
   <div class="cascaron">
     <header class="encabezado">
-      <h1 class="marca">{t('app.nombre')}</h1>
-      <p class="lema">{t('app.lema')}</p>
+      <div>
+        <h1 class="marca">{t('app.nombre')}</h1>
+        <p class="lema">{t('app.lema')}</p>
+      </div>
+      <nav>
+        <a class="enlace-ajustes" href={HASH_AJUSTES}>{t('ajustes.enlace')}</a>
+      </nav>
     </header>
 
     <main id="espacio-de-trabajo" aria-label={t('inicio.espacio.aria')}>
-      <Inicio />
+      {#if herramientas && ruta.pantalla === 'ajustes'}
+        <Ajustes tienda={herramientas} />
+      {:else if fase === 'bienvenida' && s && herramientas}
+        <Bienvenida almacen={s.almacen} tienda={herramientas} alTerminar={() => (fase = 'listo')} />
+      {:else if fase === 'listo' && herramientas}
+        <Inicio tienda={herramientas} />
+      {/if}
     </main>
 
     <footer class="pie">
@@ -52,7 +89,18 @@
   }
 
   .encabezado {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--ipn-esp-3);
     padding: var(--ipn-esp-5) var(--ipn-esp-4) var(--ipn-esp-3);
+  }
+
+  .enlace-ajustes {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--ipn-objetivo-tactil);
   }
 
   .marca {

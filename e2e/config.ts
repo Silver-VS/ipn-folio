@@ -24,3 +24,8 @@ export const PUERTO_ESPEJO: number =
 
 /** URL del espejo local. */
 export const URL_ESPEJO = `http://127.0.0.1:${PUERTO_ESPEJO}`;
+
+/** Tamaños medidos de LaTeX (los que alimentan {megas}); se leen del mismo manifiesto que usa la aplicación. */
+export const TAMANOS = JSON.parse(
+  readFileSync(new URL('../src/herramientas/tamanos.gen.json', import.meta.url), 'utf8'),
+) as { busytex: string; latex: { bytes: number; megas: number } };

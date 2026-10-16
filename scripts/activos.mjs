@@ -21,6 +21,7 @@ import {
 } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { generar as medirTamanos } from './tamanos.mjs';
 
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DESTINO = join(RAIZ, 'public', 'busytex');
@@ -96,6 +97,7 @@ async function principal() {
   console.log(
     `Listo: ${registro.length} archivos en public/busytex/ (${(total / 1e6).toFixed(1)} MB decimales sin comprimir).`,
   );
+  medirTamanos();
 }
 
 principal().catch((e) => {

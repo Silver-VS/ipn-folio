@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Ruta mínima por «hash»: `#/` es el inicio y `#/proyecto/<id>` abre la pantalla de proyecto (el inicio real es de la sesión 09).
 
-export type Ruta = { pantalla: 'inicio' } | { pantalla: 'proyecto'; id: string };
+export type Ruta = { pantalla: 'inicio' } | { pantalla: 'ajustes' } | { pantalla: 'proyecto'; id: string };
+
+export const HASH_AJUSTES = '#/ajustes';
 
 export function rutaDeHash(hash: string): Ruta {
+  if (/^#\/ajustes\/?$/.test(hash)) return { pantalla: 'ajustes' };
   const m = /^#\/proyecto\/([^/?#]+)\/?$/.exec(hash);
   if (!m?.[1]) return { pantalla: 'inicio' };
   try {

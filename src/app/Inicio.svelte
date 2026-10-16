@@ -4,9 +4,13 @@
   import { textoDeError, type Proyecto } from '../almacen';
   import { plano } from '../textos/plano';
   import { t } from '../textos/t';
+  import type { TiendaHerramientas } from '../herramientas/tienda.svelte';
+  import AvisoDescarga from './avisos/AvisoDescarga.svelte';
   import { crearProyectoDeEjemplo } from './ejemplo/crear-ejemplo';
   import { hashDeProyecto } from './ruta';
   import { servicios, type Servicios } from './servicios';
+
+  let { tienda }: { tienda: TiendaHerramientas } = $props();
 
   // Inicio mínimo: lista de proyectos y uno de ejemplo ficticio. El inicio real (plantillas, importar) es de la sesión 09.
   let s = $state.raw<Servicios>();
@@ -47,6 +51,7 @@
 </script>
 
 <section class="inicio" aria-labelledby="titulo-proyectos">
+  <AvisoDescarga {tienda} />
   <h2 id="titulo-proyectos">{t('inicio.proyectos')}</h2>
   {#if error}<p class="error" role="alert">{error}</p>{/if}
   {#if s && activos.length === 0}

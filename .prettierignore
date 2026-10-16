@@ -13,3 +13,4 @@ public/busytex/
 espejo-local/
 .cache-activos/
 .cache-banco/
+src/herramientas/tamanos.gen.json

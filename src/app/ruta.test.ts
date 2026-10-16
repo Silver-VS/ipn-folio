@@ -4,7 +4,13 @@ import { hashDeProyecto, rutaDeHash } from './ruta';
 
 describe('ruta por hash', () => {
   it('sin hash o con uno desconocido es el inicio', () => {
-    for (const h of ['', '#', '#/', '#/otra', '#/proyecto', '#/proyecto/']) expect(rutaDeHash(h), h).toEqual({ pantalla: 'inicio' });
+    for (const h of ['', '#', '#/', '#/otra', '#/proyecto', '#/proyecto/'])
+      expect(rutaDeHash(h), h).toEqual({ pantalla: 'inicio' });
+  });
+
+  it('#/ajustes abre los ajustes (con o sin barra final)', () => {
+    expect(rutaDeHash('#/ajustes')).toEqual({ pantalla: 'ajustes' });
+    expect(rutaDeHash('#/ajustes/')).toEqual({ pantalla: 'ajustes' });
   });
 
   it('#/proyecto/<id> abre el proyecto (con o sin barra final)', () => {

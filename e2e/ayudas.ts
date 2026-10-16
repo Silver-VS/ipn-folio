@@ -3,9 +3,19 @@
 import { expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
+/** En la primera visita aparece la bienvenida (sesión 07): «Descargar después» la cierra sin descargar nada. */
+export async function omitirBienvenida(page: Page): Promise<void> {
+  const despues = page.getByRole('button', { name: 'Descargar después' });
+  const inicio = page.getByRole('button', { name: 'Crear un proyecto de ejemplo' });
+  await expect(despues.or(inicio)).toBeVisible();
+  if (await despues.isVisible()) await despues.click();
+  await expect(inicio).toBeVisible();
+}
+
 /** Crea el proyecto de ejemplo desde el inicio y espera a que el editor esté listo. Devuelve el hash del proyecto. */
 export async function abrirProyectoDeEjemplo(page: Page): Promise<string> {
   await page.goto('/');
+  await omitirBienvenida(page);
   await page.getByRole('button', { name: 'Crear un proyecto de ejemplo' }).click();
   await page.waitForURL(/#\/proyecto\//);
   await esperarEditor(page);
@@ -28,7 +38,8 @@ export async function esperarEditor(page: Page): Promise<void> {
  */
 export async function textoDelEditor(page: Page): Promise<string> {
   return editorActivo(page).evaluate((el) => {
-    const vista = (el as unknown as { cmTile?: { view?: { state: { doc: { toString(): string } } } } }).cmTile?.view;
+    const vista = (el as unknown as { cmTile?: { view?: { state: { doc: { toString(): string } } } } }).cmTile
+      ?.view;
     return vista ? vista.state.doc.toString() : (el as HTMLElement).innerText;
   });
 }

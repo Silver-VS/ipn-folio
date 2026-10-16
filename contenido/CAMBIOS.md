@@ -54,3 +54,7 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 - 2026-10-06 · `editor.cm.coincidencia_actual`, `lineas_plegadas`, `lineas_desplegadas` · frases completas para los avisos de búsqueda y plegado; se retiran `en_linea` y `hasta` · Codex.
 - 2026-10-06 · `problemas.donde` · retirada la clave que solo contenía una ruta; se presenta el dato directamente · Codex.
 - 2026-10-06 · `pdf.de_total` · se conserva como etiqueta del formulario «Página [campo] de {total}», junto al nombre accesible completo `pdf.pagina_aria` · Codex.
+
+## 2026.10.13
+
+- 2026-10-16 · `pwa.*`, `herramientas.*`, `descarga.*`, `ajustes.*`, `bienvenida.*` · (nuevas) aviso de actualización, catálogo de herramientas, descargas con progreso y reglas de red, Ajustes › Herramientas y bienvenida de primer uso; los tamaños van como `{megas}`, sin cifras fijas · Claude Sonnet (sesión 07).

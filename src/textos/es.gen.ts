@@ -1,10 +1,15 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.12";
+export const VERSION_TEXTOS = "2026.10.13";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
+  "ajustes.enlace": "Ajustes",
+  "ajustes.solo_wifi.ayuda": "Si usas datos móviles, Folio te pregunta antes de descargar herramientas.",
+  "ajustes.solo_wifi.titulo": "Descargar solo con Wi-Fi",
+  "ajustes.titulo": "Ajustes",
+  "ajustes.volver": "Volver al inicio",
   "almacen.aviso.codificacion_convertida": "El archivo «{ruta}» no estaba en UTF-8; lo convertimos desde Windows-1252 (Latin-1). Si usa inputenc con latin1, cambia esa opción a utf8 o revisa los acentos.",
   "almacen.aviso.entrada_duplicada": "El .zip trae «{ruta}» más de una vez. Conservamos la última copia.",
   "almacen.error.almacen_no_disponible": "Tu navegador no permite guardar proyectos en este dispositivo, así que se perderán al cerrar la pestaña. Descarga una copia en .zip con frecuencia o abre IPN Folio en otra ventana que no sea privada.",
@@ -42,6 +47,24 @@ export const TEXTOS_FOLIO = {
   "archivos.subidos": "{n, plural, one {Se agregó # archivo al proyecto.} other {Se agregaron # archivos al proyecto.}}",
   "archivos.subir": "Subir archivos",
   "archivos.vacio": "Este proyecto aún no tiene archivos. Crea uno o arrastra aquí los que quieras agregar.",
+  "bienvenida.descargar_ahora": "Descargar ahora",
+  "bienvenida.descargar_despues": "Descargar después",
+  "bienvenida.despues_ajustes": "Puedes agregar más herramientas después, en Ajustes › Herramientas.",
+  "bienvenida.docente.ayuda": "Mostrar las herramientas para crear actividades y revisar entregas.",
+  "bienvenida.docente.etiqueta": "Doy clases.",
+  "bienvenida.empezar": "Empezar",
+  "bienvenida.escritorio.ayuda": "Estás en la versión web. Estas herramientas se instalan desde la app de escritorio de Folio.",
+  "bienvenida.intro": "Folio descarga solo lo que elijas y lo guarda en este equipo para que funcione sin conexión. Puedes agregar o quitar herramientas después, en Ajustes.",
+  "bienvenida.nota_datos": "Si usas datos móviles, elige «Descargar después». Puedes crear proyectos y escribir desde ahora; Folio te pedirá la descarga cuando compiles por primera vez.",
+  "bienvenida.titulo": "Te damos la bienvenida. ¿Qué vas a usar?",
+  "bienvenida.total.cantidad": "Unos {megas} MB",
+  "bienvenida.total.ninguno": "Nada por ahora",
+  "bienvenida.total.titulo": "Vas a descargar",
+  "bienvenida.unidad.ayuda": "Verás primero sus plantillas. Puedes ver las de otras unidades cuando quieras.",
+  "bienvenida.unidad.etiqueta": "Unidad académica",
+  "bienvenida.unidad.otra": "Otra unidad",
+  "bienvenida.unidad.sin_elegir": "Elige tu unidad",
+  "bienvenida.unidad.titulo": "Tu unidad académica",
   "compacto.pestanas_aria": "Paneles del proyecto",
   "compilacion.paso.bibliografia": "bibliografía",
   "compilacion.paso.final": "pasada final",
@@ -51,6 +74,27 @@ export const TEXTOS_FOLIO = {
   "compilacion.paso.pasada": "nueva pasada",
   "compilacion.paso.primera": "primera pasada",
   "compilacion.paso.progreso": "Paso {n} de {total}: {nombre}",
+  "descarga.aviso.ahora": "Descargar ahora (unos {megas} MB)",
+  "descarga.aviso.cuerpo": "Para crear el PDF, Folio necesita descargar el compilador de LaTeX: unos {megas} MB, una sola vez. Después puedes compilar en este equipo sin conexión.",
+  "descarga.aviso.datos_moviles": "Si usas datos móviles, puedes esperar a tener Wi-Fi. Mientras tanto, puedes crear tu proyecto y escribir. Para generar el PDF necesitas completar la descarga.",
+  "descarga.aviso.esperar": "Esperar a tener Wi-Fi",
+  "descarga.aviso.titulo": "Antes de crear tu primer PDF",
+  "descarga.ayuda": "Puedes seguir trabajando mientras tanto",
+  "descarga.barra.aria": "Avance de la descarga",
+  "descarga.cancelar": "Cancelar",
+  "descarga.confirmar.ahorro": "Tu navegador tiene activado el ahorro de datos. La descarga pesa unos {megas} MB.",
+  "descarga.confirmar.datos_moviles": "Estás usando datos móviles y «Solo con Wi-Fi» está activado. Esta descarga usa unos {megas} MB de tu plan.",
+  "descarga.confirmar.desconocida": "Tu navegador no dice si usas Wi-Fi o datos móviles. La descarga pesa unos {megas} MB.",
+  "descarga.confirmar.no": "Ahora no",
+  "descarga.confirmar.si": "Descargar de todos modos",
+  "descarga.en_curso": "Descargando el compilador de LaTeX · {cargados} de {megas} MB",
+  "descarga.en_pausa": "Descarga en pausa · {cargados} de {megas} MB",
+  "descarga.error.espacio": "No hay espacio suficiente en este equipo para guardar el compilador. Libera espacio y vuelve a intentarlo.",
+  "descarga.error.otro": "No se pudo descargar el compilador. Vuelve a intentarlo; si sigue fallando, avisa en el repositorio del proyecto.",
+  "descarga.error.red": "Se perdió la conexión durante la descarga. Revisa tu red y vuelve a intentarlo; lo que ya se descargó se conserva.",
+  "descarga.lista": "Compilador listo. Ya puedes compilar en este equipo sin conexión.",
+  "descarga.pausar": "Pausar",
+  "descarga.reanudar": "Reanudar",
   "distribucion.editor_arriba": "Editor arriba, PDF abajo",
   "distribucion.en_ventana": "Abrir {panel} en otra ventana",
   "distribucion.enfocada": "Escritura enfocada",
@@ -172,6 +216,45 @@ export const TEXTOS_FOLIO = {
   "guardado.hace_minutos": "Guardado en este equipo hace {minutos} min",
   "guardado.hace_segundos": "Guardado en este equipo hace {segundos} s",
   "guardado.todo": "Todo guardado en este equipo",
+  "herramientas.app_escritorio": "App de escritorio",
+  "herramientas.cpp.descripcion": "Compila y ejecuta programas con las herramientas de tu equipo.",
+  "herramientas.cpp.nombre": "C y C++",
+  "herramientas.cpp.sigla": "C++",
+  "herramientas.en_navegador": "En el navegador",
+  "herramientas.en_navegador_ayuda": "Funcionan aquí y en la app de escritorio",
+  "herramientas.espacio": "Folio usa {usado} MB en este equipo.",
+  "herramientas.estado.descargando": "Descargando",
+  "herramientas.estado.error": "No se pudo instalar",
+  "herramientas.estado.instalada": "Instalada",
+  "herramientas.estado.no_instalada": "No instalada",
+  "herramientas.estado.pausada": "En pausa",
+  "herramientas.instalar": "Instalar",
+  "herramientas.java.descripcion": "Escribe y ejecuta programas con JShell.",
+  "herramientas.java.nombre": "Java",
+  "herramientas.java.sigla": "Java",
+  "herramientas.latex.descripcion": "Escribe y compila documentos con fórmulas, bibliografía e índices, también sin conexión.",
+  "herramientas.latex.nombre": "Documentos LaTeX",
+  "herramientas.latex.sigla": "TeX",
+  "herramientas.octave.descripcion": "Cálculo numérico y señales con código y gráficas.",
+  "herramientas.octave.nombre": "Cuadernos con Octave",
+  "herramientas.octave.sigla": "Oct",
+  "herramientas.persistencia_no": "El navegador podría borrar los datos de Folio si falta espacio. Exporta tus proyectos de vez en cuando.",
+  "herramientas.persistencia_si": "El navegador conservará los datos de Folio aunque falte espacio.",
+  "herramientas.proximamente": "Próximamente",
+  "herramientas.python.descripcion": "Texto, ecuaciones, código y gráficas en un mismo cuaderno.",
+  "herramientas.python.nombre": "Cuadernos con Python",
+  "herramientas.python.sigla": "Py",
+  "herramientas.quitar": "Quitar",
+  "herramientas.quitar_aviso": "Quitar {nombre} libera unos {megas} MB. Tus proyectos no se borran.",
+  "herramientas.r.descripcion": "Análisis de datos y estadística con código y gráficas.",
+  "herramientas.r.nombre": "Cuadernos con R",
+  "herramientas.r.sigla": "R",
+  "herramientas.reintentar": "Reintentar",
+  "herramientas.seleccionar": "Usar {nombre}",
+  "herramientas.solo_escritorio": "Solo en la app de escritorio",
+  "herramientas.solo_escritorio_ayuda": "La app de escritorio agrega lo que el navegador no puede hacer bien",
+  "herramientas.tamano": "Unos {megas} MB",
+  "herramientas.titulo": "Herramientas",
   "inicio.crear_ejemplo": "Crear un proyecto de ejemplo",
   "inicio.ejemplo.nombre": "Proyecto de ejemplo",
   "inicio.espacio.aria": "Espacio de trabajo",
@@ -231,6 +314,9 @@ export const TEXTOS_FOLIO = {
   "proyecto.no_se_puede_abrir": "No se puede mostrar {ruta} en el editor. Solo se abren archivos de texto e imágenes.",
   "proyecto.tema": "Tema",
   "proyecto.volver": "Inicio",
+  "pwa.actualizacion.aria": "Actualización disponible",
+  "pwa.actualizacion.aviso": "Hay una versión nueva de Folio",
+  "pwa.actualizacion.boton": "Actualizar",
   "salida.registro_aria": "Registro de la compilación",
   "salida.vacio": "Aquí aparecerá el registro de la compilación."
 } as const;
@@ -266,7 +352,15 @@ export interface VariablesPorClave {
   "archivos.error.ya_existe": { ruta: string | number };
   "archivos.renombrar_aria": { nombre: string | number };
   "archivos.subidos": { n: string | number };
+  "bienvenida.total.cantidad": { megas: string | number };
   "compilacion.paso.progreso": { n: string | number; nombre: string | number; total: string | number };
+  "descarga.aviso.ahora": { megas: string | number };
+  "descarga.aviso.cuerpo": { megas: string | number };
+  "descarga.confirmar.ahorro": { megas: string | number };
+  "descarga.confirmar.datos_moviles": { megas: string | number };
+  "descarga.confirmar.desconocida": { megas: string | number };
+  "descarga.en_curso": { cargados: string | number; megas: string | number };
+  "descarga.en_pausa": { cargados: string | number; megas: string | number };
   "distribucion.en_ventana": { panel: string | number };
   "editor.aria_texto": { ruta: string | number };
   "editor.borrado_en_otra": { ruta: string | number };
@@ -310,6 +404,10 @@ export interface VariablesPorClave {
   "errores.latex.referencia_indefinida.titulo": { referencia: string | number };
   "guardado.hace_minutos": { minutos: string | number };
   "guardado.hace_segundos": { segundos: string | number };
+  "herramientas.espacio": { usado: string | number };
+  "herramientas.quitar_aviso": { megas: string | number; nombre: string | number };
+  "herramientas.seleccionar": { nombre: string | number };
+  "herramientas.tamano": { megas: string | number };
   "paneles.cerrar_pestana": { titulo: string | number };
   "paneles.msg.abierto": { titulo: string | number };
   "paneles.msg.acoplado": { titulo: string | number };

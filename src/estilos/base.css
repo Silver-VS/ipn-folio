@@ -39,3 +39,45 @@ a:focus-visible {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Botones comunes de las pantallas de bienvenida, ajustes y descargas (objetivo táctil ≥ 44 px). */
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--ipn-objetivo-tactil);
+  padding: 0 var(--ipn-esp-4);
+  border: 1px solid var(--ipn-borde-control);
+  border-radius: var(--ipn-radio-s);
+  background: var(--ipn-superficie);
+  color: var(--ipn-texto);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.boton:hover:not(:disabled) {
+  background: var(--ipn-acento-suave);
+}
+
+.boton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.boton-primario {
+  border-color: var(--ipn-acento);
+  background: var(--ipn-acento);
+  color: var(--ipn-sobre-acento);
+}
+
+.boton-primario:hover:not(:disabled) {
+  background: var(--ipn-acento-fuerte);
+}
+
+.boton:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 0.1875rem solid var(--ipn-acento);
+  outline-offset: 0.125rem;
+}

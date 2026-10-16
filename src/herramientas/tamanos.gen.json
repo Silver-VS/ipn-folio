@@ -1,0 +1,41 @@
+{
+  "busytex": "1.4.0",
+  "latex": {
+    "archivos": [
+      {
+        "nombre": "busytex.js",
+        "bytes": 271047,
+        "destino": "cache"
+      },
+      {
+        "nombre": "busytex.wasm",
+        "bytes": 32507525,
+        "destino": "cache"
+      },
+      {
+        "nombre": "busytex_pipeline.js",
+        "bytes": 36266,
+        "destino": "cache"
+      },
+      {
+        "nombre": "texmf.cnf",
+        "bytes": 43630,
+        "destino": "cache"
+      },
+      {
+        "nombre": "texlive-basic.js",
+        "bytes": 2091651,
+        "destino": "cache"
+      },
+      {
+        "nombre": "texlive-basic.data",
+        "bytes": 92785062,
+        "destino": "indexeddb"
+      }
+    ],
+    "bytes": 127735181,
+    "bytesCache": 34950119,
+    "bytesIndexedDb": 92785062,
+    "megas": 128
+  }
+}

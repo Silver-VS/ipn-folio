@@ -10,6 +10,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/tamanos.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
@@ -17,9 +18,10 @@
     "e2e": "playwright test",
     "lint": "eslint .",
     "formato": "prettier --write .",
-    "tipos": "svelte-check --tsconfig ./tsconfig.json && tsc --noEmit",
+    "tipos": "svelte-check --tsconfig ./tsconfig.json && tsc --noEmit && tsc -p tsconfig.sw.json --noEmit",
     "licencias": "node scripts/licencias.mjs",
     "activos": "node scripts/activos.mjs",
+    "iconos": "node scripts/iconos/generar.mjs",
     "contenido": "node scripts/textos.mjs && node scripts/codificacion.mjs && node scripts/contenido.mjs",
     "verificar": "npm run contenido && npm run lint && npm run tipos && npm run test && npm run licencias && npm run build",
     "espejo:generar": "node scripts/espejo/generar.mjs",
@@ -55,12 +57,19 @@
     "globals": "^17.13.0",
     "prettier": "^3.9.9",
     "prettier-plugin-svelte": "^4.1.1",
+    "sharp": "^0.35.5",
     "smol-toml": "^1.9.0",
     "svelte-check": "^4.7.6",
     "texlyre-busytex": "1.4.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.1",
     "vite": "^8.3.2",
-    "vitest": "^5.0.3"
+    "vite-plugin-pwa": "^2.0.0",
+    "vitest": "^5.0.3",
+    "workbox-build": "^7.4.1",
+    "workbox-core": "^7.4.1",
+    "workbox-precaching": "^7.4.1",
+    "workbox-routing": "^7.4.1",
+    "workbox-strategies": "^7.4.1"
   }
 }

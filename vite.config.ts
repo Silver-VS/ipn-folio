@@ -3,8 +3,10 @@
 import { readFileSync, realpathSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import type { Plugin } from 'vite';
+import type { ManifestOptions } from 'vite-plugin-pwa';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { leerTextosComun, leerTextosFolio } from './scripts/lib/textos.mjs';
+import { pluginPwa, pluginVersionJson } from './scripts/lib/pwa.mjs';
 
 // Entorno de configuración: FOLIO_ENTORNO, o «desarrollo» en `vite` y «produccion» en `vite build`.
 const entornoPor = (mando: string) =>
@@ -30,6 +32,35 @@ function textosEnHtml(): Plugin {
   };
 }
 
+/** Manifiesto de la PWA: nombre y descripción salen de es.toml; los colores, de los tokens de @ipn/comun. */
+function manifiesto(comun: string): Partial<ManifestOptions> {
+  const textos = leerTextosFolio().textos as Record<string, string>;
+  const tokens = readFileSync(`${comun}/dist/tokens.css`, 'utf8');
+  const color = (variable: string): string => {
+    const m = new RegExp(`${variable}:\\s*(#[0-9a-fA-F]{6})`).exec(tokens);
+    if (!m?.[1]) throw new Error(`tokens.css: falta ${variable}`);
+    return m[1];
+  };
+  return {
+    name: textos['app.nombre'],
+    short_name: textos['app.nombre'],
+    description: textos['app.descripcion'],
+    lang: 'es-MX',
+    dir: 'ltr',
+    display: 'standalone',
+    start_url: './',
+    scope: './',
+    theme_color: color('--ipn-acento'),
+    background_color: color('--ipn-fondo'),
+    icons: [
+      { src: 'iconos/icono-192.png', sizes: '192x192', type: 'image/png' },
+      { src: 'iconos/icono-512.png', sizes: '512x512', type: 'image/png' },
+      { src: 'iconos/icono-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      { src: 'iconos/folio.svg', sizes: 'any', type: 'image/svg+xml' },
+    ],
+  };
+}
+
 export default defineConfig(({ command }) => {
   const entorno = entornoPor(command);
   const config = JSON.parse(readFileSync(new URL(`./config/${entorno}.json`, import.meta.url), 'utf8')) as {
@@ -45,6 +76,8 @@ export default defineConfig(({ command }) => {
     plugins: [
       svelte(),
       textosEnHtml(),
+      pluginVersionJson(import.meta.url),
+      pluginPwa(manifiesto(comun)),
       {
         name: 'folio-licencias-fuentes',
         generateBundle() {

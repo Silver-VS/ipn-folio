@@ -26,6 +26,13 @@ function base(cambios = {}) {
 }
 
 describe('revisar (contenido)', () => {
+  it.each(["<p>{x.replace(/'/g, '')}</p><h1>Hola mundo</h1>", "<p>{x /* it's */}</p><h1>Hola mundo</h1>"])(
+    'una comilla sin pareja no oculta el resto del archivo: %s',
+    (contenido) => {
+      const resultado = revisar(base({ svelte: [{ archivo: 'src/X.svelte', contenido }] }));
+      expect(resultado.errores.join('\n')).toMatch(/src\/X.svelte: expresión sin cerrar/);
+    },
+  );
   it('un objeto de variables no literal es un aviso «sin verificar», no un error', () => {
     const e = base({ usos: [{ clave: 'archivo.error.titulo', archivo: 'src/App.svelte', variables: null }] });
     const r = revisar(e);
@@ -73,7 +80,8 @@ describe('revisar (contenido)', () => {
       svelte: [
         {
           archivo: 'src/Y.svelte',
-          contenido: '<button onclick={() => { if (a > b) hacer(); }}>{t("x")}</button>{#each lista as x (x)}<li>{x}</li>{/each}',
+          contenido:
+            '<button onclick={() => { if (a > b) hacer(); }}>{t("x")}</button>{#each lista as x (x)}<li>{x}</li>{/each}',
         },
       ],
     });

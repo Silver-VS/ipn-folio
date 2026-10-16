@@ -42,7 +42,20 @@ export default defineConfig(({ command }) => {
   const comun = realpathSync(new URL('./node_modules/@ipn/comun', import.meta.url));
   return {
     base: process.env.FOLIO_BASE ?? config.base ?? './',
-    plugins: [svelte(), textosEnHtml()],
+    plugins: [
+      svelte(),
+      textosEnHtml(),
+      {
+        name: 'folio-licencias-fuentes',
+        generateBundle() {
+          this.emitFile({
+            type: 'asset',
+            fileName: 'licencias/OFL.txt',
+            source: readFileSync(new URL('./src/estilos/fuentes/OFL.txt', import.meta.url), 'utf8'),
+          });
+        },
+      },
+    ],
     define: { __FOLIO_ENTORNO__: JSON.stringify(entorno), __FOLIO_CONFIG__: JSON.stringify(config) },
     // El worker de BusyTeX (sesión 03) usa importScripts, que no existe en workers de módulo.
     worker: { format: 'iife' },

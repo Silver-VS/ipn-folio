@@ -65,6 +65,15 @@
     lista?.querySelector<HTMLElement>(`[data-ruta="${CSS.escape(ruta)}"]`)?.focus();
   }
 
+  async function borrar(n: NodoArbol) {
+    if (n.tipo === 'carpeta' && !window.confirm(plano(t('archivos.confirmar_borrado', { ruta: n.ruta }))))
+      return;
+    const i = visibles.findIndex((fila) => fila.ruta === n.ruta);
+    await estado.borrarArchivo(n.ruta);
+    await tick();
+    await enfocar(visibles[Math.min(i, visibles.length - 1)]?.ruta);
+  }
+
   function teclas(e: KeyboardEvent, n: NodoArbol, i: number) {
     if (renombrando) return;
     switch (e.key) {
@@ -107,7 +116,7 @@
         break;
       case 'Delete':
         e.preventDefault();
-        void estado.borrarArchivo(n.ruta);
+        void borrar(n);
         break;
     }
   }
@@ -225,7 +234,7 @@
       type="button"
       class="boton"
       disabled={!nodoSeleccionado}
-      onclick={() => nodoSeleccionado && void estado.borrarArchivo(nodoSeleccionado.ruta)}>{t('archivos.borrar')}</button
+      onclick={() => nodoSeleccionado && void borrar(nodoSeleccionado)}>{t('archivos.borrar')}</button
     >
   </div>
 

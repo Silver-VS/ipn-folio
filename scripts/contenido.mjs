@@ -76,6 +76,7 @@ export function sinExpresiones(marcado) {
     else if (c === '{') nivel++;
     else if (c === '}' && --nivel === 0) salida += ' ';
   }
+  if (nivel > 0 || comilla) throw new Error('expresión sin cerrar');
   return salida;
 }
 
@@ -150,9 +151,14 @@ export function revisar(e) {
       .replace(/<style[\s\S]*?<\/style>/g, '')
       .replace(/<!--[\s\S]*?-->/g, '');
     // Las entidades (&times;, &#9662;) son símbolos, no texto traducible.
-    const texto = sinExpresiones(marcado)
-      .replace(/<[^>]*>/g, ' ')
-      .replace(/&[a-z]+;|&#\d+;/gi, ' ');
+    let sinExp;
+    try {
+      sinExp = sinExpresiones(marcado);
+    } catch (error) {
+      errores.push(`${archivo}: ${error.message}`);
+      continue;
+    }
+    const texto = sinExp.replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;|&#\d+;/gi, ' ');
     if (/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]{2,}/.test(texto))
       errores.push(`${archivo}: hay texto escrito en la plantilla; muévelo a es.toml y pídelo con t()`);
     for (const m of marcado.matchAll(/\s(aria-label|title|alt|placeholder)="([^"{]+)"/g))

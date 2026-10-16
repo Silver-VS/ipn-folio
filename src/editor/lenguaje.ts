@@ -2,20 +2,16 @@
 // Lenguaje del editor según el archivo. LaTeX usa el paquete de TeXlyre (D9); no se escribe un analizador propio.
 import type { Extension } from '@codemirror/state';
 import { latex } from 'codemirror-lang-latex';
+import { EXTENSIONES_LATEX, extension } from '../almacen/rutas';
 
 export type TipoEditor = 'latex' | 'texto';
-
-const LATEX = new Set(['tex', 'sty', 'cls', 'ltx', 'dtx']);
 
 /**
  * `.tex`, `.sty`, `.cls`… son LaTeX; el resto es texto plano. `.bib` también: el paquete de TeXlyre no trae un
  * lenguaje BibTeX y no se improvisa uno (anotado en el HANDOFF de la sesión 08).
  */
 export function tipoEditorPorRuta(ruta: string): TipoEditor {
-  const nombre = ruta.slice(ruta.lastIndexOf('/') + 1);
-  const punto = nombre.lastIndexOf('.');
-  const extension = punto > 0 ? nombre.slice(punto + 1).toLowerCase() : '';
-  return LATEX.has(extension) ? 'latex' : 'texto';
+  return EXTENSIONES_LATEX.has(extension(ruta)) ? 'latex' : 'texto';
 }
 
 /**

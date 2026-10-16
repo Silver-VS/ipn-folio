@@ -6,7 +6,12 @@ import type { Almacen } from '../../almacen';
 import type { Servicios } from '../servicios';
 import { EstadoProyecto } from './estado.svelte';
 
-async function montar(): Promise<{ almacen: Almacen; servicios: Servicios; estado: EstadoProyecto; id: string }> {
+async function montar(): Promise<{
+  almacen: Almacen;
+  servicios: Servicios;
+  estado: EstadoProyecto;
+  id: string;
+}> {
   const almacen = crearAlmacenMemoria();
   const proyecto = await almacen.crearProyecto({ nombre: 'Proyecto de prueba', principal: 'main.tex' }, [
     { ruta: 'main.tex', contenido: '\\documentclass{article}' },
@@ -34,7 +39,11 @@ describe('EstadoProyecto', () => {
     const { almacen, servicios, estado, id } = await montar();
     expect(estado.abiertos).toEqual(['main.tex']);
     expect(estado.activo).toBe('main.tex');
-    expect(estado.archivos.map((a) => a.ruta).sort()).toEqual(['capitulos/uno.tex', 'main.tex', 'referencias.bib']);
+    expect(estado.archivos.map((a) => a.ruta).sort()).toEqual([
+      'capitulos/uno.tex',
+      'main.tex',
+      'referencias.bib',
+    ]);
     await almacen.moverAPapelera(id);
     expect(await EstadoProyecto.abrir(servicios, id)).toBeUndefined();
     expect(await EstadoProyecto.abrir(servicios, 'no-existe')).toBeUndefined();
@@ -89,7 +98,7 @@ describe('EstadoProyecto', () => {
     expect(aviso?.accion?.etiqueta).toBe('Deshacer');
     aviso?.accion?.ejecutar();
     await vi.advanceTimersByTimeAsync(1000);
-    expect(await almacen.leer(id, 'referencias.bib')).toBeDefined();
+    expect((await almacen.leer(id, 'referencias.bib'))?.contenido).toBe('@book{pendiente}');
   });
 
   it('borrar una carpeta quita todo lo que cuelga de ella', async () => {
@@ -154,5 +163,53 @@ describe('EstadoProyecto', () => {
     estado.avisar('error', 'mal');
     await vi.advanceTimersByTimeAsync(10_000);
     expect(estado.mensajes.map((m) => m.texto)).toEqual(['mal']);
+  });
+
+  it('el aviso con Deshacer permanece más de quince segundos hasta cerrarlo', async () => {
+    const { estado } = await montar();
+    await estado.borrarArchivo('referencias.bib');
+    const aviso = estado.mensajes.at(-1)!;
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(estado.mensajes).toContain(aviso);
+    estado.quitarMensaje(aviso.id);
+    expect(estado.mensajes).not.toContain(aviso);
+  });
+
+  it('un fallo de guardado publica un error y evita borrar la versión sin guardar', async () => {
+    const { almacen, estado, id } = await montar();
+    vi.spyOn(almacen, 'escribir').mockRejectedValue(new Error('almacén no disponible'));
+    estado.alEditar('main.tex', 'cambio sin guardar');
+    await estado.borrarArchivo('main.tex');
+    expect(estado.guardado).toBe('error');
+    expect(estado.mensajes.at(-1)?.tipo).toBe('error');
+    expect((await almacen.leer(id, 'main.tex'))?.contenido).toBe('\\documentclass{article}');
+    expect(estado.abiertos).toContain('main.tex');
+  });
+
+  it('el conflicto cancela el guardado y bloquea nuevas pulsaciones hasta elegir', async () => {
+    const { almacen, servicios, estado, id } = await montar();
+    let recibir: Parameters<typeof servicios.avisos.escuchar>[0] | undefined;
+    const escuchar = vi.spyOn(servicios.avisos, 'escuchar').mockImplementation((fn) => {
+      recibir = fn;
+      return () => {};
+    });
+    const otra = (await EstadoProyecto.abrir(servicios, id))!;
+    escuchar.mockRestore();
+    otra.alEditar('main.tex', 'mi versión');
+    await almacen.escribir(id, 'main.tex', 'otra versión');
+    recibir?.({ tipo: 'cambio-archivo', proyectoId: id, ruta: 'main.tex', origen: 'otra' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(otra.conflictos).toContain('main.tex');
+    otra.alEditar('main.tex', 'mi versión con más cambios');
+    // Un archivo distinto puede guardarse sin desbloquear el conflicto.
+    otra.alEditar('referencias.bib', 'bibliografía');
+    await vi.advanceTimersByTimeAsync(3000);
+    expect((await almacen.leer(id, 'main.tex'))?.contenido).toBe('otra versión');
+    otra.alEditar('main.tex', 'todavía en conflicto');
+    await vi.advanceTimersByTimeAsync(3000);
+    expect((await almacen.leer(id, 'main.tex'))?.contenido).toBe('otra versión');
+    await otra.destruir();
+    await estado.destruir();
+    servicios.avisos.cerrar();
   });
 });

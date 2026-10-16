@@ -3,6 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { ErrorAlmacen, textoDeError } from './errores';
 import { esRutaValida, normalizarRuta, planearRenombrado, tipoPorRuta, validarArbol } from './rutas';
 
+it.each(['ltx', 'dtx', 'csv', 'dat', 'm', 'py'])('el archivo académico .%s se abre como texto', (extension) => {
+  expect(tipoPorRuta(`archivo.${extension}`)).toBe('texto');
+});
+
 describe('normalizarRuta', () => {
   it('acepta rutas con espacios y acentos y las deja tal cual', () => {
     expect(normalizarRuta('capitulos/Marco Teórico.tex')).toBe('capitulos/Marco Teórico.tex');

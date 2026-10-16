@@ -115,9 +115,12 @@ export class EstadoProyecto {
     this.ultimoGuardado = auto.ultimoGuardado;
     this.quitar.push(
       auto.alCambiar(() => {
+        if (auto.estado === 'error' && this.guardado !== 'error') this.avisar('error', t('guardado.error'));
         this.guardado = auto.estado;
         this.ultimoGuardado = auto.ultimoGuardado;
-        if (auto.estado === 'guardado') this.sucios.clear();
+        if (auto.estado === 'guardado') {
+          for (const ruta of this.sucios) if (!this.conflictos.includes(ruta)) this.sucios.delete(ruta);
+        }
       }),
       avisos.escuchar((a) => void this.alAvisoExterno(a)),
       // Cambios locales: solo se vuelve a listar si aparece un archivo nuevo (cada guardado emite un evento).
@@ -223,7 +226,8 @@ export class EstadoProyecto {
     }
     this.abiertos = abiertos;
     this.activo = guardadas?.activo && abiertos.includes(guardadas.activo) ? guardadas.activo : abiertos[0];
-    if (guardadas?.compacta && PESTANAS_COMPACTAS.includes(guardadas.compacta)) this.pestanaCompacta = guardadas.compacta;
+    if (guardadas?.compacta && PESTANAS_COMPACTAS.includes(guardadas.compacta))
+      this.pestanaCompacta = guardadas.compacta;
   }
 
   // ---------- edición y guardado ----------
@@ -231,7 +235,7 @@ export class EstadoProyecto {
   /** Cada pulsación: el autoguardado agrupa las escrituras (400 ms de calma). */
   alEditar(ruta: string, texto: string): void {
     this.sucios.add(ruta);
-    this.servicios.auto.programar(this.id, ruta, texto);
+    if (!this.conflictos.includes(ruta)) this.servicios.auto.programar(this.id, ruta, texto);
   }
 
   /** Ctrl+S: guarda ya. La sesión 09 agrega la compilación. */
@@ -286,9 +290,12 @@ export class EstadoProyecto {
     }
   }
 
-  /** Borra un archivo o carpeta; el aviso ofrece «Deshacer» (el borrado definitivo no existe en el almacén). */
+  /** Borra un archivo o carpeta; el aviso conserva «Deshacer» hasta que se cierre (no sobrevive a una recarga). */
   async borrarArchivo(ruta: string): Promise<void> {
     try {
+      await this.servicios.auto.guardarTodo();
+      // guardarTodo conserva los fallidos: no borrar una versión que todavía no se pudo guardar.
+      if (this.servicios.auto.estado === 'error') return;
       const victimas = this.archivos.filter((a) => estaBajo(a.ruta, ruta));
       const guardadas = (
         await Promise.all(victimas.map((v) => this.servicios.almacen.leer(this.id, v.ruta)))
@@ -299,14 +306,17 @@ export class EstadoProyecto {
       await Promise.all([this.refrescarArchivos(), this.recargarProyecto()]);
       this.avisar('info', plano(t('archivos.borrado', { ruta })), {
         etiqueta: t('archivos.deshacer'),
-        ejecutar: () => void this.restaurarBorrados(guardadas.map((a) => ({ ruta: a.ruta, contenido: a.contenido }))),
+        ejecutar: () =>
+          void this.restaurarBorrados(guardadas.map((a) => ({ ruta: a.ruta, contenido: a.contenido }))),
       });
     } catch (e) {
       this.avisarError(e);
     }
   }
 
-  private async restaurarBorrados(lista: Array<{ ruta: string; contenido: string | Uint8Array }>): Promise<void> {
+  private async restaurarBorrados(
+    lista: Array<{ ruta: string; contenido: string | Uint8Array }>,
+  ): Promise<void> {
     try {
       for (const a of lista) this.servicios.auto.programar(this.id, a.ruta, a.contenido);
       await this.servicios.auto.guardarTodo();
@@ -355,15 +365,23 @@ export class EstadoProyecto {
       await this.recargarProyecto();
       return;
     }
+    // Antes de cualquier await: un guardado programado no debe pisar la versión de la otra pestaña.
+    const enConflicto = this.abiertos.includes(a.ruta) && this.sucios.has(a.ruta);
+    if (enConflicto) {
+      if (!this.conflictos.includes(a.ruta)) this.conflictos = [...this.conflictos, a.ruta];
+      this.servicios.auto.descartar(this.id, a.ruta);
+    }
     await this.refrescarArchivos();
     if (!this.abiertos.includes(a.ruta)) return;
     if (!this.conocidas.has(a.ruta)) {
       // Otra pestaña borró el archivo que aquí está abierto: se conserva el texto (el próximo guardado lo recrea).
+      if (enConflicto) this.conservarMiVersion(a.ruta);
       this.avisar('aviso', plano(t('editor.borrado_en_otra', { ruta: a.ruta })));
       return;
     }
-    if (this.sucios.has(a.ruta)) {
+    if (enConflicto || this.sucios.has(a.ruta)) {
       if (!this.conflictos.includes(a.ruta)) this.conflictos = [...this.conflictos, a.ruta];
+      this.servicios.auto.descartar(this.id, a.ruta);
       return;
     }
     await this.recargarDesdeAlmacen(a.ruta);
@@ -413,7 +431,8 @@ export class EstadoProyecto {
   avisar(tipo: Mensaje['tipo'], texto: string, accion?: Mensaje['accion']): number {
     const id = ++this.contadorMensajes;
     this.mensajes = [...this.mensajes, { id, tipo, texto, accion }];
-    if (tipo === 'info' && typeof setTimeout !== 'undefined') setTimeout(() => this.quitarMensaje(id), SEGUNDOS_MENSAJE * 1000);
+    if (tipo === 'info' && !accion && typeof setTimeout !== 'undefined')
+      setTimeout(() => this.quitarMensaje(id), SEGUNDOS_MENSAJE * 1000);
     return id;
   }
 

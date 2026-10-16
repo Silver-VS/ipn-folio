@@ -24,7 +24,7 @@ import {
 } from '@codemirror/view';
 import { plano } from '../textos/plano';
 import { t } from '../textos/t';
-import { frasesCodeMirror } from './frases';
+import { avisosCodeMirror, frasesCodeMirror } from './frases';
 import { lenguajePara, tipoEditorPorRuta } from './lenguaje';
 import { temaFolio } from './tema';
 
@@ -81,6 +81,7 @@ export function crearEstadoEditor(o: OpcionesEstado): EditorState {
       search({ top: true }),
       EditorView.lineWrapping,
       EditorState.phrases.of(frasesCodeMirror()),
+      avisosCodeMirror,
       EditorView.contentAttributes.of({
         'aria-label': plano(t('editor.aria_texto', { ruta: o.ruta })),
         'aria-multiline': 'true',

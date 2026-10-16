@@ -7,29 +7,30 @@
 </script>
 
 <div class="mensajes" role="region" aria-label={t('mensajes.aria')}>
-  {#each estado.mensajes as mensaje (mensaje.id)}
-    <div
-      class="mensaje {mensaje.tipo}"
-      role={mensaje.tipo === 'error' ? 'alert' : 'status'}
-    >
-      <p class="texto">{mensaje.texto}</p>
-      {#if mensaje.accion}
-        {@const accion = mensaje.accion}
-        <button
-          type="button"
-          class="boton"
-          onclick={() => {
-            accion.ejecutar();
-            estado.quitarMensaje(mensaje.id);
-          }}>{accion.etiqueta}</button
-        >
-      {/if}
-      <button
-        type="button"
-        class="cerrar"
-        aria-label={t('aviso.cerrar.boton')}
-        onclick={() => estado.quitarMensaje(mensaje.id)}>&times;</button
-      >
+  {#each ['polite', 'assertive'] as prioridad (prioridad)}
+    <div aria-live={prioridad === 'polite' ? 'polite' : 'assertive'} aria-relevant="additions text">
+      {#each estado.mensajes.filter((m) => (m.tipo === 'error') === (prioridad === 'assertive')) as mensaje (mensaje.id)}
+        <div class="mensaje {mensaje.tipo}">
+          <p class="texto">{mensaje.texto}</p>
+          {#if mensaje.accion}
+            {@const accion = mensaje.accion}
+            <button
+              type="button"
+              class="boton"
+              onclick={() => {
+                accion.ejecutar();
+                estado.quitarMensaje(mensaje.id);
+              }}>{accion.etiqueta}</button
+            >
+          {/if}
+          <button
+            type="button"
+            class="cerrar"
+            aria-label={t('aviso.cerrar.boton')}
+            onclick={() => estado.quitarMensaje(mensaje.id)}>&times;</button
+          >
+        </div>
+      {/each}
     </div>
   {/each}
 </div>
@@ -58,6 +59,12 @@
     color: var(--ipn-texto);
     font-size: var(--ipn-tamano-s);
     pointer-events: auto;
+  }
+
+  .mensajes > div {
+    display: grid;
+    gap: var(--ipn-esp-2);
+    justify-items: end;
   }
 
   .mensaje.aviso {

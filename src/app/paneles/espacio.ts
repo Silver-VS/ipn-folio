@@ -3,6 +3,7 @@
 // ventana. La distribución se serializa con `toJSON` y se guarda por proyecto en el almacén `distribuciones` (02), con
 // una distribución global por omisión. dockview se carga con `import()` solo en modo amplio.
 import type { DockviewApi, IHeaderActionsRenderer, ITabRenderer } from 'dockview';
+import { instalarAtajosGlobales } from '../../editor/atajos';
 import '../../estilos/paneles.css';
 import { plano } from '../../textos/plano';
 import { t } from '../../textos/t';
@@ -181,6 +182,11 @@ export async function crearEspacio(contenedor: HTMLElement, estado: EstadoProyec
         ventana.document.title = document.title;
         const tema = document.documentElement.getAttribute('data-tema');
         if (tema) raiz.setAttribute('data-tema', tema);
+        const quitarAtajos = instalarAtajosGlobales(ventana, {
+          guardar: () => void estado.guardarYa(),
+          paleta: () => (estado.paletaAbierta = true),
+        });
+        ventana.addEventListener('pagehide', quitarAtajos, { once: true });
       },
     });
 
@@ -245,6 +251,7 @@ export async function crearEspacio(contenedor: HTMLElement, estado: EstadoProyec
     if (temporizador !== undefined) clearTimeout(temporizador);
     temporizador = setTimeout(guardarAhora, ESPERA_GUARDADO_MS);
   };
+  window.addEventListener('pagehide', guardarAhora);
 
   const suscripciones = [
     api.onDidLayoutChange(() => {
@@ -317,6 +324,7 @@ export async function crearEspacio(contenedor: HTMLElement, estado: EstadoProyec
       return () => void oyentes.delete(fn);
     },
     dispose() {
+      window.removeEventListener('pagehide', guardarAhora);
       // Lo último que se movió se guarda antes de cerrar.
       if (temporizador !== undefined) {
         clearTimeout(temporizador);

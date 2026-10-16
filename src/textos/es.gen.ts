@@ -1,7 +1,7 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.11";
+export const VERSION_TEXTOS = "2026.10.12";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
@@ -29,6 +29,7 @@ export const TEXTOS_FOLIO = {
   "archivos.barra_aria": "Acciones de archivos",
   "archivos.borrado": "Se borró {ruta}.",
   "archivos.borrar": "Borrar",
+  "archivos.confirmar_borrado": "¿Quieres borrar la carpeta {ruta} y todos sus archivos? Puedes restaurarlos con Deshacer mientras el aviso siga abierto.",
   "archivos.deshacer": "Deshacer",
   "archivos.error.ya_existe": "Ya existe un archivo llamado {ruta}. Elige otro nombre.",
   "archivos.nuevo": "Nuevo archivo",
@@ -66,15 +67,13 @@ export const TEXTOS_FOLIO = {
   "editor.cm.caracter_control": "Carácter de control",
   "editor.cm.cerrar": "cerrar",
   "editor.cm.codigo_plegado": "código plegado",
-  "editor.cm.coincidencia_actual": "coincidencia actual",
+  "editor.cm.coincidencia_actual": "Coincidencia actual: {texto}, en la línea {linea}.",
   "editor.cm.desplegar": "Desplegar línea",
   "editor.cm.desplegar_corto": "desplegar",
-  "editor.cm.en_linea": "en la línea",
-  "editor.cm.hasta": "a",
   "editor.cm.ir": "ir",
   "editor.cm.ir_a_linea": "Ir a la línea",
-  "editor.cm.lineas_desplegadas": "Líneas desplegadas",
-  "editor.cm.lineas_plegadas": "Líneas plegadas",
+  "editor.cm.lineas_desplegadas": "Se desplegaron las líneas de {desde} a {hasta}.",
+  "editor.cm.lineas_plegadas": "Se plegaron las líneas de {desde} a {hasta}.",
   "editor.cm.mayusculas": "distinguir mayúsculas",
   "editor.cm.palabra": "palabra completa",
   "editor.cm.plegar": "Plegar línea",
@@ -220,7 +219,6 @@ export const TEXTOS_FOLIO = {
   "pdf.zoom": "{porcentaje} %",
   "pie.codigo_fuente_licencia": "Código fuente ({licencia})",
   "problemas.aviso": "Aviso",
-  "problemas.donde": "{ruta}",
   "problemas.donde_linea": "{ruta}, línea {linea}",
   "problemas.error": "Error",
   "problemas.vacio": "Sin errores ni avisos",
@@ -264,6 +262,7 @@ export interface VariablesPorClave {
   "almacen.error.movimiento_invalido": { ruta: string | number };
   "almacen.error.ruta_invalida": { ruta: string | number };
   "archivos.borrado": { ruta: string | number };
+  "archivos.confirmar_borrado": { ruta: string | number };
   "archivos.error.ya_existe": { ruta: string | number };
   "archivos.renombrar_aria": { nombre: string | number };
   "archivos.subidos": { n: string | number };
@@ -272,6 +271,9 @@ export interface VariablesPorClave {
   "editor.aria_texto": { ruta: string | number };
   "editor.borrado_en_otra": { ruta: string | number };
   "editor.cerrar_pestana": { nombre: string | number };
+  "editor.cm.coincidencia_actual": { linea: string | number; texto: string | number };
+  "editor.cm.lineas_desplegadas": { desde: string | number; hasta: string | number };
+  "editor.cm.lineas_plegadas": { desde: string | number; hasta: string | number };
   "editor.conflicto": { ruta: string | number };
   "editor.imagen_alt": { ruta: string | number };
   "errores.latex.archivo_faltante.ayuda": { archivo: string | number };
@@ -320,7 +322,6 @@ export interface VariablesPorClave {
   "pdf.pagina_aria": { n: string | number; total: string | number };
   "pdf.zoom": { porcentaje: string | number };
   "pie.codigo_fuente_licencia": { licencia: string | number };
-  "problemas.donde": { ruta: string | number };
   "problemas.donde_linea": { linea: string | number; ruta: string | number };
   "proyecto.no_se_puede_abrir": { ruta: string | number };
 }

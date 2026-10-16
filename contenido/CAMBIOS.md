@@ -47,3 +47,10 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 ## 2026.10.11
 
 - 2026-10-05 · `proyecto.*`, `guardado.*`, `paneles.*`, `distribucion.*`, `compacto.*`, `archivos.*`, `editor.*`, `editor.cm.*`, `pdf.*`, `problemas.*`, `salida.*`, `paleta.*`, `mensajes.*`, `inicio.*` · (nuevas) textos de la pantalla de proyecto: paneles, árbol de archivos, editor, visor de PDF, indicador de guardado, paleta (esqueleto), inicio mínimo y traducción de CodeMirror · Claude Sonnet (sesión 08).
+
+## 2026.10.12
+
+- 2026-10-06 · `archivos.confirmar_borrado` · (nueva) confirmación antes de borrar una carpeta con sus archivos · Codex.
+- 2026-10-06 · `editor.cm.coincidencia_actual`, `lineas_plegadas`, `lineas_desplegadas` · frases completas para los avisos de búsqueda y plegado; se retiran `en_linea` y `hasta` · Codex.
+- 2026-10-06 · `problemas.donde` · retirada la clave que solo contenía una ruta; se presenta el dato directamente · Codex.
+- 2026-10-06 · `pdf.de_total` · se conserva como etiqueta del formulario «Página [campo] de {total}», junto al nombre accesible completo `pdf.pagina_aria` · Codex.

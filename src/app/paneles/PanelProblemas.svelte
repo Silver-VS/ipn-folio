@@ -23,7 +23,7 @@
               >{plano(
                 problema.linea
                   ? t('problemas.donde_linea', { ruta: problema.ruta, linea: problema.linea })
-                  : t('problemas.donde', { ruta: problema.ruta }),
+                  : problema.ruta,
               )}</span
             >
           {/if}

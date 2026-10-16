@@ -11,6 +11,9 @@
   import VistaImagen from './VistaImagen.svelte';
 
   let { estado }: { estado: EstadoProyecto } = $props();
+  // El registro pertenece a las acciones DOM; no debe volver a disparar el efecto que reconstruye sus vistas.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity
+  const propias = new Map<HTMLElement, { ruta: string; vista: EditorView }>();
 
   /** Una vista de CodeMirror por archivo abierto; se conserva el estado (cursor, historial) al cambiar de pestaña. */
   function montar(nodo: HTMLElement, ruta: string) {
@@ -18,27 +21,37 @@
     void (async () => {
       let guardado = estado.estadosEditor.get(ruta);
       if (!guardado) {
+        await estado.servicios.auto.guardarTodo();
+        if (!vivo) return;
         const archivo = await estado.servicios.almacen.leer(estado.id, ruta);
         if (!vivo) return;
         guardado = crearEstadoEditor({
           ruta,
           texto: archivo ? aTexto(archivo.contenido) : '',
           alEditar: (texto) => estado.alEditar(ruta, texto),
-          alActualizar: (s) => estado.estadosEditor.set(ruta, s),
+          alActualizar: (s) => {
+            if (estado.estadosEditor.has(ruta)) estado.estadosEditor.set(ruta, s);
+          },
           alGuardar: () => void estado.guardarYa(),
           alPaleta: () => (estado.paletaAbierta = true),
         });
         estado.estadosEditor.set(ruta, guardado);
       }
-      estado.vistas.set(ruta, new EditorView({ state: guardado, parent: nodo, root: nodo.ownerDocument }));
+      const vista = new EditorView({ state: guardado, parent: nodo, root: nodo.ownerDocument });
+      propias.set(nodo, { ruta, vista });
+      estado.vistas.set(ruta, vista);
     })();
     return {
       destroy() {
         vivo = false;
-        const vista = estado.vistas.get(ruta);
+        const vista = propias.get(nodo)?.vista;
         if (vista) {
-          estado.estadosEditor.set(ruta, vista.state);
-          estado.vistas.delete(ruta);
+          // Un montaje nuevo puede haberse registrado antes del desmontaje de este panel.
+          // En un teardown Svelte lee valores reactivos anteriores; cerrar/renombrar ya borró este mapa ordinario.
+          if (estado.estadosEditor.has(ruta) && estado.vistas.get(ruta) === vista)
+            estado.estadosEditor.set(ruta, vista.state);
+          if (estado.vistas.get(ruta) === vista) estado.vistas.delete(ruta);
+          propias.delete(nodo);
           vista.destroy();
         }
       },
@@ -73,7 +86,9 @@
     void tick().then(() => document.getElementById(`pestana-${estado.id}-${destino}`)?.focus());
   }
 
-  const conflicto = $derived(estado.activo && estado.conflictos.includes(estado.activo) ? estado.activo : undefined);
+  const conflicto = $derived(
+    estado.activo && estado.conflictos.includes(estado.activo) ? estado.activo : undefined,
+  );
 
   // CodeMirror se ata a la ventana (documento) donde nace: al pasar el panel a otra ventana, o al volver, las vistas se
   // vuelven a crear allí con el mismo estado (texto, cursor, historial).
@@ -83,14 +98,15 @@
     if (actual === ventanasPrevias) return;
     ventanasPrevias = actual;
     void tick().then(() => {
-      for (const [ruta, vista] of [...estado.vistas]) {
+      for (const [nodo, { ruta, vista }] of [...propias]) {
         const padre = vista.dom.parentElement;
         if (!padre) continue;
         const guardado = vista.state;
         const enfocada = vista.hasFocus;
         vista.destroy();
         const nueva = new EditorView({ state: guardado, parent: padre, root: padre.ownerDocument });
-        estado.vistas.set(ruta, nueva);
+        propias.set(nodo, { ruta, vista: nueva });
+        if (estado.vistas.get(ruta) === vista) estado.vistas.set(ruta, nueva);
         if (enfocada) nueva.focus();
       }
     });

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Autoguardado barato: agrupa las escrituras de cada archivo (400 ms de calma; nunca más de 2 s sin guardar).
+import { ErrorAlmacen } from './errores';
 import { estaBajo, normalizarRuta } from './rutas';
-import type { Almacen, Contenido } from './tipos';
+import type { Almacen, Contenido, ElementoPapelera, ResultadoRestaurar } from './tipos';
 
 export type EstadoAutoguardado = 'guardado' | 'pendiente' | 'error';
 
@@ -38,10 +39,25 @@ export interface Autoguardado {
    * guarda lo pendiente de esa ruta (así viaja con el renombrado) y después renombra. Lo fallido se redirige.
    */
   renombrar(proyectoId: string, rutaVieja: string, rutaNueva: string): Promise<void>;
-  /** Borra un archivo o carpeta del almacén descartando antes lo pendiente que cuelga de él. */
-  borrar(proyectoId: string, ruta: string): Promise<void>;
+  /**
+   * Manda un archivo o carpeta a la papelera (D29). Antes GUARDA lo pendiente que cuelga de él, para que la papelera
+   * tenga la última versión; si algo de esa ruta sigue sin poder guardarse no borra nada y lanza
+   * `ErrorAlmacen('guardado_pendiente')`.
+   */
+  borrar(proyectoId: string, ruta: string): Promise<ElementoPapelera>;
   /** Guarda lo pendiente del proyecto y lo manda a la papelera (si no, el guardado fallaría después). */
   moverAPapelera(proyectoId: string): Promise<void>;
+  /**
+   * Restaura un elemento de la papelera. Antes guarda todo lo pendiente: si no, un archivo nuevo aún sin guardar con la
+   * misma ruta pisaría lo restaurado al guardarse.
+   */
+  restaurarDePapelera(elementoId: string): Promise<ResultadoRestaurar>;
+  /** Borra un elemento de la papelera para siempre (nada pendiente vive en la papelera: pasa directo al almacén). */
+  borrarDefinitivo(elementoId: string): Promise<void>;
+  /** Borra para siempre todo lo de la papelera; devuelve cuántos elementos tenía. */
+  vaciarPapelera(): Promise<number>;
+  /** Borra para siempre lo que caducó (con hora confiable; ver `Almacen.purgarCaducados`). */
+  purgarCaducados(dias: number): Promise<ElementoPapelera[]>;
   /** Cancela los temporizadores (no guarda). */
   cerrar(): void;
 }
@@ -122,7 +138,8 @@ export function crearAutoguardado(almacen: Almacen, opciones: OpcionesAutoguarda
 
   /** Entradas (pendientes o fallidas) de un proyecto; con `base`, solo las de esa ruta y lo que cuelga de ella. */
   const afectadas = (proyectoId: string, base?: string) => {
-    const coincide = (e: Entrada) => e.proyectoId === proyectoId && (base === undefined || estaBajo(e.ruta, base));
+    const coincide = (e: Entrada) =>
+      e.proyectoId === proyectoId && (base === undefined || estaBajo(e.ruta, base));
     return {
       pendientes: [...pendientes].filter(([, e]) => coincide(e)).map(([k]) => k),
       fallidos: [...fallidos].filter(([, e]) => coincide(e)),
@@ -198,7 +215,8 @@ export function crearAutoguardado(almacen: Almacen, opciones: OpcionesAutoguarda
       // En móviles `beforeunload` no es fiable: al cambiar de app o cerrar la pestaña solo se dispara
       // `visibilitychange` (a «hidden») y, a veces, `pagehide`. Ahí se guarda sin pedir confirmación.
       const alOcultar = () => {
-        if (ventana.document?.visibilityState === 'hidden' && calcularEstado() !== 'guardado') void api.guardarTodo();
+        if (ventana.document?.visibilityState === 'hidden' && calcularEstado() !== 'guardado')
+          void api.guardarTodo();
       };
       const alCerrarPagina = () => {
         if (calcularEstado() !== 'guardado') void api.guardarTodo();
@@ -234,9 +252,14 @@ export function crearAutoguardado(almacen: Almacen, opciones: OpcionesAutoguarda
 
     async borrar(proyectoId, ruta) {
       const r = normalizarRuta(ruta);
-      descartar(proyectoId, r);
-      await Promise.all([...cadenas.values()]);
-      await almacen.borrar(proyectoId, r);
+      // Lo que se escriba mientras se guarda también cuenta: se repite hasta que no quede nada pendiente.
+      for (let vuelta = 0; vuelta < 3; vuelta++) {
+        await vaciarAfectadas(proyectoId, r);
+        if (afectadas(proyectoId, r).pendientes.length === 0) break;
+      }
+      if (afectadas(proyectoId, r).fallidos.length > 0 || afectadas(proyectoId, r).pendientes.length > 0)
+        throw new ErrorAlmacen('guardado_pendiente', { ruta: r });
+      return almacen.moverArchivosAPapelera(proyectoId, r);
     },
 
     async moverAPapelera(proyectoId) {
@@ -245,6 +268,15 @@ export function crearAutoguardado(almacen: Almacen, opciones: OpcionesAutoguarda
       descartar(proyectoId);
       await almacen.moverAPapelera(proyectoId);
     },
+
+    async restaurarDePapelera(elementoId) {
+      await api.guardarTodo();
+      return almacen.restaurarDePapelera(elementoId);
+    },
+
+    borrarDefinitivo: (elementoId) => almacen.borrarDefinitivo(elementoId),
+    vaciarPapelera: () => almacen.vaciarPapelera(),
+    purgarCaducados: (dias) => almacen.purgarCaducados(dias),
 
     cerrar() {
       for (const e of pendientes.values()) if (e.temporizador !== undefined) clearTimeout(e.temporizador);

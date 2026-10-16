@@ -54,3 +54,13 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 - 2026-10-06 · `editor.cm.coincidencia_actual`, `lineas_plegadas`, `lineas_desplegadas` · frases completas para los avisos de búsqueda y plegado; se retiran `en_linea` y `hasta` · Codex.
 - 2026-10-06 · `problemas.donde` · retirada la clave que solo contenía una ruta; se presenta el dato directamente · Codex.
 - 2026-10-06 · `pdf.de_total` · se conserva como etiqueta del formulario «Página [campo] de {total}», junto al nombre accesible completo `pdf.pagina_aria` · Codex.
+
+## 2026.10.13
+
+- 2026-10-16 · `papelera.*` · (nuevas) vista única de la papelera: encabezado, caducidad, avisos de tamaño, restaurar, borrar definitivamente, vaciar y avisos de restauración (D29) · Claude Sonnet (sesión 11).
+- 2026-10-16 · `archivos.borrado` · «Se borró {ruta}.» → «Se movió {ruta} a la papelera. Tienes {dias} días para recuperarlo.» (único aviso de caducidad, al mandar a la papelera) · Claude Sonnet (sesión 11).
+- 2026-10-16 · `editor.borrado_en_otra` · «Otra pestaña borró {ruta}…» → «Se movió {ruta} a la papelera desde otra pestaña…» · Claude Sonnet (sesión 11).
+- 2026-10-16 · `proyecto.movido_a_papelera` · (nueva) aviso con «Deshacer» al mandar un proyecto a la papelera · Claude Sonnet (sesión 11).
+- 2026-10-16 · `almacen.error.guardado_pendiente`, `elemento_inexistente`, `version_nueva`; `almacen.aviso.version_nueva`, `bloqueada`, `cerrada`, `recargar` · (nuevas) errores y avisos de la papelera y del ciclo de vida de la base entre pestañas (M4) · Claude Sonnet (sesión 11).
+- 2026-10-16 · `almacen.error.almacenamiento_lleno` · agrega «vacía la papelera» a la acción sugerida · Claude Sonnet (sesión 11).
+- 2026-10-16 · `archivos.confirmar_borrado`, `inicio.papelera`, `inicio.restaurar` · retiradas: mandar a la papelera no pide confirmación y la papelera tiene su propia vista · Claude Sonnet (sesión 11).

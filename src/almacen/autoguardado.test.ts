@@ -131,13 +131,55 @@ describe('autoguardado y cambios de ruta', () => {
     expect(auto.estado).toBe('guardado');
   });
 
-  it('borrar con un cambio pendiente (incluso bajo una carpeta) no hace reaparecer el archivo', async () => {
+  it('borrar con un cambio pendiente (incluso bajo una carpeta) deja en la papelera la última versión y no hace reaparecer el archivo', async () => {
     const { almacen, p, auto } = await preparar();
     auto.programar(p.id, 'cap/a.tex', 'nuevo');
-    await auto.borrar(p.id, 'cap');
+    const elemento = await auto.borrar(p.id, 'cap');
     await vi.advanceTimersByTimeAsync(3000);
     expect(await rutas(almacen, p.id)).toEqual(['main.tex']);
     expect(auto.estado).toBe('guardado');
+    expect(elemento).toMatchObject({ clase: 'carpeta', ruta: 'cap' });
+    await auto.restaurarDePapelera(elemento.id);
+    expect((await almacen.leer(p.id, 'cap/a.tex'))!.contenido).toBe('nuevo');
+  });
+
+  it('borrar con un guardado fallido no borra nada y lanza guardado_pendiente', async () => {
+    const { almacen, p, auto } = await preparar();
+    vi.spyOn(almacen, 'escribir').mockRejectedValue(new Error('disco lleno'));
+    auto.programar(p.id, 'cap/a.tex', 'nuevo');
+    await expect(auto.borrar(p.id, 'cap/a.tex')).rejects.toMatchObject({ codigo: 'guardado_pendiente' });
+    expect(await rutas(almacen, p.id)).toEqual(['cap/a.tex', 'main.tex']);
+    expect(await almacen.listarPapelera()).toEqual([]);
+    expect((await almacen.leer(p.id, 'cap/a.tex'))!.contenido).toBe('viejo');
+  });
+
+  it('restaurar mientras hay un archivo nuevo pendiente con la misma ruta no pisa lo restaurado', async () => {
+    const { almacen, p, auto } = await preparar();
+    const elemento = await auto.borrar(p.id, 'cap/a.tex');
+    auto.programar(p.id, 'cap/a.tex', 'recién escrito');
+    const r = await auto.restaurarDePapelera(elemento.id);
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(r.rutas).toEqual([{ original: 'cap/a.tex', final: 'cap/a (2).tex' }]);
+    expect((await almacen.leer(p.id, 'cap/a.tex'))!.contenido).toBe('recién escrito');
+    expect((await almacen.leer(p.id, 'cap/a (2).tex'))!.contenido).toBe('viejo');
+    expect(auto.estado).toBe('guardado');
+  });
+
+  it('borrar definitivamente, vaciar y purgar pasan directo al almacén', async () => {
+    const { almacen, p, auto } = await preparar();
+    const a = await auto.borrar(p.id, 'main.tex');
+    const b = await auto.borrar(p.id, 'cap/a.tex');
+    const borrarDef = vi.spyOn(almacen, 'borrarDefinitivo');
+    const vaciar = vi.spyOn(almacen, 'vaciarPapelera');
+    const purgar = vi.spyOn(almacen, 'purgarCaducados');
+    await auto.borrarDefinitivo(a.id);
+    expect(borrarDef).toHaveBeenCalledWith(a.id);
+    await auto.purgarCaducados(30);
+    expect(purgar).toHaveBeenCalledWith(30);
+    expect(await auto.vaciarPapelera()).toBe(1);
+    expect(vaciar).toHaveBeenCalled();
+    expect(await almacen.listarPapelera()).toEqual([]);
+    void b;
   });
 
   it('mover a la papelera guarda lo pendiente primero y no deja el estado en error', async () => {

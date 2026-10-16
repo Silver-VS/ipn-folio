@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { crearAlmacenIdb } from './almacen-idb';
 import { crearAlmacenMemoria } from './almacen-memoria';
+import { ErrorAlmacen } from './errores';
 import type { Almacen, OpcionesAlmacen } from './tipos';
 
 export interface ResultadoAlmacen {
@@ -13,7 +14,9 @@ export interface ResultadoAlmacen {
 export async function crearAlmacen(opciones: OpcionesAlmacen = {}): Promise<ResultadoAlmacen> {
   try {
     return { almacen: await crearAlmacenIdb(opciones), persistente: true };
-  } catch {
+  } catch (e) {
+    // Una versión más nueva de la base NO se cubre con memoria: el trabajo se perdería al cerrar la pestaña.
+    if (e instanceof ErrorAlmacen && e.codigo === 'version_nueva') throw e;
     return { almacen: crearAlmacenMemoria(opciones), persistente: false };
   }
 }
@@ -26,6 +29,8 @@ export { crearAlmacenIdb, crearAlmacenMemoria };
 export { crearAutoguardado } from './autoguardado';
 export type { Autoguardado, EstadoAutoguardado, VentanaProtegible } from './autoguardado';
 export { crearAvisos, conectarAvisos } from './avisos';
+export { crearRelojConfiable, medirHora } from './hora';
+export type { RelojConfiable } from './hora';
 export type { Aviso, Avisos } from './avisos';
 export { exportarZip, importarZip, detectarPrincipal } from './zip';
 export { pedirPersistencia, espacio } from './persistencia';

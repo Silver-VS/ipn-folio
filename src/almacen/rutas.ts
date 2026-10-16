@@ -180,3 +180,60 @@ export function decodificarTexto(bytes: Uint8Array): { texto: string; convertido
     return { texto: decodificadorWindows1252.decode(bytes), convertido: true };
   }
 }
+
+const unirCarpeta = (carpeta: string, nombre: string) => (carpeta ? `${carpeta}/${nombre}` : nombre);
+
+/** Si «imagen.png» ya existe, propone «imagen (2).png», «imagen (3).png»… (sin mayúsculas, como el sistema de archivos). */
+export function nombreUnico(existentes: ReadonlySet<string>, carpeta: string, nombre: string): string {
+  const minusculas = new Set([...existentes].map((r) => r.toLowerCase()));
+  const libre = (n: string) => !minusculas.has(unirCarpeta(carpeta, n).toLowerCase());
+  if (libre(nombre)) return nombre;
+  const punto = nombre.lastIndexOf('.');
+  const base = punto > 0 ? nombre.slice(0, punto) : nombre;
+  const extension = punto > 0 ? nombre.slice(punto) : '';
+  for (let i = 2; ; i++) {
+    const candidato = `${base} (${i})${extension}`;
+    if (libre(candidato)) return candidato;
+  }
+}
+
+/**
+ * Dónde queda lo que se restaura de la papelera sin pisar nada. `existentes` son las rutas de archivo actuales del
+ * proyecto; `raiz` es la ruta original del archivo o carpeta; `rutas` son los archivos del elemento (`raiz` misma o
+ * lo que cuelga de ella). Devuelve la raíz final y el mapa ruta original → ruta final.
+ *
+ * Se considera ocupado (sin distinguir mayúsculas) lo que ya tiene ese nombre como archivo o como carpeta, y un
+ * ancestro que ahora es archivo; en ese caso se renombra con `nombreUnico` el primer ancestro en conflicto (o la raíz).
+ */
+export function planearRestauracion(
+  existentes: readonly string[],
+  raiz: string,
+  rutas: readonly string[],
+): { raiz: string; mapa: Map<string, string> } {
+  const todos = new Set<string>();
+  const archivos = new Set<string>();
+  for (const r of existentes) {
+    archivos.add(r.toLowerCase());
+    todos.add(r.toLowerCase());
+    for (const a of ancestros(r)) todos.add(a.toLowerCase());
+  }
+  const partes = raiz.split('/');
+  // Primer ancestro (el más alto) que ahora es un archivo: cuelga de él algo que no puede existir.
+  let corte = partes.length;
+  for (let i = 1; i < partes.length; i++) {
+    if (archivos.has(partes.slice(0, i).join('/').toLowerCase())) {
+      corte = i;
+      break;
+    }
+  }
+  const prefijo = partes.slice(0, corte).join('/');
+  const resto = raiz.slice(prefijo.length);
+  const carpeta = prefijo.includes('/') ? prefijo.slice(0, prefijo.lastIndexOf('/')) : '';
+  const nombre = prefijo.slice(carpeta ? carpeta.length + 1 : 0);
+  const nuevoNombre = nombreUnico(todos, carpeta, nombre);
+  const nuevoPrefijo = unirCarpeta(carpeta, nuevoNombre);
+  const final = nuevoPrefijo + resto;
+  const mapa = new Map<string, string>();
+  for (const r of rutas) mapa.set(r, final + r.slice(raiz.length));
+  return { raiz: final, mapa };
+}

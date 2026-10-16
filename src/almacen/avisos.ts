@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Avisos entre pestañas: cuando una pestaña escribe, las demás se enteran por BroadcastChannel.
 import { nuevoId } from './rutas';
-import type { Almacen, EventoAlmacen } from './tipos';
+import type { Almacen, EventoCambio } from './tipos';
 
 export const CANAL_ALMACEN = 'ipn-folio-almacen';
 
-export type Aviso = EventoAlmacen & { origen: string };
+export type Aviso = EventoCambio & { origen: string };
 
 export interface Avisos {
   /** Identificador de esta pestaña. */
   readonly origen: string;
-  publicar(evento: EventoAlmacen): void;
+  publicar(evento: EventoCambio): void;
   /** Recibe los avisos de OTRAS pestañas (los propios se ignoran). */
   escuchar(fn: (aviso: Aviso) => void): () => void;
   cerrar(): void;
@@ -33,7 +33,12 @@ export function crearAvisos(opciones: OpcionesAvisos = {}): Avisos {
   canal?.addEventListener('message', (m: MessageEvent<unknown>) => {
     const aviso = m.data as Aviso | null;
     if (!aviso || typeof aviso !== 'object' || aviso.origen === origen) return;
-    if (aviso.tipo !== 'cambio-archivo' && aviso.tipo !== 'cambio-proyecto') return;
+    if (
+      aviso.tipo !== 'cambio-archivo' &&
+      aviso.tipo !== 'cambio-proyecto' &&
+      aviso.tipo !== 'cambio-papelera'
+    )
+      return;
     for (const fn of oyentes) fn(aviso);
   });
 
@@ -62,6 +67,7 @@ export function conectarAvisos(almacen: Almacen, avisos: Avisos): () => void {
   const quitar = [
     almacen.al('cambio-archivo', (e) => avisos.publicar(e)),
     almacen.al('cambio-proyecto', (e) => avisos.publicar(e)),
+    almacen.al('cambio-papelera', (e) => avisos.publicar(e)),
   ];
   return () => quitar.forEach((q) => q());
 }

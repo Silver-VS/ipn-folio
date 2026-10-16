@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Lógica pura del árbol de archivos: armarlo desde la lista plana del almacén, aplanar lo visible y elegir nombres.
 import type { InfoArchivo } from '../../almacen';
+import { nombreUnico } from '../../almacen/rutas';
 
 export interface NodoArbol {
   /** Ruta completa («capitulos/intro.tex»; para carpetas, sin barra final). */
@@ -88,19 +89,7 @@ export function unirRuta(carpeta: string, nombre: string): string {
   return carpeta ? `${carpeta}/${nombre}` : nombre;
 }
 
-/** Si «imagen.png» ya existe, propone «imagen (2).png», «imagen (3).png»… (sin mayúsculas, como el sistema de archivos). */
-export function nombreUnico(existentes: ReadonlySet<string>, carpeta: string, nombre: string): string {
-  const minusculas = new Set([...existentes].map((r) => r.toLowerCase()));
-  const libre = (n: string) => !minusculas.has(unirRuta(carpeta, n).toLowerCase());
-  if (libre(nombre)) return nombre;
-  const punto = nombre.lastIndexOf('.');
-  const base = punto > 0 ? nombre.slice(0, punto) : nombre;
-  const extension = punto > 0 ? nombre.slice(punto) : '';
-  for (let i = 2; ; i++) {
-    const candidato = `${base} (${i})${extension}`;
-    if (libre(candidato)) return candidato;
-  }
-}
+export { nombreUnico };
 
 const IMAGENES = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp']);
 const EXTENSION = /\.([^./]+)$/;

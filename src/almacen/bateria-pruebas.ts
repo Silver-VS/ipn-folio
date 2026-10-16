@@ -170,13 +170,21 @@ export function probarAlmacen(nombre: string, fabrica: FabricaAlmacen): void {
       a.cerrar();
     });
 
-    it('borra un archivo y una carpeta', async () => {
+    it('manda un archivo y una carpeta a la papelera', async () => {
       const a = await nuevo();
       const p = await conArbol(a);
-      await a.borrar(p.id, 'main.tex');
-      await a.borrar(p.id, 'capitulos');
+      const archivo = await a.moverArchivosAPapelera(p.id, 'main.tex');
+      const carpeta = await a.moverArchivosAPapelera(p.id, 'capitulos');
       expect((await a.listarArchivos(p.id)).map((f) => f.ruta)).toEqual(['img/logo.png']);
-      await rechazaCon(a.borrar(p.id, 'capitulos'), 'archivo_inexistente');
+      await rechazaCon(a.moverArchivosAPapelera(p.id, 'capitulos'), 'archivo_inexistente');
+      expect(archivo).toMatchObject({
+        clase: 'archivo',
+        ruta: 'main.tex',
+        cuantos: 1,
+        nombreProyecto: 'Proyecto de ejemplo',
+      });
+      expect(carpeta).toMatchObject({ clase: 'carpeta', ruta: 'capitulos', cuantos: 3, tamano: 10 });
+      expect(await a.leer(p.id, 'main.tex')).toBeUndefined();
       a.cerrar();
     });
 
@@ -269,6 +277,324 @@ export function probarAlmacen(nombre: string, fabrica: FabricaAlmacen): void {
       });
       await a.renombrar(p.id, 'img.tex', 'img.bin');
       expect(await a.leer(p.id, 'img.bin')).toMatchObject({ tipo: 'binario', tamano: 3 });
+      a.cerrar();
+    });
+
+    // ---------- papelera (D29) ----------
+
+    const DIA = 86_400_000;
+    const T0 = 1_800_000_000_000;
+
+    /** Almacén con hora confiable que la prueba mueve a voluntad (`undefined` = sin conexión). */
+    async function conHora(inicial: number | undefined) {
+      const reloj = { hora: inicial };
+      const a = await nuevo({ horaConfiable: () => reloj.hora });
+      return { a, reloj };
+    }
+
+    async function contenido(a: Almacen, id: string, ruta: string) {
+      const archivo = await a.leer(id, ruta);
+      return archivo && (typeof archivo.contenido === 'string' ? archivo.contenido : [...archivo.contenido]);
+    }
+
+    /** Contenido como texto aunque la extensión lo haga binario. */
+    async function texto(a: Almacen, id: string, ruta: string) {
+      const archivo = await a.leer(id, ruta);
+      return (
+        archivo &&
+        (typeof archivo.contenido === 'string'
+          ? archivo.contenido
+          : new TextDecoder().decode(archivo.contenido))
+      );
+    }
+
+    it('papelera: mover y restaurar devuelve los mismos bytes, en las mismas rutas', async () => {
+      const a = await nuevo();
+      const p = await conArbol(a);
+      const antes = await a.listarArchivos(p.id);
+      const carpeta = await a.moverArchivosAPapelera(p.id, 'capitulos');
+      const imagen = await a.moverArchivosAPapelera(p.id, 'img/logo.png');
+      expect((await a.listarArchivos(p.id)).map((f) => f.ruta)).toEqual(['main.tex']);
+      const lista = await a.listarPapelera();
+      expect(lista.map((e) => e.id)).toEqual([imagen.id, carpeta.id]);
+      expect(lista[0]).toMatchObject({ clase: 'archivo', tamano: PNG.length, fechaConfiable: false });
+      const r = await a.restaurarDePapelera(carpeta.id);
+      await a.restaurarDePapelera(imagen.id);
+      expect(r.rutas.map((x) => x.final).sort()).toEqual([
+        'capitulos/dos.tex',
+        'capitulos/tres.tex',
+        'capitulos/uno.tex',
+      ]);
+      expect((await a.listarArchivos(p.id)).map((f) => [f.ruta, f.tamano])).toEqual(
+        antes.map((f) => [f.ruta, f.tamano]),
+      );
+      expect(await contenido(a, p.id, 'capitulos/uno.tex')).toBe('Uno');
+      expect(await contenido(a, p.id, 'img/logo.png')).toEqual([...PNG]);
+      expect(await a.listarPapelera()).toEqual([]);
+      a.cerrar();
+    });
+
+    it('papelera: lo que está en ella no aparece como archivo del proyecto', async () => {
+      const a = await nuevo();
+      const p = await conArbol(a);
+      await a.moverArchivosAPapelera(p.id, 'capitulos');
+      expect(await a.leer(p.id, 'capitulos/uno.tex')).toBeUndefined();
+      expect((await a.listarArchivos(p.id)).some((f) => f.ruta.startsWith('capitulos'))).toBe(false);
+      // Se puede volver a crear el mismo nombre sin chocar con lo borrado.
+      await a.escribir(p.id, 'capitulos/uno.tex', 'nuevo');
+      expect(await contenido(a, p.id, 'capitulos/uno.tex')).toBe('nuevo');
+      a.cerrar();
+    });
+
+    it('papelera: restaurar con la ruta ocupada usa un nombre nuevo y no pisa nada', async () => {
+      const a = await nuevo();
+      const p = await conArbol(a);
+      // Archivo.
+      const x = await a.moverArchivosAPapelera(p.id, 'main.tex');
+      await a.escribir(p.id, 'main.tex', 'otro texto');
+      const r1 = await a.restaurarDePapelera(x.id);
+      expect(r1.rutas).toEqual([{ original: 'main.tex', final: 'main (2).tex' }]);
+      expect(await contenido(a, p.id, 'main.tex')).toBe('otro texto');
+      expect(await contenido(a, p.id, 'main (2).tex')).toBe('\\documentclass{article}\n');
+      // Carpeta con todo lo suyo.
+      const c = await a.moverArchivosAPapelera(p.id, 'capitulos');
+      await a.escribir(p.id, 'capitulos/nuevo.tex', 'N');
+      const r2 = await a.restaurarDePapelera(c.id);
+      expect(r2.rutas.map((q) => q.final).sort()).toEqual([
+        'capitulos (2)/dos.tex',
+        'capitulos (2)/tres.tex',
+        'capitulos (2)/uno.tex',
+      ]);
+      expect(await contenido(a, p.id, 'capitulos/nuevo.tex')).toBe('N');
+      expect(await contenido(a, p.id, 'capitulos (2)/tres.tex')).toBe('Tres');
+      // Choque que solo difiere en mayúsculas.
+      const i = await a.moverArchivosAPapelera(p.id, 'img/logo.png');
+      await a.escribir(p.id, 'img/LOGO.png', 'x');
+      const r3 = await a.restaurarDePapelera(i.id);
+      expect(r3.rutas).toEqual([{ original: 'img/logo.png', final: 'img/logo (2).png' }]);
+      expect(await texto(a, p.id, 'img/LOGO.png')).toBe('x');
+      a.cerrar();
+    });
+
+    it('papelera: si un ancestro ahora es un archivo, se restaura bajo otro nombre', async () => {
+      const a = await nuevo();
+      const p = await conArbol(a);
+      const c = await a.moverArchivosAPapelera(p.id, 'capitulos/uno.tex');
+      await a.moverArchivosAPapelera(p.id, 'capitulos');
+      await a.escribir(p.id, 'capitulos', 'ahora soy un archivo');
+      const r = await a.restaurarDePapelera(c.id);
+      expect(r.rutas).toEqual([{ original: 'capitulos/uno.tex', final: 'capitulos (2)/uno.tex' }]);
+      expect(await texto(a, p.id, 'capitulos')).toBe('ahora soy un archivo');
+      expect(await contenido(a, p.id, 'capitulos (2)/uno.tex')).toBe('Uno');
+      a.cerrar();
+    });
+
+    it('papelera: restaurar vuelve a crear las carpetas que ya no existen', async () => {
+      const a = await nuevo();
+      const p = await conArbol(a);
+      const f = await a.moverArchivosAPapelera(p.id, 'img/logo.png');
+      expect(await a.listarArchivos(p.id)).toHaveLength(4);
+      await a.restaurarDePapelera(f.id);
+      expect(await contenido(a, p.id, 'img/logo.png')).toEqual([...PNG]);
+      a.cerrar();
+    });
+
+    it('papelera: un fallo al mandar o al restaurar no deja nada a medias', async () => {
+      let fallar: 'papelera' | 'restaurar' | undefined;
+      const a = await nuevo({
+        inyectarFallo: (op: string, indice: number) => {
+          if (op === fallar && indice === 1) throw new Error('fallo inyectado');
+        },
+      });
+      const p = await conArbol(a);
+      const antes = await a.listarArchivos(p.id);
+      fallar = 'papelera';
+      await expect(a.moverArchivosAPapelera(p.id, 'capitulos')).rejects.toThrow('fallo inyectado');
+      expect(await a.listarArchivos(p.id)).toEqual(antes);
+      expect(await a.listarPapelera()).toEqual([]);
+      fallar = undefined;
+      const e = await a.moverArchivosAPapelera(p.id, 'capitulos');
+      const sinCapitulos = await a.listarArchivos(p.id);
+      fallar = 'restaurar';
+      await expect(a.restaurarDePapelera(e.id)).rejects.toThrow('fallo inyectado');
+      expect(await a.listarArchivos(p.id)).toEqual(sinCapitulos);
+      expect((await a.listarPapelera()).map((x) => x.id)).toEqual([e.id]);
+      fallar = undefined;
+      await a.restaurarDePapelera(e.id);
+      expect(await a.listarArchivos(p.id)).toHaveLength(5);
+      a.cerrar();
+    });
+
+    it('papelera: proyectos y archivos conviven en una sola lista; los archivos viajan con su proyecto', async () => {
+      const a = await nuevo();
+      const p1 = await conArbol(a);
+      const p2 = await a.crearProyecto({ nombre: 'Segundo' }, [{ ruta: 'a.tex', contenido: 'A' }]);
+      const suelto = await a.moverArchivosAPapelera(p1.id, 'main.tex');
+      await a.moverArchivosAPapelera(p2.id, 'a.tex');
+      await a.moverAPapelera(p2.id);
+      const lista = await a.listarPapelera();
+      expect(lista.map((e) => e.id)).toEqual([`proyecto:${p2.id}`, suelto.id]);
+      expect(lista[0]).toMatchObject({ clase: 'proyecto', nombreProyecto: 'Segundo', cuantos: 1, tamano: 1 });
+      // No se puede restaurar un archivo de un proyecto que está en la papelera.
+      const interno = await a.moverArchivosAPapelera(p1.id, 'img/logo.png');
+      await a.moverAPapelera(p1.id);
+      await rechazaCon(a.restaurarDePapelera(interno.id), 'proyecto_en_papelera');
+      await a.restaurarDePapelera(`proyecto:${p1.id}`);
+      expect((await a.listarPapelera()).map((e) => e.id).sort()).toEqual(
+        [`proyecto:${p2.id}`, suelto.id, interno.id].sort(),
+      );
+      await a.restaurarDePapelera(interno.id);
+      await rechazaCon(a.restaurarDePapelera(interno.id), 'elemento_inexistente');
+      await rechazaCon(a.restaurarDePapelera('proyecto:no-existe'), 'elemento_inexistente');
+      a.cerrar();
+    });
+
+    it('papelera: borrar definitivamente un elemento o un proyecto, y vaciar', async () => {
+      const a = await nuevo();
+      const p1 = await conArbol(a);
+      const p2 = await a.crearProyecto({ nombre: 'Segundo' }, [{ ruta: 'a.tex', contenido: 'A' }]);
+      await a.guardarDistribucion(p2.id, { x: 1 });
+      await a.guardarAjuste(`folio.pestanas.${p2.id}`, { abiertos: ['a.tex'] });
+      const e1 = await a.moverArchivosAPapelera(p1.id, 'capitulos');
+      await a.moverArchivosAPapelera(p2.id, 'a.tex');
+      await a.moverAPapelera(p2.id);
+      await a.borrarDefinitivo(e1.id);
+      await rechazaCon(a.borrarDefinitivo(e1.id), 'elemento_inexistente');
+      expect((await a.listarPapelera()).map((e) => e.id)).toEqual([`proyecto:${p2.id}`]);
+      await a.borrarDefinitivo(`proyecto:${p2.id}`);
+      expect(await a.obtenerProyecto(p2.id)).toBeUndefined();
+      expect(await a.leerDistribucion(p2.id)).toBeUndefined();
+      expect(await a.leerAjuste(`folio.pestanas.${p2.id}`)).toBeUndefined();
+      expect(await a.listarPapelera()).toEqual([]);
+      await a.moverArchivosAPapelera(p1.id, 'main.tex');
+      await a.moverArchivosAPapelera(p1.id, 'img');
+      await a.moverAPapelera(p1.id);
+      expect(await a.vaciarPapelera()).toBe(1);
+      expect(await a.listarProyectos('todos')).toEqual([]);
+      expect(await a.vaciarPapelera()).toBe(0);
+      a.cerrar();
+    });
+
+    it('papelera: emite cambio-papelera al entrar, restaurar y borrar definitivamente', async () => {
+      const a = await nuevo();
+      const p = await conArbol(a);
+      const acciones: string[] = [];
+      a.al('cambio-papelera', (e) => acciones.push(`${e.accion}:${e.elemento.clase}`));
+      const e = await a.moverArchivosAPapelera(p.id, 'main.tex');
+      await a.restaurarDePapelera(e.id);
+      const e2 = await a.moverArchivosAPapelera(p.id, 'capitulos');
+      await a.borrarDefinitivo(e2.id);
+      await a.moverAPapelera(p.id);
+      await a.restaurar(p.id);
+      expect(acciones).toEqual([
+        'entra:archivo',
+        'restaurado:archivo',
+        'entra:carpeta',
+        'borrado-definitivo:carpeta',
+        'entra:proyecto',
+        'restaurado:proyecto',
+      ]);
+      a.cerrar();
+    });
+
+    it('papelera: la entrada se sella con la hora confiable, o queda marcada como no confiable', async () => {
+      const { a, reloj } = await conHora(T0);
+      const p = await conArbol(a);
+      const con = await a.moverArchivosAPapelera(p.id, 'main.tex');
+      expect(con).toMatchObject({ fecha: T0, fechaConfiable: true });
+      reloj.hora = undefined;
+      const sin = await a.moverArchivosAPapelera(p.id, 'capitulos');
+      expect(sin.fechaConfiable).toBe(false);
+      expect(sin.fecha).not.toBe(T0);
+      reloj.hora = T0;
+      await a.moverAPapelera(p.id);
+      expect((await a.obtenerProyecto(p.id))!.enPapeleraConfiable).toBe(true);
+      a.cerrar();
+    });
+
+    it('papelera: purga con el margen de 1 día, sin pasarse un minuto', async () => {
+      const { a, reloj } = await conHora(T0);
+      const p = await conArbol(a);
+      await a.moverArchivosAPapelera(p.id, 'main.tex');
+      reloj.hora = T0 + 31 * DIA - 60_000;
+      expect(await a.purgarCaducados(30)).toEqual([]);
+      expect(await a.listarPapelera()).toHaveLength(1);
+      reloj.hora = T0 + 31 * DIA;
+      expect((await a.purgarCaducados(30)).map((e) => e.ruta)).toEqual(['main.tex']);
+      expect(await a.listarPapelera()).toEqual([]);
+      // Dos purgas seguidas no fallan.
+      expect(await a.purgarCaducados(30)).toEqual([]);
+      a.cerrar();
+    });
+
+    it('papelera: cambiar la caducidad a menos días purga los que ya la superan', async () => {
+      const { a, reloj } = await conHora(T0);
+      const p = await conArbol(a);
+      await a.moverArchivosAPapelera(p.id, 'main.tex');
+      reloj.hora = T0 + 5 * DIA;
+      await a.moverArchivosAPapelera(p.id, 'capitulos');
+      reloj.hora = T0 + 8 * DIA;
+      expect(await a.purgarCaducados(30)).toEqual([]);
+      expect((await a.purgarCaducados(7)).map((e) => e.ruta)).toEqual(['main.tex']);
+      expect((await a.listarPapelera()).map((e) => e.ruta)).toEqual(['capitulos']);
+      a.cerrar();
+    });
+
+    it('papelera: un proyecto caducado se lleva sus archivos, su distribución y su papelera interna', async () => {
+      const { a, reloj } = await conHora(T0);
+      const p = await conArbol(a);
+      await a.guardarDistribucion(p.id, { x: 1 });
+      await a.guardarAjuste(`folio.pestanas.${p.id}`, { abiertos: [] });
+      await a.moverArchivosAPapelera(p.id, 'capitulos');
+      reloj.hora = T0 + DIA;
+      await a.moverAPapelera(p.id);
+      reloj.hora = T0 + DIA + 31 * DIA;
+      const borrados = await a.purgarCaducados(30);
+      expect(borrados.map((e) => e.id)).toEqual([`proyecto:${p.id}`]);
+      expect(await a.obtenerProyecto(p.id)).toBeUndefined();
+      expect(await a.leerDistribucion(p.id)).toBeUndefined();
+      expect(await a.leerAjuste(`folio.pestanas.${p.id}`)).toBeUndefined();
+      expect(await a.listarPapelera()).toEqual([]);
+      a.cerrar();
+    });
+
+    it('papelera: sin hora confiable no se purga nada', async () => {
+      const { a, reloj } = await conHora(T0);
+      const p = await conArbol(a);
+      await a.moverArchivosAPapelera(p.id, 'main.tex');
+      reloj.hora = undefined;
+      expect(await a.purgarCaducados(7)).toEqual([]);
+      expect(await a.listarPapelera()).toHaveLength(1);
+      a.cerrar();
+    });
+
+    it('papelera: lo borrado sin hora confiable cuenta el plazo desde la primera hora confiable', async () => {
+      const { a, reloj } = await conHora(undefined);
+      const p = await conArbol(a);
+      const e = await a.moverArchivosAPapelera(p.id, 'main.tex');
+      expect(e.fechaConfiable).toBe(false);
+      // Primera hora confiable: el elemento se vuelve a sellar y el plazo empieza ahora, no con el reloj del equipo.
+      reloj.hora = T0;
+      expect(await a.purgarCaducados(30)).toEqual([]);
+      expect((await a.listarPapelera())[0]).toMatchObject({ fecha: T0, fechaConfiable: true });
+      reloj.hora = T0 + 30 * DIA;
+      expect(await a.purgarCaducados(30)).toEqual([]);
+      reloj.hora = T0 + 31 * DIA;
+      expect(await a.purgarCaducados(30)).toHaveLength(1);
+      a.cerrar();
+    });
+
+    it('papelera: una fecha en el futuro respecto de la hora confiable se vuelve a sellar', async () => {
+      const { a, reloj } = await conHora(T0 + 100 * DIA);
+      const p = await conArbol(a);
+      await a.moverArchivosAPapelera(p.id, 'main.tex');
+      await a.moverAPapelera(p.id);
+      reloj.hora = T0;
+      expect(await a.purgarCaducados(7)).toEqual([]);
+      const lista = await a.listarPapelera();
+      expect(lista[0]).toMatchObject({ clase: 'proyecto', fecha: T0 });
+      reloj.hora = T0 + 8 * DIA;
+      expect(await a.purgarCaducados(7)).toHaveLength(1);
       a.cerrar();
     });
   });

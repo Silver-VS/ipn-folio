@@ -2,11 +2,16 @@
 // Valores compartidos por la configuración de Playwright y las pruebas de compilación (un solo lugar).
 import { readFileSync } from 'node:fs';
 
+/*
+ * Varias sesiones pueden probar a la vez en carpetas distintas: cada una fija sus puertos con FOLIO_PUERTO_E2E,
+ * FOLIO_PUERTO_BANCO y FOLIO_PUERTO_DESARROLLO para no reutilizar el servidor de otra.
+ */
+
 /** Puerto del banco de compilación (e2e/banco), que empaqueta y sirve Vite solo si hay activos de BusyTeX. */
-export const PUERTO_BANCO = 4174;
+export const PUERTO_BANCO = Number(process.env.FOLIO_PUERTO_BANCO ?? 4174);
 
 /** Puerto del servidor de desarrollo que sirve la página de prueba del almacén (e2e/almacen.html). */
-export const PUERTO_DESARROLLO = 4175;
+export const PUERTO_DESARROLLO = Number(process.env.FOLIO_PUERTO_DESARROLLO ?? 4175);
 
 /** Dirección de la página del banco. `espejo` es la URL del espejo de TeX Live (opcional). */
 export function urlBanco(espejo?: string): string {

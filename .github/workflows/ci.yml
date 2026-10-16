@@ -26,3 +26,10 @@ jobs:
       - run: npm run verificar
       - run: npx playwright install --with-deps chromium webkit
       - run: npm run e2e
+      # Si fallan las e2e, se guardan las trazas para revisarlas (`npx playwright show-trace`).
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-e2e
+          path: test-results/
+          retention-days: 7

@@ -3,6 +3,20 @@
 
 Una línea por cambio: fecha · clave · antes → después · quién.
 
+## 2026.10.18
+
+- 2026-10-16 · `inicio.ejemplo.descripcion` · (nueva) descripción de la tarjeta del proyecto de ejemplo · Codex.
+- 2026-10-16 · `descarga.aviso.cuerpo` · aviso largo → «Descarga única de unos {megas} MB. Después compilas sin conexión.» · Codex.
+- 2026-10-16 · `descarga.aviso.ahora`, `descarga.aviso.esperar` · «Descargar ahora (unos {megas} MB)», «Esperar a tener Wi-Fi» → «Descargar», «Más tarde» · Codex.
+- 2026-10-16 · `plantillas.usar_boton` · (nueva) «Usar»; se conserva el nombre accesible con la plantilla · Codex.
+
+## 2026.10.17
+
+- 2026-10-16 · `inicio.crear_ejemplo` · «Crear un proyecto de ejemplo» → «Proyecto de ejemplo» · Codex.
+- 2026-10-16 · `inicio.plantillas`, `inicio.importar`, `inicio.importar_boton`, `inicio.importar_cancelar` · (nuevas) títulos de sección y selector de importación · Codex.
+- 2026-10-16 · `plantillas.proponer_ayuda`, `plantillas.soltar` · explicaciones largas → propuesta breve y zona de soltar · Codex.
+- 2026-10-16 · `descarga.aviso.cuerpo`, `descarga.aviso.datos_moviles` · explicaciones largas → tamaño, uso sin conexión y espera con Wi-Fi · Codex.
+
 ## 2026.10.1
 
 - 2026-10-05 · `app.*`, `inicio.espacio.aria` · (nuevas) primeras claves de la pantalla inicial · Claude Sonnet (andamiaje).

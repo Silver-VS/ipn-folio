@@ -6,7 +6,7 @@ import type { Locator, Page } from '@playwright/test';
 /** En la primera visita aparece la bienvenida (sesión 07): «Descargar después» la cierra sin descargar nada. */
 export async function omitirBienvenida(page: Page): Promise<void> {
   const despues = page.getByRole('button', { name: 'Descargar después' });
-  const inicio = page.getByRole('button', { name: 'Crear un proyecto de ejemplo' });
+  const inicio = page.getByRole('button', { name: 'Usar Proyecto de ejemplo' });
   await expect(despues.or(inicio)).toBeVisible();
   if (await despues.isVisible()) await despues.click();
   await expect(inicio).toBeVisible();
@@ -16,7 +16,7 @@ export async function omitirBienvenida(page: Page): Promise<void> {
 export async function abrirProyectoDeEjemplo(page: Page): Promise<string> {
   await page.goto('/');
   await omitirBienvenida(page);
-  await page.getByRole('button', { name: 'Crear un proyecto de ejemplo' }).click();
+  await page.getByRole('button', { name: 'Usar Proyecto de ejemplo' }).click();
   await page.waitForURL(/#\/proyecto\//);
   await esperarEditor(page);
   return new URL(page.url()).hash;

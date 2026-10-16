@@ -35,13 +35,9 @@
   <section class="aviso" aria-labelledby="aviso-descarga-titulo">
     <h2 id="aviso-descarga-titulo">{t('descarga.aviso.titulo')}</h2>
     <p>{t('descarga.aviso.cuerpo', { megas })}</p>
-    <p class="nota">{t('descarga.aviso.datos_moviles')}</p>
     <div class="acciones">
-      <button
-        type="button"
-        class="boton boton-primario"
-        data-solicitar-descarga
-        onclick={() => void tienda.solicitar()}>{t('descarga.aviso.ahora', { megas })}</button
+      <button type="button" class="boton" data-solicitar-descarga onclick={() => void tienda.solicitar()}
+        >{t('descarga.aviso.ahora')}</button
       >
       <button type="button" class="boton" onclick={() => (pospuesto = true)}
         >{t('descarga.aviso.esperar')}</button
@@ -52,25 +48,25 @@
 
 <style>
   .aviso {
-    display: grid;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
     gap: var(--ipn-esp-3);
     margin-bottom: var(--ipn-esp-5);
-    padding: var(--ipn-esp-4);
-    border: 1px solid var(--ipn-linea);
-    border-radius: var(--ipn-radio);
-    background: var(--ipn-acento-suave);
+    padding-block: var(--ipn-esp-3);
+    border-bottom: var(--ipn-borde-fino) solid var(--ipn-linea);
   }
 
   h2 {
     margin: 0;
-    font-size: var(--ipn-tamano-l);
+    font-size: var(--ipn-tamano-m);
   }
 
   p {
     margin: 0;
   }
 
-  .nota {
+  .aviso > p {
     color: var(--ipn-tenue);
     font-size: var(--ipn-tamano-s);
   }
@@ -87,5 +83,10 @@
     display: flex;
     flex-wrap: wrap;
     gap: var(--ipn-esp-3);
+  }
+  .boton {
+    max-width: 100%;
+    padding-block: var(--ipn-esp-2);
+    text-align: center;
   }
 </style>

@@ -42,7 +42,7 @@ test.describe('bienvenida', () => {
     await page.getByRole('checkbox', { name: /Doy clases/ }).check();
 
     await page.getByRole('button', { name: 'Descargar después' }).click();
-    await expect(page.getByRole('button', { name: 'Crear un proyecto de ejemplo' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Usar Proyecto de ejemplo' })).toBeVisible();
     // Criterio 3: nada de BusyTeX hasta que se elige y se confirma.
     expect(busytex).toEqual([]);
     expect(
@@ -51,7 +51,8 @@ test.describe('bienvenida', () => {
 
     // No vuelve a salir.
     await page.reload();
-    await expect(page.getByRole('button', { name: 'Crear un proyecto de ejemplo' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Usar Proyecto de ejemplo' })).toBeVisible();
+    await expect(page.getByLabel('Plantillas por unidad académica')).toHaveValue('upiita');
     await expect(page.getByRole('heading', { name: TITULO })).toHaveCount(0);
     expect(busytex).toEqual([]);
   });
@@ -122,7 +123,7 @@ test.describe('bienvenida', () => {
     }
     await expect(page.getByRole('button', { name: 'Descargar después' })).toBeFocused();
     await page.keyboard.press('Enter');
-    await expect(page.getByRole('button', { name: 'Crear un proyecto de ejemplo' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Usar Proyecto de ejemplo' })).toBeVisible();
   });
 
   test('(criterio 6) con datos móviles simulados y «Solo con Wi-Fi» activo, «Descargar ahora» pregunta y no descarga', async ({
@@ -155,7 +156,7 @@ test.describe('bienvenida', () => {
     await simularRed(page, { type: 'cellular' });
     await page.goto('/');
     await page.getByRole('button', { name: 'Descargar después' }).click();
-    const abrir = page.getByRole('button', { name: /Descargar ahora/ });
+    const abrir = page.getByRole('button', { name: 'Descargar', exact: true });
     await abrir.click();
     await expect(page.getByRole('button', { name: 'Descargar de todos modos' })).toBeFocused();
     await page.getByRole('button', { name: 'Ahora no' }).click();
@@ -180,14 +181,14 @@ test.describe('bienvenida', () => {
     await expect(page.getByRole('alert')).toContainText('No se pudo guardar');
     await expect(despues).toBeEnabled();
     await despues.click();
-    await expect(page.getByRole('button', { name: 'Crear un proyecto de ejemplo' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Usar Proyecto de ejemplo' })).toBeVisible();
   });
 
   test('7: abrir el proyecto sin LaTeX no arranca ni descarga el Motor', async ({ page }) => {
     const pedidos = vigilarBusytex(page);
     await page.goto('/');
     await page.getByRole('button', { name: 'Descargar después' }).click();
-    await page.getByRole('button', { name: 'Crear un proyecto de ejemplo' }).click();
+    await page.getByRole('button', { name: 'Usar Proyecto de ejemplo' }).click();
     await expect(page.locator('.vista:not([hidden]) .cm-content')).toBeVisible();
     expect(pedidos).toEqual([]);
     await expect(page.getByRole('button', { name: /^Compilar$/ })).toHaveCount(0);
@@ -281,7 +282,7 @@ test.describe('instalación de LaTeX en la aplicación', () => {
     // Sin conexión: recargar y abrir; Ajustes dice «Instalada» y muestra el espacio usado.
     await context.setOffline(true);
     await page.reload();
-    await expect(page.getByRole('button', { name: 'Crear un proyecto de ejemplo' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Usar Proyecto de ejemplo' })).toBeVisible();
     await page.getByRole('link', { name: 'Ajustes' }).click();
     const fila = page.locator('li[data-herramienta="latex"]');
     await expect(fila).toContainText('Instalada');
@@ -291,7 +292,7 @@ test.describe('instalación de LaTeX en la aplicación', () => {
 
     // Quitar: confirma, libera cachés y IndexedDB; los proyectos no se tocan.
     await page.getByRole('link', { name: 'Volver al inicio' }).click();
-    await page.getByRole('button', { name: 'Crear un proyecto de ejemplo' }).click();
+    await page.getByRole('button', { name: 'Usar Proyecto de ejemplo' }).click();
     await page.waitForURL(/#\/proyecto\//);
     await page.goto('/#/ajustes');
     await page.evaluate(

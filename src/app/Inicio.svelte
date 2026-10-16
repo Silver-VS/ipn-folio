@@ -184,7 +184,6 @@
 </script>
 
 <section class="inicio" aria-labelledby="titulo-proyectos">
-  <AvisoDescarga {tienda} />
   <!-- La región existe desde el inicio, vacía (ver Papelera.svelte). -->
   <div role="status">
     {#if avisoInicio.actual}
@@ -206,121 +205,231 @@
     {/if}
   </div>
 
-  <h2 id="titulo-proyectos">{t('inicio.proyectos')}</h2>
-  {#if error}<p class="error" role="alert">{error}</p>{/if}
-  {#if s && activos.length === 0}
-    <p class="vacio">{t('inicio.sin_proyectos')}</p>
-  {/if}
-  {#if activos.length > 0}
-    <ul class="lista">
-      {#each activos as p (p.id)}
-        <li>
-          {#if renombrando === p.id}
-            <form
-              onsubmit={(e) => {
-                e.preventDefault();
-                void ejecutar(() => renombrar(p));
-              }}
-            >
-              <input
-                bind:this={campoNombre}
-                bind:value={nombreNuevo}
-                aria-label={plano(t('plantillas.renombrar_pregunta', { nombre: p.nombre }))}
-                required
-                onkeydown={(e) => {
-                  if (e.key === 'Escape') {
-                    renombrando = undefined;
-                    void tick().then(() => document.getElementById(`renombrar-${p.id}`)?.focus());
-                  }
+  <AvisoDescarga {tienda} />
+
+  <section class="seccion proyectos" aria-labelledby="titulo-proyectos">
+    <div class="cabecera">
+      <h2 id="titulo-proyectos">{t('inicio.proyectos')}</h2>
+      <a class="enlace" href={HASH_PAPELERA}>{t('papelera.enlace', { n: enPapelera })}</a>
+    </div>
+    {#if error}<p class="error" role="alert">{error}</p>{/if}
+    {#if s && activos.length === 0}
+      <p class="vacio">{t('inicio.sin_proyectos')}</p>
+    {/if}
+    {#if activos.length > 0}
+      <ul class="lista">
+        {#each activos as p (p.id)}
+          <li>
+            {#if renombrando === p.id}
+              <form
+                onsubmit={(e) => {
+                  e.preventDefault();
+                  void ejecutar(() => renombrar(p));
                 }}
-              />
-              <button class="boton" disabled={ocupado}>{t('archivos.renombrar')}</button>
-            </form>
-          {:else}
-            <a class="proyecto" href={hashDeProyecto(p.id)}>{p.nombre}</a>
-          {/if}
-          <time datetime={new Date(p.modificado).toISOString()}
-            >{new Date(p.modificado).toLocaleString('es-MX')}</time
-          >
-          <div class="acciones">
-            <button
-              id="renombrar-{p.id}"
-              class="boton"
-              disabled={ocupado}
-              onclick={() => void empezarRenombre(p)}>{t('archivos.renombrar')}</button
+              >
+                <input
+                  bind:this={campoNombre}
+                  bind:value={nombreNuevo}
+                  aria-label={plano(t('plantillas.renombrar_pregunta', { nombre: p.nombre }))}
+                  required
+                  onkeydown={(e) => {
+                    if (e.key === 'Escape') {
+                      renombrando = undefined;
+                      void tick().then(() => document.getElementById(`renombrar-${p.id}`)?.focus());
+                    }
+                  }}
+                />
+                <button class="boton" disabled={ocupado}>{t('archivos.renombrar')}</button>
+              </form>
+            {:else}
+              <a class="proyecto" href={hashDeProyecto(p.id)}>{p.nombre}</a>
+            {/if}
+            <time datetime={new Date(p.modificado).toISOString()}
+              >{new Date(p.modificado).toLocaleString('es-MX')}</time
             >
-            <button class="boton" disabled={ocupado} onclick={() => void ejecutar(() => exportar(p))}
-              >{t('plantillas.exportar')}</button
-            >
-            <button class="boton" disabled={ocupado} onclick={() => void ejecutar(() => papelera(p))}
-              >{t('plantillas.papelera')}</button
-            >
-          </div>
-        </li>
-      {/each}
-    </ul>
-  {/if}
-  <div class="acciones">
-    <button type="button" class="boton" disabled={!s} onclick={() => void crearEjemplo()}
-      >{t('inicio.crear_ejemplo')}</button
-    >
-    <a class="boton enlace" href={HASH_PAPELERA}>{t('papelera.enlace', { n: enPapelera })}</a>
-  </div>
-  <h2>{t('plantillas.crear')}</h2>
-  <button class="boton" disabled={!s || ocupado} onclick={() => void ejecutar(() => crear())}
-    >{t('plantillas.blanco')}</button
-  >
-  <label for="unidad-plantillas">{t('plantillas.unidad')}</label>
-  <select
-    id="unidad-plantillas"
-    bind:value={unidad}
-    onchange={() => {
-      todas = false;
-    }}
-  >
-    {#each UNIDADES_PLANTILLAS as u (u.id)}<option value={u.id}>{u.siglas}</option>{/each}
-    <option value="otra">{t('bienvenida.unidad.otra')}</option>
-  </select>
-  <button class="boton" onclick={() => (todas = !todas)}
-    >{todas ? t('plantillas.ver_unidad') : t('plantillas.ver_todas')}</button
-  >
-  <div class="tarjetas">
-    {#each plantillas as plantilla (plantilla.id)}
+            <div class="acciones">
+              <button
+                id="renombrar-{p.id}"
+                class="boton"
+                disabled={ocupado}
+                onclick={() => void empezarRenombre(p)}>{t('archivos.renombrar')}</button
+              >
+              <button class="boton" disabled={ocupado} onclick={() => void ejecutar(() => exportar(p))}
+                >{t('plantillas.exportar')}</button
+              >
+              <button class="boton" disabled={ocupado} onclick={() => void ejecutar(() => papelera(p))}
+                >{t('plantillas.papelera')}</button
+              >
+            </div>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+    <div class="acciones">
+      <button
+        class="boton boton-primario"
+        disabled={!s || ocupado}
+        onclick={() => void ejecutar(() => crear())}>{t('plantillas.crear')}</button
+      >
+    </div>
+  </section>
+  <section class="seccion" aria-labelledby="titulo-importar">
+    <h2 id="titulo-importar">{t('inicio.importar')}</h2>
+    {#if s}<Importar
+        servicios={s}
+        alError={(e) => (error = plano(textoDeError(e)))}
+        alAviso={(texto) => avisoInicio.mostrar({ texto })}
+      />{/if}
+  </section>
+  <section class="seccion" aria-labelledby="titulo-plantillas">
+    <h2 id="titulo-plantillas">{t('inicio.plantillas')}</h2>
+    <div class="filtros">
+      <div class="campo-unidad">
+        <label for="unidad-plantillas">{t('plantillas.unidad')}</label>
+        <select
+          id="unidad-plantillas"
+          bind:value={unidad}
+          onchange={() => {
+            todas = false;
+          }}
+        >
+          {#each UNIDADES_PLANTILLAS as u (u.id)}<option value={u.id}>{u.siglas}</option>{/each}
+          <option value="otra">{t('bienvenida.unidad.otra')}</option>
+        </select>
+      </div>
+      <button class="boton boton-texto enlace" aria-pressed={todas} onclick={() => (todas = !todas)}
+        >{todas ? t('plantillas.ver_unidad') : t('plantillas.ver_todas')}</button
+      >
+    </div>
+    <div class="tarjetas">
       <article>
-        <h3>{plantilla.nombre}</h3>
-        <p>{plantilla.descripcion}</p>
-        <small>{plantilla.licencia}</small>
-        <button class="boton" disabled={!s || ocupado} onclick={() => void ejecutar(() => crear(plantilla))}
-          >{t('plantillas.usar', { nombre: plantilla.nombre })}</button
+        <h3>{t('inicio.crear_ejemplo')}</h3>
+        <p>{t('inicio.ejemplo.descripcion')}</p>
+        <button
+          class="boton"
+          aria-label={t('plantillas.usar', { nombre: t('inicio.crear_ejemplo') })}
+          disabled={!s || ocupado}
+          onclick={() => void ejecutar(crearEjemplo)}>{t('plantillas.usar_boton')}</button
         >
       </article>
-    {/each}
-  </div>
-  {#if !plantillas.some((p) => p.unidad === unidad)}
-    <details>
-      <summary>{t('plantillas.proponer')}</summary>
-      <p>{t('plantillas.proponer_ayuda')}</p>
-    </details>
-  {/if}
-  {#if s}<Importar
-      servicios={s}
-      alError={(e) => (error = plano(textoDeError(e)))}
-      alAviso={(texto) => avisoInicio.mostrar({ texto })}
-    />{/if}
+      {#each plantillas as plantilla (plantilla.id)}
+        <article>
+          <h3>{plantilla.nombre}</h3>
+          <p>{plantilla.descripcion}</p>
+          <button
+            class="boton"
+            aria-label={t('plantillas.usar', { nombre: plantilla.nombre })}
+            disabled={!s || ocupado}
+            onclick={() => void ejecutar(() => crear(plantilla))}>{t('plantillas.usar_boton')}</button
+          >
+        </article>
+      {/each}
+    </div>
+    {#if !plantillas.some((p) => p.unidad === unidad)}
+      <details>
+        <summary>{t('plantillas.proponer')}</summary>
+        <p>{t('plantillas.proponer_ayuda')}</p>
+      </details>
+    {/if}
+  </section>
 </section>
 
 <style>
   .tarjetas {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
-    gap: var(--ipn-esp-3);
-    margin-block: var(--ipn-esp-4);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ipn-ancho-tarjeta)), 1fr));
+    gap: var(--ipn-esp-4);
+    margin-block: var(--ipn-esp-5);
   }
   article {
-    padding: var(--ipn-esp-3);
-    border: 1px solid var(--ipn-linea);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--ipn-esp-3);
+    padding: var(--ipn-esp-5);
+    border: var(--ipn-borde-fino) solid var(--ipn-linea);
     border-radius: var(--ipn-radio);
     background: var(--ipn-superficie);
+  }
+  article h3,
+  article p {
+    margin: 0;
+  }
+  article h3 {
+    font-size: var(--ipn-tamano-m);
+  }
+  article p,
+  time {
+    font-size: var(--ipn-tamano-s);
+  }
+  article p {
+    color: var(--ipn-tenue);
+  }
+  article .boton {
+    margin-top: auto;
+    font-size: var(--ipn-tamano-s);
+  }
+  .seccion {
+    margin-bottom: var(--ipn-esp-7);
+  }
+  .cabecera,
+  .filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ipn-esp-3) var(--ipn-esp-5);
+  }
+  .cabecera {
+    justify-content: space-between;
+    margin-bottom: var(--ipn-esp-4);
+  }
+  .cabecera h2 {
+    margin: 0;
+  }
+  .campo-unidad {
+    display: grid;
+    gap: var(--ipn-esp-2);
+    max-width: 100%;
+  }
+  label {
+    font-size: var(--ipn-tamano-s);
+    color: var(--ipn-tenue);
+  }
+  .enlace,
+  summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--ipn-objetivo-tactil);
+  }
+  .enlace,
+  .boton.enlace,
+  summary {
+    color: var(--ipn-acento);
+    text-decoration: underline;
+    text-underline-offset: var(--ipn-foco-separacion);
+    font-size: var(--ipn-tamano-s);
+  }
+  details {
+    color: var(--ipn-tenue);
+    font-size: var(--ipn-tamano-s);
+  }
+  summary {
+    cursor: pointer;
+  }
+  summary:focus-visible {
+    outline: var(--ipn-foco-ancho) solid var(--ipn-acento);
+    outline-offset: var(--ipn-foco-separacion);
+  }
+  form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ipn-esp-2);
+  }
+  input {
+    min-width: 0;
+    max-width: 100%;
+    min-height: var(--ipn-objetivo-tactil);
+    font: inherit;
   }
   select {
     min-height: var(--ipn-objetivo-tactil);
@@ -328,6 +437,9 @@
     font: inherit;
     background: var(--ipn-superficie);
     color: var(--ipn-texto);
+    padding-inline: var(--ipn-esp-3);
+    border: var(--ipn-borde-fino) solid var(--ipn-borde-control);
+    border-radius: var(--ipn-radio-s);
   }
   time {
     display: block;
@@ -338,13 +450,17 @@
     overflow-wrap: anywhere;
   }
   .inicio {
-    padding: var(--ipn-esp-4);
-    max-width: 48rem;
+    padding: var(--ipn-esp-5) var(--ipn-esp-4);
+    max-width: var(--ipn-ancho-inicio);
+    margin-inline: auto;
   }
 
   h2 {
     margin: 0 0 var(--ipn-esp-3);
     font-size: var(--ipn-tamano-l);
+  }
+  .proyectos h2 {
+    font-size: var(--ipn-tamano-xl);
   }
 
   .vacio {
@@ -365,13 +481,13 @@
     gap: var(--ipn-esp-2);
     margin-bottom: var(--ipn-esp-4);
     padding: var(--ipn-esp-1) var(--ipn-esp-1) var(--ipn-esp-1) var(--ipn-esp-3);
-    border: 1px solid var(--ipn-info);
+    border: var(--ipn-borde-fino) solid var(--ipn-info);
     border-radius: var(--ipn-radio-s);
     background: var(--ipn-info-suave);
   }
 
   .aviso .texto {
-    flex: 1 1 14rem;
+    flex: 1 1 var(--ipn-ancho-tarjeta);
     margin: 0;
   }
 
@@ -387,10 +503,7 @@
     display: flex;
     align-items: center;
     min-height: var(--ipn-objetivo-tactil);
-    padding: 0 var(--ipn-esp-3);
-    border: 1px solid var(--ipn-linea);
-    border-radius: var(--ipn-radio-s);
-    background: var(--ipn-superficie);
+    padding: 0;
     color: var(--ipn-texto);
     text-decoration: none;
   }
@@ -412,13 +525,31 @@
     justify-content: center;
     min-height: var(--ipn-objetivo-tactil);
     padding: 0 var(--ipn-esp-4);
-    border: 1px solid var(--ipn-borde-control);
+    border: var(--ipn-borde-fino) solid var(--ipn-borde-control);
     border-radius: var(--ipn-radio-s);
     background: var(--ipn-superficie);
     color: var(--ipn-texto);
     font: inherit;
     text-decoration: none;
     cursor: pointer;
+  }
+  .boton {
+    max-width: 100%;
+    padding-block: var(--ipn-esp-2);
+    text-align: center;
+  }
+  .boton-primario {
+    background: var(--ipn-acento);
+    color: var(--ipn-sobre-acento);
+    border-color: var(--ipn-acento);
+  }
+  .boton-primario:hover:not(:disabled) {
+    background: var(--ipn-acento-fuerte);
+  }
+  .boton-texto {
+    background: transparent;
+    border-color: transparent;
+    padding-inline: var(--ipn-esp-2);
   }
 
   .cerrar {
@@ -430,14 +561,14 @@
     line-height: 1;
   }
 
-  .boton:hover:not(:disabled) {
+  .boton:hover:not(:disabled):not(.boton-primario) {
     background: var(--ipn-acento-suave);
   }
 
   .proyecto:focus-visible,
   .boton:focus-visible,
   .cerrar:focus-visible {
-    outline: 0.1875rem solid var(--ipn-acento);
-    outline-offset: 0.125rem;
+    outline: var(--ipn-foco-ancho) solid var(--ipn-acento);
+    outline-offset: var(--ipn-foco-separacion);
   }
 </style>

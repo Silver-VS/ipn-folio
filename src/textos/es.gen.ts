@@ -1,7 +1,7 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.16";
+export const VERSION_TEXTOS = "2026.10.18";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
@@ -86,10 +86,10 @@ export const TEXTOS_FOLIO = {
   "descarga.anuncio.fin": "Terminó la descarga del compilador de LaTeX.",
   "descarga.anuncio.inicio": "Se inició la descarga del compilador de LaTeX.",
   "descarga.anuncio.pausa": "La descarga del compilador de LaTeX está en pausa.",
-  "descarga.aviso.ahora": "Descargar ahora (unos {megas} MB)",
-  "descarga.aviso.cuerpo": "Para crear el PDF, Folio necesita descargar el compilador de LaTeX: unos {megas} MB, una sola vez. Después puedes compilar en este equipo sin conexión.",
-  "descarga.aviso.datos_moviles": "Si usas datos móviles, puedes esperar a tener Wi-Fi. Mientras tanto, puedes crear tu proyecto y escribir. Para generar el PDF necesitas completar la descarga.",
-  "descarga.aviso.esperar": "Esperar a tener Wi-Fi",
+  "descarga.aviso.ahora": "Descargar",
+  "descarga.aviso.cuerpo": "Descarga única de unos {megas} MB. Después compilas sin conexión.",
+  "descarga.aviso.datos_moviles": "Puedes escribir mientras esperas a tener Wi-Fi.",
+  "descarga.aviso.esperar": "Más tarde",
   "descarga.aviso.titulo": "Antes de crear tu primer PDF",
   "descarga.ayuda": "Puedes seguir trabajando mientras tanto",
   "descarga.barra.aria": "Avance de la descarga",
@@ -285,9 +285,14 @@ export const TEXTOS_FOLIO = {
   "herramientas.solo_escritorio_ayuda": "La app de escritorio agrega lo que el navegador no puede hacer bien",
   "herramientas.tamano": "Unos {megas} MB",
   "herramientas.titulo": "Herramientas",
-  "inicio.crear_ejemplo": "Crear un proyecto de ejemplo",
+  "inicio.crear_ejemplo": "Proyecto de ejemplo",
+  "inicio.ejemplo.descripcion": "Documento con capítulos, fórmulas y bibliografía para empezar.",
   "inicio.ejemplo.nombre": "Proyecto de ejemplo",
   "inicio.espacio.aria": "Espacio de trabajo",
+  "inicio.importar": "Importar",
+  "inicio.importar_boton": "Importar .tex, .zip o carpeta",
+  "inicio.importar_cancelar": "Cancelar",
+  "inicio.plantillas": "Plantillas",
   "inicio.proyectos": "Tus proyectos",
   "inicio.sin_proyectos": "Aún no tienes proyectos en este equipo.",
   "mensajes.aria": "Avisos",
@@ -371,11 +376,12 @@ export const TEXTOS_FOLIO = {
   "plantillas.importar": "Importar .tex o .zip",
   "plantillas.papelera": "Mover a la papelera",
   "plantillas.proponer": "Proponer una plantilla",
-  "plantillas.proponer_ayuda": "Prepara un archivo .zip con los archivos fuente y su licencia. La recepción de propuestas estará disponible más adelante; por ahora puedes importarlo en este equipo.",
+  "plantillas.proponer_ayuda": "Próximamente. Prepara un .zip con los archivos fuente y su licencia.",
   "plantillas.renombrar_pregunta": "Nuevo nombre para {nombre}",
-  "plantillas.soltar": "Arrastra aquí una carpeta o archivos .tex o .zip, o elígelos abajo.",
+  "plantillas.soltar": "O suelta aquí tus archivos o carpeta.",
   "plantillas.unidad": "Plantillas por unidad académica",
   "plantillas.usar": "Usar {nombre}",
+  "plantillas.usar_boton": "Usar",
   "plantillas.ver_todas": "Ver de otras unidades",
   "plantillas.ver_unidad": "Ver las de mi unidad",
   "problemas.aviso": "Aviso",
@@ -435,7 +441,6 @@ export interface VariablesPorClave {
   "archivos.subidos": { n: string | number };
   "bienvenida.total.cantidad": { megas: string | number };
   "compilacion.paso.progreso": { n: string | number; nombre: string | number; total: string | number };
-  "descarga.aviso.ahora": { megas: string | number };
   "descarga.aviso.cuerpo": { megas: string | number };
   "descarga.confirmar.ahorro": { megas: string | number };
   "descarga.confirmar.datos_moviles": { megas: string | number };

@@ -13,6 +13,9 @@
     alAviso,
   }: { servicios: Servicios; alError: (e: unknown) => void; alAviso: (texto: string) => void } = $props();
   let ocupado = $state(false);
+  let selector: HTMLDialogElement;
+  let archivos: HTMLInputElement;
+  let carpeta: HTMLInputElement;
   const rutas = new WeakMap<File, string>();
 
   async function soltar(evento: DragEvent) {
@@ -107,39 +110,95 @@
   ondragover={(e) => e.preventDefault()}
   ondrop={(e) => void soltar(e)}
 >
+  <button class="boton" disabled={ocupado} onclick={() => selector.showModal()}>
+    {t('inicio.importar_boton')}
+  </button>
   <p>{t('plantillas.soltar')}</p>
-  <label
-    >{t('plantillas.importar')}<input
-      type="file"
-      accept=".tex,.zip"
-      disabled={ocupado}
-      onchange={(e) => void importar(e.currentTarget.files)}
-    /></label
-  >
-  <label
-    >{t('plantillas.carpeta')}<input
-      type="file"
-      webkitdirectory
-      disabled={ocupado}
-      onchange={(e) => void importar(e.currentTarget.files)}
-    /></label
-  >
+  <input
+    bind:this={archivos}
+    hidden
+    aria-label={t('plantillas.importar')}
+    type="file"
+    accept=".tex,.zip"
+    disabled={ocupado}
+    onchange={(e) => void importar(e.currentTarget.files)}
+  />
+  <input
+    bind:this={carpeta}
+    hidden
+    aria-label={t('plantillas.carpeta')}
+    type="file"
+    webkitdirectory
+    disabled={ocupado}
+    onchange={(e) => void importar(e.currentTarget.files)}
+  />
 </div>
+<dialog bind:this={selector} aria-labelledby="selector-importar-titulo">
+  <h3 id="selector-importar-titulo">{t('inicio.importar_boton')}</h3>
+  <div class="opciones">
+    <button
+      class="boton"
+      onclick={() => {
+        selector.close();
+        archivos.click();
+      }}>{t('plantillas.importar')}</button
+    >
+    <button
+      class="boton"
+      onclick={() => {
+        selector.close();
+        carpeta.click();
+      }}>{t('plantillas.carpeta')}</button
+    >
+    <button class="boton" onclick={() => selector.close()}>{t('inicio.importar_cancelar')}</button>
+  </div>
+</dialog>
 
 <style>
   .importar {
+    display: grid;
+    justify-items: start;
+    gap: var(--ipn-esp-3);
+  }
+  .importar p {
+    display: none;
+    margin: 0;
+    color: var(--ipn-tenue);
+    font-size: var(--ipn-tamano-s);
+  }
+  .boton {
+    max-width: 100%;
+    padding-block: var(--ipn-esp-2);
+    text-align: center;
+  }
+  dialog {
+    max-width: calc(100% - var(--ipn-esp-6));
+    padding: var(--ipn-esp-5);
+    border: var(--ipn-borde-fino) solid var(--ipn-linea);
+    border-radius: var(--ipn-radio);
+    background: var(--ipn-superficie);
+    color: var(--ipn-texto);
+  }
+  h3 {
+    margin: 0 0 var(--ipn-esp-5);
+    font-size: var(--ipn-tamano-l);
+  }
+  .opciones {
     display: flex;
     flex-wrap: wrap;
     gap: var(--ipn-esp-3);
-    margin-block: var(--ipn-esp-4);
   }
-  label {
-    display: grid;
-    gap: var(--ipn-esp-2);
-    max-width: 100%;
+  @media (pointer: fine) and (min-width: 48rem) {
+    .importar {
+      padding-block: var(--ipn-esp-3);
+      border-block: var(--ipn-borde-fino) dashed var(--ipn-borde-control);
+    }
+    .importar p {
+      display: block;
+    }
   }
-  input {
-    max-width: 100%;
-    min-height: var(--ipn-objetivo-tactil);
+  .importar:focus-within,
+  .importar:hover {
+    border-color: var(--ipn-acento);
   }
 </style>

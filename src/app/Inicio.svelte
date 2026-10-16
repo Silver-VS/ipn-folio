@@ -84,23 +84,26 @@
 </script>
 
 <section class="inicio" aria-labelledby="titulo-proyectos">
-  {#if avisoInicio.actual}
-    {@const aviso = avisoInicio.actual}
-    <div class="aviso" role="status">
-      <p class="texto">{aviso.texto}</p>
-      {#if aviso.accion}
-        <button type="button" class="boton" onclick={() => void ejecutarAviso()}
-          >{aviso.accion.etiqueta}</button
+  <!-- La región existe desde el inicio, vacía (ver Papelera.svelte). -->
+  <div role="status">
+    {#if avisoInicio.actual}
+      {@const aviso = avisoInicio.actual}
+      <div class="aviso">
+        <p class="texto">{aviso.texto}</p>
+        {#if aviso.accion}
+          <button type="button" class="boton" onclick={() => void ejecutarAviso()}
+            >{aviso.accion.etiqueta}</button
+          >
+        {/if}
+        <button
+          type="button"
+          class="cerrar"
+          aria-label={t('aviso.cerrar.boton')}
+          onclick={() => avisoInicio.quitar()}>&times;</button
         >
-      {/if}
-      <button
-        type="button"
-        class="cerrar"
-        aria-label={t('aviso.cerrar.boton')}
-        onclick={() => avisoInicio.quitar()}>&times;</button
-      >
-    </div>
-  {/if}
+      </div>
+    {/if}
+  </div>
 
   <h2 id="titulo-proyectos">{t('inicio.proyectos')}</h2>
   {#if error}<p class="error" role="alert">{error}</p>{/if}

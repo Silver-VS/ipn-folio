@@ -237,4 +237,10 @@ describe('ciclo de vida de la conexión (M4)', () => {
     await expect(crearAlmacenIdb({ nombreBD })).rejects.toMatchObject({ codigo: 'version_nueva' });
     await expect(crearAlmacen({ nombreBD })).rejects.toMatchObject({ codigo: 'version_nueva' });
   });
+
+  it('con la conexión cerrada, las operaciones dicen por qué (almacen_cerrado)', async () => {
+    const a = await crearAlmacenIdb({ nombreBD: nombre('cerrada') });
+    a.cerrar();
+    await expect(a.listarProyectos()).rejects.toMatchObject({ codigo: 'almacen_cerrado' });
+  });
 });

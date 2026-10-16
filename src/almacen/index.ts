@@ -16,7 +16,8 @@ export async function crearAlmacen(opciones: OpcionesAlmacen = {}): Promise<Resu
     return { almacen: await crearAlmacenIdb(opciones), persistente: true };
   } catch (e) {
     // Una versión más nueva de la base NO se cubre con memoria: el trabajo se perdería al cerrar la pestaña.
-    if (e instanceof ErrorAlmacen && e.codigo === 'version_nueva') throw e;
+    // Tampoco se cubre un fallo de apertura o migración: solo falta de IndexedDB (o ventana privada) cae a memoria.
+    if (e instanceof ErrorAlmacen && e.codigo !== 'almacen_no_disponible') throw e;
     return { almacen: crearAlmacenMemoria(opciones), persistente: false };
   }
 }

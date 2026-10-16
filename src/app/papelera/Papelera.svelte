@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import { acerca } from '../../acerca';
   import { espacio, textoDeError, type ElementoPapelera } from '../../almacen';
-  import { caducadosCon, ocupaMucho, tamanoTotal } from '../../almacen/papelera';
+  import { estaCaducado, ocupaMucho, tamanoTotal } from '../../almacen/papelera';
   import { plano } from '../../textos/plano';
   import { t } from '../../textos/t';
   import { hashDeProyecto } from '../ruta';
@@ -155,13 +155,15 @@
     await recargar();
   }
 
-  function cambiarDias(evento: Event) {
+  async function cambiarDias(evento: Event) {
     const select = evento.currentTarget as HTMLSelectElement;
     const nuevo = Number(select.value);
-    const ahora = s?.reloj.horaConfiable();
-    // Pasar a menos días borra de inmediato lo que ya los superó: antes se dice cuánto y se pide confirmación.
+    // Pasar a menos días borra de inmediato lo que ya los superó: antes se dice cuánto y se pide confirmación. Se mide
+    // la hora antes de decidir; si no hay red, se cuenta con el reloj del equipo (mejor avisar de más que de menos).
+    if (nuevo < dias) await s?.reloj.medir();
+    const ahora = s?.reloj.horaConfiable() ?? Date.now();
     const caducos =
-      ahora === undefined || nuevo >= dias ? [] : caducadosCon(elementos, nuevo, config.margenDias, ahora);
+      nuevo >= dias ? [] : elementos.filter((e) => estaCaducado(e.fecha, nuevo, config.margenDias, ahora));
     if (caducos.length === 0) {
       void aplicarDias(nuevo, false).catch((e: unknown) => (error = plano(textoDeError(e))));
       return;
@@ -210,24 +212,23 @@
 
   {#if error}<p class="error" role="alert">{error}</p>{/if}
 
-  {#if avisos.length > 0}
-    <div class="avisos" role="status">
-      {#each avisos as aviso (aviso.id)}
-        <div class="aviso">
-          <p class="texto">{aviso.texto}</p>
-          {#if aviso.abrir}
-            <a class="boton" href={aviso.abrir.href}>{aviso.abrir.etiqueta}</a>
-          {/if}
-          <button
-            type="button"
-            class="cerrar"
-            aria-label={t('aviso.cerrar.boton')}
-            onclick={() => quitarAviso(aviso.id)}>&times;</button
-          >
-        </div>
-      {/each}
-    </div>
-  {/if}
+  <!-- La región existe desde el inicio, vacía: algunos lectores de pantalla no anuncian una región que nace con texto. -->
+  <div class="avisos" role="status">
+    {#each avisos as aviso (aviso.id)}
+      <div class="aviso">
+        <p class="texto">{aviso.texto}</p>
+        {#if aviso.abrir}
+          <a class="boton" href={aviso.abrir.href}>{aviso.abrir.etiqueta}</a>
+        {/if}
+        <button
+          type="button"
+          class="cerrar"
+          aria-label={t('aviso.cerrar.boton')}
+          onclick={() => quitarAviso(aviso.id)}>&times;</button
+        >
+      </div>
+    {/each}
+  </div>
 
   <div class="encabezado">
     <p class="ocupa">{t('papelera.ocupa', { megas: megas(bytes) })}</p>
@@ -237,8 +238,8 @@
         id="caducidad-papelera"
         class="control"
         value={String(dias)}
-        onchange={cambiarDias}
-        disabled={!s}
+        onchange={(ev) => void cambiarDias(ev)}
+        disabled={!s || cargando}
       >
         {#each config.opcionesDias as opcion (opcion)}
           <option value={String(opcion)}>{t('papelera.caducidad.opcion', { dias: opcion })}</option>
@@ -403,6 +404,9 @@
   .avisos {
     display: grid;
     gap: var(--ipn-esp-2);
+  }
+
+  .avisos > :last-child {
     margin-bottom: var(--ipn-esp-4);
   }
 

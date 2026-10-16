@@ -13,6 +13,10 @@
         return t('almacen.aviso.bloqueada');
       case 'cerrada':
         return t('almacen.aviso.cerrada');
+      case 'version-nueva-sin-guardar':
+        return t('almacen.aviso.version_nueva_sin_guardar');
+      case 'apertura-fallida':
+        return t('almacen.error.apertura_fallida');
       case 'version-vieja':
         return t('almacen.error.version_nueva');
       default:
@@ -22,16 +26,19 @@
   const conRecarga = $derived(ciclo.aviso !== undefined && ciclo.aviso !== 'bloqueada');
 </script>
 
-{#if ciclo.aviso}
-  <div class="ciclo" role="status" data-aviso={ciclo.aviso}>
-    <p class="texto">{texto}</p>
-    {#if conRecarga}
-      <button type="button" class="boton" onclick={() => location.reload()}
-        >{t('almacen.aviso.recargar')}</button
-      >
-    {/if}
-  </div>
-{/if}
+<!-- La región existe desde el inicio, vacía: así los lectores de pantalla anuncian el aviso cuando aparece. -->
+<div role="status">
+  {#if ciclo.aviso}
+    <div class="ciclo" data-aviso={ciclo.aviso}>
+      <p class="texto">{texto}</p>
+      {#if conRecarga}
+        <button type="button" class="boton" onclick={() => location.reload()}
+          >{t('almacen.aviso.recargar')}</button
+        >
+      {/if}
+    </div>
+  {/if}
+</div>
 
 <style>
   .ciclo {

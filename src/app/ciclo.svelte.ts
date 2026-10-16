@@ -3,7 +3,13 @@
 // otra no la suelta, el navegador la cerró, o la base es de una versión más nueva que esta página.
 import type { EventoApertura } from '../almacen';
 
-export type AvisoCiclo = 'version-nueva' | 'bloqueada' | 'cerrada' | 'version-vieja';
+export type AvisoCiclo =
+  | 'version-nueva'
+  | 'version-nueva-sin-guardar'
+  | 'bloqueada'
+  | 'cerrada'
+  | 'version-vieja'
+  | 'apertura-fallida';
 
 class EstadoCiclo {
   aviso = $state<AvisoCiclo | undefined>();
@@ -14,9 +20,8 @@ class EstadoCiclo {
     else if (this.aviso === 'bloqueada') this.aviso = undefined;
   }
 
-  /** Un aviso más grave no lo reemplaza uno más leve (después de «Recargar» ya no hay nada que decir). */
   mostrar(aviso: AvisoCiclo): void {
-    if (this.aviso === 'bloqueada' || this.aviso === undefined) this.aviso = aviso;
+    this.aviso = aviso;
   }
 }
 

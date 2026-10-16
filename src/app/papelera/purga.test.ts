@@ -81,15 +81,27 @@ describe('purga', () => {
     await purga.purgar(true);
     const e = await auto.borrar(p.id, 'a.tex');
     expect(e.fechaConfiable).toBe(true);
-    expect(Math.abs(e.fecha - T0)).toBeLessThan(5000);
-    // Pasan 20 días reales: ni el equipo adelantado ni la medición adelantan el borrado.
+    // Se sella con el mayor de los dos relojes: equivocarse hacia el futuro es seguro (el resello lo corrige).
+    expect(e.fecha).toBeGreaterThanOrEqual(T0 + 100 * DIA);
+    // Pasan 20 días reales: la fecha futura se vuelve a sellar con la hora del sitio y el plazo cuenta desde ahí.
     local.ahora += 20 * DIA;
     sitio.hora = T0 + 20 * DIA;
     expect(await purga.purgar(true)).toEqual([]);
-    expect(await almacen.listarPapelera()).toHaveLength(1);
-    local.ahora += 11 * DIA;
-    sitio.hora = T0 + 31 * DIA;
+    const [resellado] = await almacen.listarPapelera();
+    expect(Math.abs(resellado!.fecha - (T0 + 20 * DIA))).toBeLessThan(5000);
+    local.ahora += 32 * DIA;
+    sitio.hora = T0 + 52 * DIA;
     expect(await purga.purgar(true)).toHaveLength(1);
+  });
+
+  it('si la medición de ESTA pasada falla no purga, aunque la anterior siga vigente', async () => {
+    const { almacen, auto, purga, local, sitio, p } = await montar();
+    await purga.purgar(true);
+    await auto.borrar(p.id, 'a.tex');
+    local.ahora = T0 + 60 * DIA;
+    sitio.hora = 'sin-red';
+    expect(await purga.purgar(true)).toEqual([]);
+    expect(await almacen.listarPapelera()).toHaveLength(1);
   });
 
   it('al volver a la pestaña solo purga si pasaron 6 h desde la última purga', async () => {

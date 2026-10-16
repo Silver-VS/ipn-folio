@@ -85,13 +85,17 @@ export function proyectoDeId(elementoId: string): string | undefined {
   return elementoId.startsWith(PREFIJO_PROYECTO) ? elementoId.slice(PREFIJO_PROYECTO.length) : undefined;
 }
 
-/** Sello de entrada: con hora confiable la fecha lo es; si no, es el reloj del equipo y queda sin confirmar. */
+/**
+ * Sello de entrada: con hora confiable la fecha lo es (nunca anterior al reloj del equipo: equivocarse hacia el futuro
+ * es seguro porque el resello lo corrige; hacia el pasado adelantaría la purga); si no, es el reloj del equipo y queda
+ * sin confirmar.
+ */
 export function sellar(
   horaConfiable: number | undefined,
   ahoraLocal: () => number,
 ): { fecha: number; fechaConfiable: boolean } {
   return horaConfiable !== undefined
-    ? { fecha: horaConfiable, fechaConfiable: true }
+    ? { fecha: Math.max(horaConfiable, ahoraLocal()), fechaConfiable: true }
     : { fecha: ahoraLocal(), fechaConfiable: false };
 }
 

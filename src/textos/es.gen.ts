@@ -1,7 +1,7 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.13";
+export const VERSION_TEXTOS = "2026.10.14";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
@@ -11,8 +11,10 @@ export const TEXTOS_FOLIO = {
   "almacen.aviso.entrada_duplicada": "El .zip trae «{ruta}» más de una vez. Conservamos la última copia.",
   "almacen.aviso.recargar": "Recargar",
   "almacen.aviso.version_nueva": "IPN Folio se actualizó en otra pestaña. Recarga esta para seguir; tus cambios ya se guardaron.",
+  "almacen.aviso.version_nueva_sin_guardar": "IPN Folio se actualizó en otra pestaña. Recarga esta para seguir; los últimos cambios de esta pestaña pueden no haberse guardado.",
   "almacen.error.almacen_no_disponible": "Tu navegador no permite guardar proyectos en este dispositivo, así que se perderán al cerrar la pestaña. Descarga una copia en .zip con frecuencia o abre IPN Folio en otra ventana que no sea privada.",
   "almacen.error.almacenamiento_lleno": "Tu navegador se quedó sin espacio para guardar. Descarga una copia en .zip, vacía la papelera y libera espacio borrando proyectos que ya no uses.",
+  "almacen.error.apertura_fallida": "No pudimos abrir tus proyectos guardados en este navegador. Recarga la página; si sigue fallando, no borres los datos del sitio y descarga una copia en .zip si puedes.",
   "almacen.error.archivo_inexistente": "No encontramos el archivo «{ruta}». Revisa el nombre o actualiza la lista de archivos.",
   "almacen.error.desconocido": "No se pudo guardar tu trabajo. Inténtalo de nuevo; si sigue fallando, descarga una copia en .zip.",
   "almacen.error.destino_ocupado": "Ya existe un archivo o una carpeta llamada «{ruta}». Elige otro nombre.",

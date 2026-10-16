@@ -108,6 +108,9 @@ describe('sello de entrada', () => {
     expect(sellar(T0, () => 5)).toEqual({ fecha: T0, fechaConfiable: true });
     expect(sellar(undefined, () => 5)).toEqual({ fecha: 5, fechaConfiable: false });
   });
+  it('con hora confiable nunca sella antes del reloj del equipo (equivocarse hacia el futuro es seguro)', () => {
+    expect(sellar(T0, () => T0 + 100)).toEqual({ fecha: T0 + 100, fechaConfiable: true });
+  });
   it('se vuelve a sellar lo no confiable y lo que está en el futuro', () => {
     expect(requiereResello(T0, true, T0)).toBe(false);
     expect(requiereResello(T0, false, T0 + 1)).toBe(true);

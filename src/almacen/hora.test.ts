@@ -19,10 +19,10 @@ describe('medirHora', () => {
       return respuesta(T0 + 5 * 60_000 + 200);
     });
     const m = await medirHora(fetchFalso, () => local, 'https://ejemplo.mx/hora.json');
-    expect(fetchFalso).toHaveBeenCalledWith('https://ejemplo.mx/hora.json', {
-      method: 'HEAD',
-      cache: 'no-store',
-    });
+    expect(fetchFalso).toHaveBeenCalledWith(
+      'https://ejemplo.mx/hora.json',
+      expect.objectContaining({ method: 'HEAD', cache: 'no-store', signal: expect.any(AbortSignal) }),
+    );
     // El servidor va 5 min adelante (la cabecera Date tiene resolución de 1 s).
     expect(Math.abs(m!.desfase - 5 * 60_000)).toBeLessThanOrEqual(1000);
   });
@@ -112,7 +112,8 @@ describe('crearRelojConfiable', () => {
     });
     await reloj.medir();
     falla = true;
-    expect(await reloj.medir()).toBe(true);
+    // Esta medición no funcionó (quien decide purgar debe saberlo), aunque la anterior siga vigente.
+    expect(await reloj.medir()).toBe(false);
     expect(reloj.horaConfiable()).toBeDefined();
   });
 
@@ -139,5 +140,89 @@ describe('crearRelojConfiable', () => {
     const reloj = crearRelojConfiable({ url: 'x', ahora: () => T0, fetch: f });
     await Promise.all([reloj.medir(), reloj.medir()]);
     expect(f).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('reloj monótono y mediciones dudosas', () => {
+  /** Reloj del equipo y monótono separados: mover `equipo` simula que el alumno cambió la hora. */
+  function montar(fecha: () => number) {
+    const t = { equipo: T0, mono: T0 };
+    const reloj = crearRelojConfiable({
+      url: 'x',
+      ahora: () => t.equipo,
+      monotono: () => t.mono,
+      fetch: async () => respuesta(fecha()),
+    });
+    return { t, reloj };
+  }
+
+  it('el paso del tiempo real (reloj monótono) avanza la hora confiable', async () => {
+    const { t, reloj } = montar(() => T0);
+    await reloj.medir();
+    t.equipo += 5000;
+    t.mono += 5000;
+    expect(Math.abs(reloj.horaConfiable()! - (T0 + 5000))).toBeLessThanOrEqual(1000);
+  });
+
+  it('si el alumno adelanta el reloj del equipo, el desfase deja de valer (no hay hora confiable)', async () => {
+    const { t, reloj } = montar(() => T0);
+    await reloj.medir();
+    t.equipo += 30 * 86_400_000; // el monótono no se mueve
+    expect(reloj.horaConfiable()).toBeUndefined();
+    // Hasta volver a medir no hay hora; al medir de nuevo, vuelve.
+    expect(await reloj.medirSiToca(1_000_000)).toBe(true);
+    expect(reloj.horaConfiable()).toBeDefined();
+  });
+
+  it('si atrasa el reloj del equipo tampoco vale', async () => {
+    const { t, reloj } = montar(() => T0);
+    await reloj.medir();
+    t.equipo -= 3 * 86_400_000;
+    expect(reloj.horaConfiable()).toBeUndefined();
+  });
+
+  it('un salto de menos de un minuto (deriva normal) no invalida', async () => {
+    const { t, reloj } = montar(() => T0);
+    await reloj.medir();
+    t.equipo += 20_000;
+    expect(reloj.horaConfiable()).toBeDefined();
+  });
+
+  it('una medición que tardó más de 30 s en ir y volver se descarta', async () => {
+    let local = T0;
+    const m = await medirHora(
+      async () => {
+        local += 31_000;
+        return respuesta(T0);
+      },
+      () => local,
+      'x',
+    );
+    expect(m).toBeNull();
+  });
+
+  it('suma la cabecera Age cuando la respuesta viene de una caché', async () => {
+    const headers = new Headers({ Date: new Date(T0).toUTCString(), Age: '600' });
+    const m = await medirHora(
+      async () => ({ ok: true, status: 200, headers }),
+      () => T0,
+      'x',
+    );
+    expect(m!.desfase).toBeGreaterThan(599_000);
+    expect(m!.desfase).toBeLessThan(601_000);
+  });
+
+  it('una petición que no responde se aborta (señal con tiempo límite)', async () => {
+    let senal: AbortSignal | null | undefined;
+    await medirHora(
+      async (_url, init) => {
+        senal = init.signal;
+        return respuesta(T0);
+      },
+      () => T0,
+      'x',
+    );
+    expect(senal).toBeInstanceOf(AbortSignal);
+    expect(senal!.aborted).toBe(false);
   });
 });

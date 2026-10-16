@@ -3,7 +3,7 @@
 # Reglas: claves a-z0-9_ con puntos; variables {nombre}; plurales {n, plural, one {# x} other {# xs}}.
 # Los textos que también necesita IPN-tools viven en ipn-comun (comun.es.toml), no aquí.
 # Al cambiar un texto: sube `version` y anota el cambio en contenido/CAMBIOS.md.
-version = "2026.10.13"
+version = "2026.10.14"
 
 [app]
 # Nombre del producto: <title> de la página y encabezado. Es un nombre propio.
@@ -217,6 +217,8 @@ zip_demasiado_grande = "El contenido de ese .zip es demasiado grande para abrirl
 # {ruta}: archivo o carpeta que no se pudo guardar antes de mandarlo a la papelera.
 guardado_pendiente = "No pudimos guardar los últimos cambios de «{ruta}», así que no lo borramos. Inténtalo de nuevo; si sigue fallando, descarga una copia en .zip."
 elemento_inexistente = "Ese elemento ya no está en la papelera. Actualiza la vista para ver lo que queda."
+# No se pudo abrir (o actualizar) la base de datos de los proyectos: no se trabaja en memoria para no perder cambios.
+apertura_fallida = "No pudimos abrir tus proyectos guardados en este navegador. Recarga la página; si sigue fallando, no borres los datos del sitio y descarga una copia en .zip si puedes."
 # La base de datos ya es de una versión más nueva que esta página (p. ej. una pestaña vieja que se recarga).
 version_nueva = "Hay una versión más nueva de IPN Folio abierta. Recarga la página."
 
@@ -225,6 +227,8 @@ codificacion_convertida = "El archivo «{ruta}» no estaba en UTF-8; lo converti
 entrada_duplicada = "El .zip trae «{ruta}» más de una vez. Conservamos la última copia."
 # Ciclo de vida de la base de datos entre pestañas.
 version_nueva = "IPN Folio se actualizó en otra pestaña. Recarga esta para seguir; tus cambios ya se guardaron."
+# Otra pestaña actualizó la base y alcanzó el tiempo límite sin poder guardar todo.
+version_nueva_sin_guardar = "IPN Folio se actualizó en otra pestaña. Recarga esta para seguir; los últimos cambios de esta pestaña pueden no haberse guardado."
 bloqueada = "Cierra las otras pestañas de IPN Folio para terminar de actualizar."
 cerrada = "El navegador cerró la conexión con tus proyectos. Recarga la página para seguir."
 recargar = "Recargar"

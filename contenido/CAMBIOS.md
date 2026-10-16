@@ -64,3 +64,7 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 - 2026-10-16 · `almacen.error.guardado_pendiente`, `elemento_inexistente`, `version_nueva`; `almacen.aviso.version_nueva`, `bloqueada`, `cerrada`, `recargar` · (nuevas) errores y avisos de la papelera y del ciclo de vida de la base entre pestañas (M4) · Claude Sonnet (sesión 11).
 - 2026-10-16 · `almacen.error.almacenamiento_lleno` · agrega «vacía la papelera» a la acción sugerida · Claude Sonnet (sesión 11).
 - 2026-10-16 · `archivos.confirmar_borrado`, `inicio.papelera`, `inicio.restaurar` · retiradas: mandar a la papelera no pide confirmación y la papelera tiene su propia vista · Claude Sonnet (sesión 11).
+
+## 2026.10.14
+
+- 2026-10-16 · `almacen.error.apertura_fallida`, `almacen.aviso.version_nueva_sin_guardar` · (nuevas) fallo al abrir o migrar la base y aviso de actualización cuando no alcanzó a guardar lo pendiente · Claude Sonnet (sesión 11, arreglos).

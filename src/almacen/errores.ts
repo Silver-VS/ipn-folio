@@ -15,7 +15,9 @@ export type CodigoErrorAlmacen =
   | 'zip_demasiado_grande'
   | 'guardado_pendiente'
   | 'elemento_inexistente'
-  | 'version_nueva';
+  | 'version_nueva'
+  | 'almacen_cerrado'
+  | 'apertura_fallida';
 
 /** Error de la capa de almacenamiento. El texto para el alumnado sale de `textoDeError`, no de `message`. */
 export class ErrorAlmacen extends Error {
@@ -63,6 +65,10 @@ export function textoDeError(e: unknown): string {
       return t('almacen.error.elemento_inexistente');
     case 'version_nueva':
       return t('almacen.error.version_nueva');
+    case 'almacen_cerrado':
+      return t('almacen.aviso.cerrada');
+    case 'apertura_fallida':
+      return t('almacen.error.apertura_fallida');
   }
 }
 

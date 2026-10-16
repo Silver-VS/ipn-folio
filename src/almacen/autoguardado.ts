@@ -168,8 +168,13 @@ export function crearAutoguardado(almacen: Almacen, opciones: OpcionesAutoguarda
     avisarSiCambio();
   }
 
+  /** Rutas que se están mandando a la papelera ahora mismo. */
+  const enBorrado: Array<{ proyectoId: string; base: string }> = [];
+
   const api: Autoguardado = {
     programar(proyectoId, ruta, contenido) {
+      // Mientras se manda a la papelera, una pulsación no debe recrear el archivo que se está borrando.
+      if (enBorrado.some((b) => b.proyectoId === proyectoId && estaBajo(ruta, b.base))) return;
       const k = clave(proyectoId, ruta);
       const t = ahora();
       const previa = pendientes.get(k);
@@ -252,14 +257,23 @@ export function crearAutoguardado(almacen: Almacen, opciones: OpcionesAutoguarda
 
     async borrar(proyectoId, ruta) {
       const r = normalizarRuta(ruta);
-      // Lo que se escriba mientras se guarda también cuenta: se repite hasta que no quede nada pendiente.
-      for (let vuelta = 0; vuelta < 3; vuelta++) {
-        await vaciarAfectadas(proyectoId, r);
-        if (afectadas(proyectoId, r).pendientes.length === 0) break;
+      const marca = { proyectoId, base: r };
+      enBorrado.push(marca);
+      try {
+        // Lo que se escriba mientras se guarda también cuenta: se repite hasta que no quede nada pendiente.
+        for (let vuelta = 0; vuelta < 3; vuelta++) {
+          await vaciarAfectadas(proyectoId, r);
+          if (afectadas(proyectoId, r).pendientes.length === 0) break;
+        }
+        if (afectadas(proyectoId, r).fallidos.length > 0 || afectadas(proyectoId, r).pendientes.length > 0)
+          throw new ErrorAlmacen('guardado_pendiente', { ruta: r });
+        const elemento = await almacen.moverArchivosAPapelera(proyectoId, r);
+        // Nada de esa ruta debe quedar pendiente: recrearía el archivo borrado.
+        descartar(proyectoId, r);
+        return elemento;
+      } finally {
+        enBorrado.splice(enBorrado.indexOf(marca), 1);
       }
-      if (afectadas(proyectoId, r).fallidos.length > 0 || afectadas(proyectoId, r).pendientes.length > 0)
-        throw new ErrorAlmacen('guardado_pendiente', { ruta: r });
-      return almacen.moverArchivosAPapelera(proyectoId, r);
     },
 
     async moverAPapelera(proyectoId) {
@@ -271,6 +285,12 @@ export function crearAutoguardado(almacen: Almacen, opciones: OpcionesAutoguarda
 
     async restaurarDePapelera(elementoId) {
       await api.guardarTodo();
+      // `guardarTodo` no lanza si algo sigue sin poder guardarse: ese archivo se reintentaría después y pisaría lo
+      // restaurado en su ruta. Mejor no restaurar ahora.
+      if (api.estado !== 'guardado') {
+        const pendiente = [...fallidos.values(), ...pendientes.values()][0];
+        throw new ErrorAlmacen('guardado_pendiente', { ruta: pendiente?.ruta ?? '' });
+      }
       return almacen.restaurarDePapelera(elementoId);
     },
 

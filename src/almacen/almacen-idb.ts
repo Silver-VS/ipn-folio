@@ -155,14 +155,19 @@ export async function crearAlmacenIdb(opciones: OpcionesAlmacen = {}): Promise<A
   } catch (e) {
     if (e instanceof ErrorAlmacen) throw e;
     // La base ya es más nueva que este código (una pestaña vieja que se recarga desde caché): NO se cae a memoria.
-    if ((e as { name?: string } | null)?.name === 'VersionError') throw new ErrorAlmacen('version_nueva');
-    throw new ErrorAlmacen('almacen_no_disponible');
+    const nombreError = (e as { name?: string } | null)?.name;
+    if (nombreError === 'VersionError') throw new ErrorAlmacen('version_nueva');
+    // Ventana privada o permisos: no hay dónde guardar y se trabaja en memoria. Cualquier otro fallo (p. ej. al
+    // migrar) NO: la lista saldría vacía y lo que se haga se perdería; se avisa de forma persistente.
+    if (nombreError === 'SecurityError' || nombreError === 'InvalidStateError')
+      throw new ErrorAlmacen('almacen_no_disponible');
+    throw new ErrorAlmacen('apertura_fallida');
   }
   if (estuvoBloqueada) opciones.alAbrir?.({ tipo: 'almacen-liberado' });
 
   /** La conexión, o el error con la acción a seguir si ya se soltó porque hay una versión más nueva. */
   const conexion = (): IDBPDatabase<EsquemaFolio> => {
-    if (cerradaPorVersion && cerrada) throw new ErrorAlmacen('version_nueva');
+    if (cerrada) throw new ErrorAlmacen(cerradaPorVersion ? 'version_nueva' : 'almacen_cerrado');
     return db;
   };
 

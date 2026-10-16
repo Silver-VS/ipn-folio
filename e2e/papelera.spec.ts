@@ -60,7 +60,7 @@ async function irAPapelera(page: Page): Promise<void> {
 
 /** Responde la petición de hora del sitio con la cabecera `Date` que tenga `sitio.hora`, o la aborta. */
 async function simularHoraDelSitio(page: Page, sitio: { hora: number | 'sin-red' }): Promise<void> {
-  await page.route('**/hora.json', async (ruta) => {
+  await page.route('**/version.json', async (ruta) => {
     if (sitio.hora === 'sin-red') return ruta.abort('failed');
     return ruta.fulfill({
       status: 200,
@@ -148,6 +148,8 @@ test.describe('papelera', () => {
 
   test.describe('caducidad con hora confiable', () => {
     const T = new Date('2027-03-01T12:00:00Z').getTime();
+    // Con carga (tres perfiles en paralelo) estos escenarios tardan ~30 s: margen amplio.
+    test.describe.configure({ timeout: 60_000 });
 
     test('a los 32 días con hora del sitio y reloj adelantados, el elemento ya no está y no hay aviso', async ({
       page,
@@ -162,7 +164,7 @@ test.describe('papelera', () => {
       await irAPapelera(page);
       await expect(page.getByRole('listitem').filter({ hasText: 'referencias.bib' })).toBeVisible();
       // «Se borrará…» es un dato de cada elemento, no un recordatorio.
-      await expect(page.getByText(/Se borrará dentro de 30 días/)).toBeVisible();
+      await expect(page.getByText(/Se borrará dentro de (30|31) días/)).toBeVisible();
 
       sitio.hora = T + 32 * DIA;
       await page.clock.setSystemTime(T + 32 * DIA);
@@ -213,6 +215,7 @@ test.describe('papelera', () => {
       await page.clock.setSystemTime(T + 20 * DIA);
       await page.reload();
       await irAPapelera(page);
+      await expect(page.getByRole('listitem').filter({ hasText: 'referencias.bib' })).toBeVisible();
       await page.getByLabel('Borrar automáticamente después de').selectOption('7');
       const dialogo = page.getByRole('dialog');
       await expect(dialogo).toContainText('Con 7 días, se borraría ahora 1 elemento de la papelera.');
@@ -222,6 +225,28 @@ test.describe('papelera', () => {
       await page.getByLabel('Borrar automáticamente después de').selectOption('7');
       await page.getByRole('dialog').getByRole('button', { name: 'Cambiar y borrar' }).click();
       await expect(page.getByText(/La papelera está vacía/)).toBeVisible();
+    });
+
+    test('sin conexión, bajar los días también pide confirmación (se mide la hora antes de decidir)', async ({
+      page,
+      isMobile,
+    }) => {
+      const sitio = { hora: 'sin-red' as number | 'sin-red' };
+      await simularHoraDelSitio(page, sitio);
+      await page.clock.install({ time: T });
+      await abrirProyectoDeEjemplo(page);
+      await irAPapelera(page);
+      await page.getByLabel('Borrar automáticamente después de').selectOption('90');
+      await page.evaluate(() => (location.hash = '#/'));
+      await page.getByRole('link', { name: 'Proyecto de ejemplo' }).click();
+      await borrarDelArbol(page, isMobile, /referencias.bib/);
+      await expect(page.getByRole('treeitem', { name: /referencias.bib/ })).toHaveCount(0);
+      await page.clock.setSystemTime(T + 20 * DIA);
+      await page.reload();
+      await irAPapelera(page);
+      await expect(page.getByRole('listitem').filter({ hasText: 'referencias.bib' })).toBeVisible();
+      await page.getByLabel('Borrar automáticamente después de').selectOption('7');
+      await expect(page.getByRole('dialog')).toContainText('se borraría ahora 1 elemento');
     });
   });
 

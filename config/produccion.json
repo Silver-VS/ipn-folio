@@ -10,6 +10,6 @@
     "intervaloPurgaHoras": 6,
     "avisoMegas": 100,
     "avisoFraccionUso": 0.25,
-    "urlHora": "./hora.json"
+    "urlHora": "./version.json"
   }
 }

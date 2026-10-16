@@ -165,6 +165,32 @@ describe('autoguardado y cambios de ruta', () => {
     expect(auto.estado).toBe('guardado');
   });
 
+  it('restaurar con un guardado que sigue fallando lanza guardado_pendiente y no restaura', async () => {
+    const { almacen, p, auto } = await preparar();
+    const elemento = await auto.borrar(p.id, 'cap/a.tex');
+    vi.spyOn(almacen, 'escribir').mockRejectedValue(new Error('disco lleno'));
+    auto.programar(p.id, 'cap/a.tex', 'nuevo, sin poder guardar');
+    await expect(auto.restaurarDePapelera(elemento.id)).rejects.toMatchObject({
+      codigo: 'guardado_pendiente',
+    });
+    expect(await almacen.listarPapelera()).toHaveLength(1);
+    expect(await rutas(almacen, p.id)).toEqual(['main.tex']);
+  });
+
+  it('una pulsación durante el borrado no recrea el archivo', async () => {
+    const { almacen, p, auto } = await preparar();
+    const borrando = auto.borrar(p.id, 'cap');
+    auto.programar(p.id, 'cap/a.tex', 'tecla tardía');
+    await borrando;
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(await rutas(almacen, p.id)).toEqual(['main.tex']);
+    expect(auto.estado).toBe('guardado');
+    // Pasado el borrado, el mismo archivo vuelve a poder escribirse.
+    auto.programar(p.id, 'cap/a.tex', 'otra vez');
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(await rutas(almacen, p.id)).toEqual(['cap/a.tex', 'main.tex']);
+  });
+
   it('borrar definitivamente, vaciar y purgar pasan directo al almacén', async () => {
     const { almacen, p, auto } = await preparar();
     const a = await auto.borrar(p.id, 'main.tex');

@@ -43,7 +43,11 @@ export function armarServicios(almacen: Almacen, persistente: boolean, reloj?: R
     almacen.al('version-nueva', () => {
       ciclo.mostrar('version-nueva');
       const limite = new Promise<void>((resolver) => setTimeout(resolver, ESPERA_GUARDAR_AL_ACTUALIZAR));
-      void Promise.race([auto.guardarTodo().catch(() => undefined), limite]).then(() => almacen.cerrar());
+      void Promise.race([auto.guardarTodo().catch(() => undefined), limite]).then(() => {
+        // Solo se dice «tus cambios ya se guardaron» si es verdad.
+        if (auto.estado !== 'guardado') ciclo.mostrar('version-nueva-sin-guardar');
+        almacen.cerrar();
+      });
     }),
     // El navegador cerró la conexión (M4, `terminated`).
     almacen.al('almacen-cerrado', () => ciclo.mostrar('cerrada')),
@@ -90,6 +94,7 @@ async function crear(): Promise<Servicios> {
   } catch (e) {
     // La base es de una versión más nueva que esta página: no se trabaja en memoria, se pide recargar.
     if (e instanceof ErrorAlmacen && e.codigo === 'version_nueva') ciclo.mostrar('version-vieja');
+    else if (e instanceof ErrorAlmacen && e.codigo === 'apertura_fallida') ciclo.mostrar('apertura-fallida');
     throw e;
   }
 }

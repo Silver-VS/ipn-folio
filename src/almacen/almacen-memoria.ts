@@ -347,12 +347,14 @@ export function crearAlmacenMemoria(opciones: OpcionesAlmacen = {}): Almacen {
     },
 
     async vaciarPapelera() {
-      const lista = listar();
-      for (const e of lista) {
+      let borrados = 0;
+      for (const e of listar()) {
         const quitado = quitarDefinitivo(e.id);
-        if (quitado) avisarBorrado(quitado);
+        if (!quitado) continue;
+        borrados++;
+        avisarBorrado(quitado);
       }
-      return lista.length;
+      return borrados;
     },
 
     async purgarCaducados(dias) {

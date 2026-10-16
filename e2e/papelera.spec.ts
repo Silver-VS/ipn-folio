@@ -228,6 +228,11 @@ test.describe('papelera', () => {
       await page.getByRole('link', { name: 'Proyecto de ejemplo' }).click();
       await esperarHoraDelSitio(page, sitio);
       await borrarDelArbol(page, isMobile, /referencias\.bib/);
+      // Recargar el mismo día asegura que la fecha quede sellada con la hora del sitio (T) aunque la primera medición
+      // no haya alcanzado a valer antes de borrar (pasaba en la CI).
+      await page.reload();
+      await irAPapelera(page);
+      await expect(page.getByRole('listitem').filter({ hasText: 'referencias.bib' })).toBeVisible();
       sitio.hora = T + 20 * DIA;
       await page.clock.setSystemTime(T + 20 * DIA);
       await page.reload();

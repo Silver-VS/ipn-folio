@@ -18,7 +18,9 @@
   let ruta = $state<Ruta>(rutaDeHash(location.hash));
   let hashActual = location.hash;
   let comprobarSalida: (() => boolean) | undefined;
-  const protegerSalida = (comprobar?: () => boolean) => { comprobarSalida = comprobar; };
+  const protegerSalida = (comprobar?: () => boolean) => {
+    comprobarSalida = comprobar;
+  };
   // La pantalla de proyecto (CodeMirror, paneles) se descarga solo al abrir un proyecto: el inicio queda ligero.
   let cargaProyecto: Promise<typeof import('./app/proyecto/Proyecto.svelte')> | undefined;
   const cargarProyecto = () => (cargaProyecto ??= import('./app/proyecto/Proyecto.svelte'));

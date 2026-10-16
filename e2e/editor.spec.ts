@@ -62,7 +62,9 @@ test.describe('editor y archivos', () => {
     await page.getByRole('button', { name: 'Borrar', exact: true }).click();
     await expect(page.getByRole('treeitem', { name: /ideas\.tex/ })).toHaveCount(0);
     // Sin confirmación: va a la papelera y el aviso lo dice una sola vez, con el plazo.
-    await expect(page.getByText('Se movió notas/ideas.tex a la papelera. Tienes 30 días para recuperarlo.')).toBeVisible();
+    await expect(
+      page.getByText('Se movió notas/ideas.tex a la papelera. Tienes 30 días para recuperarlo.'),
+    ).toBeVisible();
     await page.getByRole('button', { name: 'Deshacer' }).click();
     await expect(page.getByRole('treeitem', { name: /ideas\.tex/ })).toBeVisible();
   });
@@ -211,6 +213,27 @@ test.describe('editor y archivos', () => {
     await esperarEditor(otra);
     expect(await textoDelEditor(otra)).toContain('otra vez');
     expect(await textoDelEditor(otra)).not.toContain('% mio');
+    // N2: cerrar el archivo y rechazar salir no debe descartar la versión local en conflicto.
+    await page.getByRole('tab', { name: 'referencias.bib' }).press('Delete');
+    await expect(page.getByRole('tab', { name: 'referencias.bib' })).toBeVisible();
+    expect(await textoDelEditor(page)).toContain('% mio');
+    const salida = page.waitForEvent('dialog');
+    await page.evaluate(() => {
+      location.hash = '#/';
+    });
+    const confirmacion = await salida;
+    expect(confirmacion.message()).toContain('perderás tu versión local');
+    await confirmacion.dismiss();
+    await expect(page).toHaveURL(new RegExp(hash.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'));
+    expect(await textoDelEditor(page)).toContain('% mio');
+    // El mismo guardia cubre recargar/cerrar la pestaña del navegador (beforeunload).
+    expect(
+      await page.evaluate(() => {
+        const evento = new Event('beforeunload', { cancelable: true });
+        window.dispatchEvent(evento);
+        return evento.defaultPrevented;
+      }),
+    ).toBe(true);
     await page.getByRole('button', { name: 'Cargar la versión de la otra pestaña' }).click();
     await expect.poll(() => textoDelEditor(page)).toContain('otra vez');
     await expect.poll(() => textoDelEditor(page)).not.toContain('% mio');
@@ -222,7 +245,9 @@ test.describe('editor y archivos', () => {
     await page.getByRole('menuitem', { name: 'Mover el proyecto a la papelera' }).click();
     await expect(page).toHaveURL(/#\/$/);
     await expect(
-      page.getByText('Se movió el proyecto Proyecto de ejemplo a la papelera. Tienes 30 días para recuperarlo.'),
+      page.getByText(
+        'Se movió el proyecto Proyecto de ejemplo a la papelera. Tienes 30 días para recuperarlo.',
+      ),
     ).toBeVisible();
     await expect(page.getByRole('link', { name: 'Papelera (1)' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Proyecto de ejemplo' })).toHaveCount(0);

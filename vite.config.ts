@@ -7,6 +7,8 @@ import type { ManifestOptions } from 'vite-plugin-pwa';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { leerTextosComun, leerTextosFolio } from './scripts/lib/textos.mjs';
 import { pluginPwa, pluginVersionJson } from './scripts/lib/pwa.mjs';
+import { pluginPlantillasLocales } from './scripts/lib/plantillas-locales.mjs';
+import { pluginEspejoEstatico } from './scripts/lib/espejo-vite.mjs';
 
 // Entorno de configuración: FOLIO_ENTORNO, o «desarrollo» en `vite` y «produccion» en `vite build`.
 const entornoPor = (mando: string) =>
@@ -75,6 +77,8 @@ export default defineConfig(({ command }) => {
     base: process.env.FOLIO_BASE ?? config.base ?? './',
     plugins: [
       svelte(),
+      pluginPlantillasLocales(),
+      pluginEspejoEstatico(),
       textosEnHtml(),
       pluginVersionJson(import.meta.url),
       pluginPwa(manifiesto(comun)),

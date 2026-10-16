@@ -89,6 +89,8 @@ export class EstadoProyecto {
   pdfAnterior = $state(false);
   salto = $state.raw<{ ruta: string; linea: number; n: number } | undefined>();
   actualizarPdf?: () => Promise<void>;
+  compilacionAutomatica = $state(false);
+  alCambiarTexto?: () => void;
   paletaAbierta = $state(false);
   pestanaCompacta = $state<PestanaCompacta>('editor');
   /** Sube cada vez que un panel pasa a otra ventana del navegador o vuelve: los paneles se vuelven a medir. */
@@ -172,7 +174,8 @@ export class EstadoProyecto {
   async refrescarPapelera(): Promise<void> {
     try {
       const todos = await this.servicios.almacen.listarPapelera();
-      if (!this.destruido) this.papelera = todos.filter((e) => e.proyectoId === this.id && e.clase !== 'proyecto');
+      if (!this.destruido)
+        this.papelera = todos.filter((e) => e.proyectoId === this.id && e.clase !== 'proyecto');
     } catch {
       /* la lista de la papelera es una comodidad: si falla, la vista Papelera lo dirá */
     }
@@ -270,6 +273,7 @@ export class EstadoProyecto {
   alEditar(ruta: string, texto: string): void {
     this.sucios.add(ruta);
     if (!this.conflictos.includes(ruta)) this.servicios.auto.programar(this.id, ruta, texto);
+    this.alCambiarTexto?.();
   }
 
   /** Ctrl+S: guarda ya. La sesión 09 agrega la compilación. */

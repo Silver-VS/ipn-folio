@@ -7,6 +7,7 @@ import { join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { configurar, reiniciar, registrar, t as formatear } from '@ipn/comun/js/texto.js';
 import { RAIZ, leerTextosComun, leerTextosFolio, leerVetadas, variablesDe } from './lib/textos.mjs';
+import { validar } from '@ipn/comun/herramientas/lib/esquema.mjs';
 
 /** Un tamaño escrito a mano («90 MB», «1,5 GB»): los textos piden {megas} al manifiesto de tamaños medidos. */
 const TAMANO_FIJO = /\d[\d.,]*\s?(?:MB|MiB|GB|GiB)\b/;
@@ -295,6 +296,19 @@ export function reunir(raiz = RAIZ) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { errores, avisos } = revisar(reunir());
+  const catalogo = JSON.parse(readFileSync(join(RAIZ, 'public/plantillas/catalogo.json'), 'utf8'));
+  const esquema = JSON.parse(readFileSync(join(RAIZ, 'public/plantillas/catalogo.schema.json'), 'utf8'));
+  errores.push(...validar(catalogo, esquema));
+  const ids = new Set();
+  for (const plantilla of catalogo) {
+    if (ids.has(plantilla.id)) errores.push(`plantilla duplicada: ${plantilla.id}`);
+    ids.add(plantilla.id);
+    if (plantilla.origen !== 'repo') errores.push(`plantilla local en catálogo público: ${plantilla.id}`);
+    for (const archivo of plantilla.archivos) {
+      if (!existsSync(join(RAIZ, 'public/plantillas', plantilla.id, archivo)))
+        errores.push(`plantilla: falta ${plantilla.id}/${archivo}`);
+    }
+  }
   for (const a of avisos) console.warn(`aviso: ${a}`);
   for (const e of errores) console.error(`error: ${e}`);
   console.log(`contenido: ${errores.length} errores, ${avisos.length} avisos`);

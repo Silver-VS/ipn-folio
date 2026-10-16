@@ -1,7 +1,7 @@
 // GENERADO desde contenido/textos/es.toml y @ipn/comun (dist/textos/comun.es.json); no editar
 // SPDX-License-Identifier: CC0-1.0
 
-export const VERSION_TEXTOS = "2026.10.14";
+export const VERSION_TEXTOS = "2026.10.16";
 export const VERSION_TEXTOS_COMUN = "2026.10.1";
 
 export const TEXTOS_FOLIO = {
@@ -224,6 +224,22 @@ export const TEXTOS_FOLIO = {
   "errores.motor.ruta_no_permitida": "El proyecto tiene un archivo con una ruta que sale de su carpeta. Corrige su nombre y vuelve a compilar.",
   "errores.motor.sin_montar": "Primero hay que cargar los archivos del proyecto. Vuelve a compilar.",
   "errores.motor.worker": "El motor de compilación se detuvo de forma inesperada. Vuelve a compilar: se reiniciará solo.",
+  "flujo.actualizando": "Actualizando PDF…",
+  "flujo.actualizar": "Actualizar PDF",
+  "flujo.automatica": "Actualizar PDF al dejar de escribir",
+  "flujo.avisos": "PDF actualizado · Revisa {n, plural, one {# aviso} other {# avisos}}",
+  "flujo.error": "No se pudo actualizar el PDF · Revisa los problemas",
+  "flujo.error_resumen": "No se pudo actualizar el PDF · Revisa {errores, plural, one {# error} other {# errores}} y {avisos, plural, one {# aviso} other {# avisos}}",
+  "flujo.fallo_preparacion": "No se pudo preparar el PDF. Comprueba que tus cambios estén guardados y vuelve a actualizarlo.",
+  "flujo.ir_linea": "Ir a la línea",
+  "flujo.listo": "PDF actualizado · {segundos} s",
+  "flujo.pdf_anterior": "Estás viendo la última versión del PDF que compiló sin errores. Corrige los problemas y actualiza el PDF.",
+  "flujo.progreso": "Actualizando PDF · {paso}",
+  "flujo.que_revisar": "Qué revisar",
+  "flujo.resolver_conflicto": "Conserva tu versión o carga la de la otra pestaña antes de cerrar el archivo o actualizar el PDF.",
+  "flujo.salir_conflicto": "Hay cambios locales en conflicto con otra pestaña. Si sales, perderás tu versión local. ¿Quieres salir?",
+  "flujo.sin_compilar": "PDF sin generar",
+  "flujo.ver_detalle": "Ver detalle",
   "guardado.error": "No se pudo guardar. Lo intentaremos de nuevo; mientras tanto, descarga una copia en .zip.",
   "guardado.guardando": "Guardando…",
   "guardado.hace_minutos": "Guardado en este equipo hace {minutos} min",
@@ -346,6 +362,22 @@ export const TEXTOS_FOLIO = {
   "pdf.vista_aria": "Páginas del PDF",
   "pdf.zoom": "{porcentaje} %",
   "pie.codigo_fuente_licencia": "Código fuente ({licencia})",
+  "plantillas.blanco": "Documento en blanco",
+  "plantillas.carpeta": "Importar carpeta",
+  "plantillas.crear": "Crear un proyecto",
+  "plantillas.error_catalogo": "No se pudieron cargar las plantillas. Recarga la página para intentarlo de nuevo.",
+  "plantillas.exportar": "Exportar .zip",
+  "plantillas.importados_ignorados": "Se omitieron {n, plural, one {# archivo auxiliar o no compatible} other {# archivos auxiliares o no compatibles}}.",
+  "plantillas.importar": "Importar .tex o .zip",
+  "plantillas.papelera": "Mover a la papelera",
+  "plantillas.proponer": "Proponer una plantilla",
+  "plantillas.proponer_ayuda": "Prepara un archivo .zip con los archivos fuente y su licencia. La recepción de propuestas estará disponible más adelante; por ahora puedes importarlo en este equipo.",
+  "plantillas.renombrar_pregunta": "Nuevo nombre para {nombre}",
+  "plantillas.soltar": "Arrastra aquí una carpeta o archivos .tex o .zip, o elígelos abajo.",
+  "plantillas.unidad": "Plantillas por unidad académica",
+  "plantillas.usar": "Usar {nombre}",
+  "plantillas.ver_todas": "Ver de otras unidades",
+  "plantillas.ver_unidad": "Ver las de mi unidad",
   "problemas.aviso": "Aviso",
   "problemas.donde_linea": "{ruta}, línea {linea}",
   "problemas.error": "Error",
@@ -452,6 +484,10 @@ export interface VariablesPorClave {
   "errores.latex.paquete_error.titulo": { paquete: string | number };
   "errores.latex.referencia_indefinida.ayuda": { referencia: string | number };
   "errores.latex.referencia_indefinida.titulo": { referencia: string | number };
+  "flujo.avisos": { n: string | number };
+  "flujo.error_resumen": { avisos: string | number; errores: string | number };
+  "flujo.listo": { segundos: string | number };
+  "flujo.progreso": { paso: string | number };
   "guardado.hace_minutos": { minutos: string | number };
   "guardado.hace_segundos": { segundos: string | number };
   "herramientas.espacio": { usado: string | number };
@@ -488,6 +524,9 @@ export interface VariablesPorClave {
   "pdf.pagina_aria": { n: string | number; total: string | number };
   "pdf.zoom": { porcentaje: string | number };
   "pie.codigo_fuente_licencia": { licencia: string | number };
+  "plantillas.importados_ignorados": { n: string | number };
+  "plantillas.renombrar_pregunta": { nombre: string | number };
+  "plantillas.usar": { nombre: string | number };
   "problemas.donde_linea": { linea: string | number; ruta: string | number };
   "proyecto.movido_a_papelera": { dias: string | number; nombre: string | number };
   "proyecto.no_se_puede_abrir": { ruta: string | number };

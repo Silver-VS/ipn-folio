@@ -4,7 +4,7 @@
   import { t } from '../../textos/t';
   import type { EstadoProyecto } from '../proyecto/estado.svelte';
 
-  let { estado }: { estado: EstadoProyecto } = $props();
+  let { estado, alSaltar }: { estado: EstadoProyecto; alSaltar?: () => void } = $props();
 </script>
 
 <section class="problemas" aria-label={t('paneles.problemas')}>
@@ -20,10 +20,20 @@
           <span class="texto">{problema.texto}</span>
           {#if problema.accion}<p>{problema.accion}</p>{/if}
           {#if problema.ruta && problema.linea}
-            <button type="button" class="boton" onclick={() => estado.irALinea(problema)}>{t('flujo.ir_linea')}</button>
+            <button
+              type="button"
+              class="boton"
+              onclick={() => {
+                estado.irALinea(problema);
+                alSaltar?.();
+              }}>{t('flujo.ir_linea')}</button
+            >
           {/if}
           {#if problema.original}
-            <details><summary>{t('flujo.ver_detalle')}</summary><pre>{problema.original}</pre></details>
+            <details>
+              <summary>{t('flujo.ver_detalle')}</summary>
+              <pre>{problema.original}</pre>
+            </details>
           {/if}
           {#if problema.ruta}
             <span class="donde"
@@ -41,8 +51,19 @@
 </section>
 
 <style>
-  button { min-height: var(--ipn-objetivo-tactil); font: inherit; color: var(--ipn-texto); background: var(--ipn-superficie); border: 1px solid var(--ipn-borde-control); border-radius: var(--ipn-radio-s); cursor: pointer; }
-  pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  button {
+    min-height: var(--ipn-objetivo-tactil);
+    font: inherit;
+    color: var(--ipn-texto);
+    background: var(--ipn-superficie);
+    border: 1px solid var(--ipn-borde-control);
+    border-radius: var(--ipn-radio-s);
+    cursor: pointer;
+  }
+  pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
   .problemas {
     height: 100%;
     overflow: auto;

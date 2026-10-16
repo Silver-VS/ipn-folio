@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 /** Extensiones que forman el cascarón de la app (HTML, JS, CSS, fuentes, íconos). Nunca los activos de BusyTeX. */
 export const PRECACHE = {
-  globPatterns: ['**/*.{html,js,css,woff2,svg,png,webmanifest,txt}'],
+  globPatterns: ['**/*.{html,js,css,woff2,svg,png,webmanifest,txt}', 'plantillas/**'],
   // Los activos de BusyTeX (~125 MB) se descargan solo cuando el usuario instala «Documentos LaTeX»;
   // `version.json` es la petición de hora de la papelera: debe ir siempre a la red.
   globIgnores: ['busytex/**', 'version.json', 'licencias/**', '**/*.map'],

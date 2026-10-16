@@ -69,3 +69,6 @@ Una línea por cambio: fecha · clave · antes → después · quién.
 ## 2026.10.14
 
 - 2026-10-16 · `almacen.error.apertura_fallida`, `almacen.aviso.version_nueva_sin_guardar` · (nuevas) fallo al abrir o migrar la base y aviso de actualización cuando no alcanzó a guardar lo pendiente · Claude Sonnet (sesión 11, arreglos).
+## 2026.10.16
+
+Inicio con plantillas, importación y acciones de proyectos; estados de compilación, problemas y protección de conflictos al salir.

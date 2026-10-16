@@ -5,21 +5,24 @@ import type { Almacen } from '../almacen';
 import { BUSYTEX_BASE } from '../compilacion/config';
 import { Motor } from '../compilacion/motor';
 import { BD_PAQUETES_EMSCRIPTEN } from '../pwa/nombres';
-import { Instalador } from './instalador';
+import { ErrorInstalacion, Instalador } from './instalador';
 import tamanos from './tamanos.gen.json';
 
 /** Borra la base donde Emscripten guarda el paquete de datos; si hay una conexión abierta, no espera para siempre. */
 export function borrarBaseDePaquetes(): Promise<void> {
-  return new Promise((resolver) => {
+  return new Promise((resolver, rechazar) => {
     if (typeof indexedDB === 'undefined') return resolver();
-    const plazo = setTimeout(resolver, 4000);
     const peticion = indexedDB.deleteDatabase(BD_PAQUETES_EMSCRIPTEN);
+    const fallo = () =>
+      rechazar(
+        new ErrorInstalacion('otro', 'IndexedDB: cierre las otras pestañas de Folio antes de quitar LaTeX'),
+      );
     const listo = () => {
-      clearTimeout(plazo);
       resolver();
     };
     peticion.onsuccess = listo;
-    peticion.onerror = listo;
+    peticion.onerror = fallo;
+    peticion.onblocked = fallo;
   });
 }
 
@@ -36,13 +39,20 @@ export function crearInstaladorReal(almacen: Almacen, base: string = BUSYTEX_BAS
       motor = m;
       try {
         await m.iniciar();
+      } catch (e) {
+        if (e instanceof Error && 'detalle' in e && String(e.detalle).includes('folio-version'))
+          throw new ErrorInstalacion('version', String(e.detalle));
+        throw e;
       } finally {
         m.cancelar();
         if (motor === m) motor = null;
       }
     },
     cancelarMotor: () => motor?.cancelar(),
-    borrarPaquetes: borrarBaseDePaquetes,
+    borrarPaquetes: async () => {
+      motor?.cancelar();
+      await borrarBaseDePaquetes();
+    },
     persistir: pedirPersistencia,
     async espacioLibre() {
       const e = await espacio();

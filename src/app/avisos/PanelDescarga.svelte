@@ -5,6 +5,7 @@
   import { megasDeHerramienta } from '../../herramientas/catalogo';
   import type { TiendaHerramientas } from '../../herramientas/tienda.svelte';
   import { t } from '../../textos/t';
+  import { tick } from 'svelte';
 
   let { tienda }: { tienda: TiendaHerramientas } = $props();
 
@@ -12,10 +13,22 @@
   const cargados = $derived(Math.round((tienda.progreso?.cargados ?? tienda.latex.bytes) / 1e6));
   const total = $derived(tienda.progreso?.total ?? 0);
   const valor = $derived(tienda.progreso?.cargados ?? tienda.latex.bytes);
+  function enfocar(nodo: HTMLElement) {
+    const anterior = document.activeElement as HTMLElement | null;
+    nodo.querySelector('button')?.focus();
+    return {
+      destroy() {
+        void tick().then(() => {
+          if (anterior?.isConnected && anterior !== document.body) anterior.focus();
+          else document.querySelector<HTMLElement>('[data-solicitar-descarga]')?.focus();
+        });
+      },
+    };
+  }
 </script>
 
 {#if tienda.pregunta}
-  <div class="panel" role="alertdialog" aria-labelledby="pregunta-red">
+  <div class="panel" role="alertdialog" aria-labelledby="pregunta-red" use:enfocar>
     <p id="pregunta-red">
       {#if tienda.pregunta === 'datos-moviles'}
         {t('descarga.confirmar.datos_moviles', { megas })}
@@ -39,6 +52,8 @@
     <p>
       {#if tienda.error === 'red'}
         {t('descarga.error.red')}
+      {:else if tienda.error === 'version'}
+        {t('descarga.error.version', { megas })}
       {:else if tienda.error === 'espacio'}
         {t('descarga.error.espacio')}
       {:else}
@@ -53,7 +68,7 @@
   </div>
 {:else if tienda.latex.estado === 'descargando'}
   <div class="panel" data-descarga={tienda.pausada ? 'pausada' : 'en-curso'}>
-    <p class="titulo" role="status">
+    <p class="titulo">
       {#if tienda.pausada}
         {t('descarga.en_pausa', { cargados, megas })}
       {:else}

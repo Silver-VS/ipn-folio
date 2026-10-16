@@ -8,7 +8,7 @@ export const PREFIJO_BUSYTEX = 'folio-busytex-';
 /** Caché de los archivos del espejo de TeX Live que ya se usaron (D8). */
 export const CACHE_ESPEJO = 'folio-espejo-v1';
 /** Base de datos de IndexedDB donde el cargador de Emscripten guarda `texlive-basic.data`. */
-export const BD_PAQUETES_EMSCRIPTEN = 'EM_PRELOAD_CACHE';
+export const BD_PAQUETES_EMSCRIPTEN = 'folio-EM_PRELOAD_CACHE';
 
 /** Caché de los activos de BusyTeX de una versión de texlyre-busytex. */
 export const cacheBusytex = (version: string = tamanos.busytex): string => `${PREFIJO_BUSYTEX}${version}`;

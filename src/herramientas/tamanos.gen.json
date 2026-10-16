@@ -24,7 +24,7 @@
       },
       {
         "nombre": "texlive-basic.js",
-        "bytes": 2091651,
+        "bytes": 2092014,
         "destino": "cache"
       },
       {
@@ -33,8 +33,8 @@
         "destino": "indexeddb"
       }
     ],
-    "bytes": 127735181,
-    "bytesCache": 34950119,
+    "bytes": 127735544,
+    "bytesCache": 34950482,
     "bytesIndexedDb": 92785062,
     "megas": 128
   }

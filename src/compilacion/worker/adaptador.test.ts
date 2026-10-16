@@ -1,6 +1,48 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Adaptador, ErrorAdaptador, rutaDeBitacora } from './adaptador';
+
+it('2: una incompatibilidad asíncrona del cargador rechaza el arranque pendiente', async () => {
+  const eventos = new EventTarget();
+  const creado = vi.fn();
+  const quitar = vi.fn(eventos.removeEventListener.bind(eventos));
+  vi.stubGlobal('importScripts', vi.fn());
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => new Response(null, { status: 404 })),
+  );
+  vi.stubGlobal('addEventListener', eventos.addEventListener.bind(eventos));
+  vi.stubGlobal('removeEventListener', quitar);
+  vi.stubGlobal(
+    'BusytexPipeline',
+    class {
+      Module = new Promise(() => undefined);
+      constructor() {
+        creado();
+      }
+    },
+  );
+  try {
+    const adaptador = new Adaptador({ progreso: vi.fn(), salida: vi.fn() });
+    let capturado: unknown;
+    const arranque = adaptador
+      .iniciar({ base: 'http://localhost/busytex', catalogo: ['texlive-basic.js'] })
+      .catch((error: unknown) => {
+        capturado = error;
+      });
+    await vi.waitFor(() => expect(creado).toHaveBeenCalledOnce());
+    const error = new Error('folio-version: paquete incompatible');
+    const evento = Object.assign(new Event('unhandledrejection', { cancelable: true }), { reason: error });
+    eventos.dispatchEvent(evento);
+    await new Promise((resolver) => setTimeout(resolver, 0));
+    expect(capturado).toBe(error);
+    await arranque;
+    expect(evento.defaultPrevented).toBe(true);
+    expect(quitar).toHaveBeenCalledWith('unhandledrejection', expect.any(Function));
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
 
 describe('rutaDeBitacora', () => {
   it('TeX: el .log del archivo principal', () => {

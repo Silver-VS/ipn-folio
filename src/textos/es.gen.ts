@@ -53,6 +53,7 @@ export const TEXTOS_FOLIO = {
   "bienvenida.docente.ayuda": "Mostrar las herramientas para crear actividades y revisar entregas.",
   "bienvenida.docente.etiqueta": "Doy clases.",
   "bienvenida.empezar": "Empezar",
+  "bienvenida.error_guardar": "No se pudo guardar tu elección. Vuelve a intentarlo.",
   "bienvenida.escritorio.ayuda": "Estás en la versión web. Estas herramientas se instalan desde la app de escritorio de Folio.",
   "bienvenida.intro": "Folio descarga solo lo que elijas y lo guarda en este equipo para que funcione sin conexión. Puedes agregar o quitar herramientas después, en Ajustes.",
   "bienvenida.nota_datos": "Si usas datos móviles, elige «Descargar después». Puedes crear proyectos y escribir desde ahora; Folio te pedirá la descarga cuando compiles por primera vez.",
@@ -74,6 +75,9 @@ export const TEXTOS_FOLIO = {
   "compilacion.paso.pasada": "nueva pasada",
   "compilacion.paso.primera": "primera pasada",
   "compilacion.paso.progreso": "Paso {n} de {total}: {nombre}",
+  "descarga.anuncio.fin": "Terminó la descarga del compilador de LaTeX.",
+  "descarga.anuncio.inicio": "Se inició la descarga del compilador de LaTeX.",
+  "descarga.anuncio.pausa": "La descarga del compilador de LaTeX está en pausa.",
   "descarga.aviso.ahora": "Descargar ahora (unos {megas} MB)",
   "descarga.aviso.cuerpo": "Para crear el PDF, Folio necesita descargar el compilador de LaTeX: unos {megas} MB, una sola vez. Después puedes compilar en este equipo sin conexión.",
   "descarga.aviso.datos_moviles": "Si usas datos móviles, puedes esperar a tener Wi-Fi. Mientras tanto, puedes crear tu proyecto y escribir. Para generar el PDF necesitas completar la descarga.",
@@ -92,6 +96,7 @@ export const TEXTOS_FOLIO = {
   "descarga.error.espacio": "No hay espacio suficiente en este equipo para guardar el compilador. Libera espacio y vuelve a intentarlo.",
   "descarga.error.otro": "No se pudo descargar el compilador. Vuelve a intentarlo; si sigue fallando, avisa en el repositorio del proyecto.",
   "descarga.error.red": "Se perdió la conexión durante la descarga. Revisa tu red y vuelve a intentarlo; lo que ya se descargó se conserva.",
+  "descarga.error.version": "La versión del compilador cambió. Actualiza Folio antes de descargar unos {megas} MB. Los archivos de versiones anteriores se conservan si ya estaban en este equipo.",
   "descarga.lista": "Compilador listo. Ya puedes compilar en este equipo sin conexión.",
   "descarga.pausar": "Pausar",
   "descarga.reanudar": "Reanudar",
@@ -222,6 +227,7 @@ export const TEXTOS_FOLIO = {
   "herramientas.cpp.sigla": "C++",
   "herramientas.en_navegador": "En el navegador",
   "herramientas.en_navegador_ayuda": "Funcionan aquí y en la app de escritorio",
+  "herramientas.error_quitar": "No se pudo quitar LaTeX. Cierra las otras pestañas de Folio y vuelve a intentarlo.",
   "herramientas.espacio": "Folio usa {usado} MB en este equipo.",
   "herramientas.estado.descargando": "Descargando",
   "herramientas.estado.error": "No se pudo instalar",
@@ -317,6 +323,9 @@ export const TEXTOS_FOLIO = {
   "pwa.actualizacion.aria": "Actualización disponible",
   "pwa.actualizacion.aviso": "Hay una versión nueva de Folio",
   "pwa.actualizacion.boton": "Actualizar",
+  "pwa.actualizacion.recargar": "Folio se actualizó en otra pestaña. Recarga para continuar.",
+  "pwa.error_carga": "No se pudo cargar Folio. Recarga la página para volver a intentarlo.",
+  "pwa.recargar": "Recargar",
   "salida.registro_aria": "Registro de la compilación",
   "salida.vacio": "Aquí aparecerá el registro de la compilación."
 } as const;
@@ -361,6 +370,7 @@ export interface VariablesPorClave {
   "descarga.confirmar.desconocida": { megas: string | number };
   "descarga.en_curso": { cargados: string | number; megas: string | number };
   "descarga.en_pausa": { cargados: string | number; megas: string | number };
+  "descarga.error.version": { megas: string | number };
   "distribucion.en_ventana": { panel: string | number };
   "editor.aria_texto": { ruta: string | number };
   "editor.borrado_en_otra": { ruta: string | number };

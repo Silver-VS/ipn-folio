@@ -139,7 +139,7 @@ test.describe('service worker con BusyTeX real', () => {
         nombre,
       ).toEqual([]);
     }
-    expect(await pagina.evaluate(() => window.banco.basesIndexedDb())).toContain('EM_PRELOAD_CACHE');
+    expect(await pagina.evaluate(() => window.banco.basesIndexedDb())).toContain('folio-EM_PRELOAD_CACHE');
 
     medidas['usoBytesTrasInstalar'] = r.usoBytes;
     medidas['persistente'] = r.persistente;
@@ -192,7 +192,9 @@ test.describe('service worker con BusyTeX real', () => {
     expect(estado.estado).toBe('no-instalada');
     const nombres = Object.keys(await cachesFolio());
     expect(nombres.filter((n) => n.startsWith('folio-busytex-') || n === 'folio-espejo-v1')).toEqual([]);
-    expect(await pagina.evaluate(() => window.banco.basesIndexedDb())).not.toContain('EM_PRELOAD_CACHE');
+    expect(await pagina.evaluate(() => window.banco.basesIndexedDb())).not.toContain(
+      'folio-EM_PRELOAD_CACHE',
+    );
     expect(await pagina.evaluate(() => window.banco.proyectos())).toContain('Proyecto de prueba');
   });
 });

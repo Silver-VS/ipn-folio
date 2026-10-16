@@ -25,7 +25,10 @@ const HERRAMIENTA: Herramienta = {
 class CacheFalsa {
   entradas = new Map<string, Response>();
   put = vi.fn(async (clave: RequestInfo | URL, respuesta: Response) => {
-    this.entradas.set(String(clave), respuesta);
+    this.entradas.set(
+      String(clave),
+      new Response(await respuesta.arrayBuffer(), { headers: respuesta.headers }),
+    );
   });
   async match(clave: RequestInfo | URL) {
     return this.entradas.get(String(clave))?.clone();
@@ -53,7 +56,12 @@ class AlmacenCachesFalso {
 
 /** fetch falso: devuelve `bytes` en trozos de 40; `bloquearEn` espera a que se aborte esa descarga. */
 function fetchFalso(
-  opciones: { bloquearEn?: string; fallarEn?: string; tamano?: (nombre: string) => number } = {},
+  opciones: {
+    bloquearEn?: string;
+    fallarEn?: string;
+    tamano?: (nombre: string) => number;
+    alLeer?: (nombre: string, bytes: number) => void;
+  } = {},
 ) {
   const pedidos: string[] = [];
   const falso = (async (entrada: RequestInfo | URL, init?: RequestInit) => {
@@ -76,6 +84,7 @@ function fetchFalso(
         const n = Math.min(40, total - enviados);
         if (n <= 0) return control.close();
         enviados += n;
+        opciones.alLeer?.(nombre, enviados);
         control.enqueue(new Uint8Array(n));
       },
     });
@@ -114,6 +123,62 @@ function armar(opciones: Parameters<typeof fetchFalso>[0] = {}, extra: { espacio
 }
 
 describe('Instalador', () => {
+  it('3: una instalación anterior con el cargador genérico necesita renovar el cargador', async () => {
+    const { almacen, caches, motor } = armar();
+    const herramienta = {
+      ...HERRAMIENTA,
+      archivos: [{ nombre: 'texlive-basic.js', bytes: 100, destino: 'cache' as const }],
+      bytes: 100,
+    };
+    const cache = await caches.open(cacheBusytex(VERSION));
+    await cache.put(`${BASE}/texlive-basic.js`, new Response('var DB_NAME = "EM_PRELOAD_CACHE";'));
+    await almacen.guardarHerramienta('latex', { estado: 'instalada', bytes: 100, version: VERSION });
+    const fetch = vi.fn(async () => new Response('folio-EM_PRELOAD_CACHE folio-version:'.padEnd(100)));
+    const instalador = new Instalador({
+      almacen,
+      caches,
+      base: BASE,
+      version: VERSION,
+      herramienta: () => herramienta,
+      fetch,
+      iniciarMotor: motor.iniciar,
+      cancelarMotor: motor.cancelar,
+      borrarPaquetes: motor.borrarPaquetes,
+    });
+    expect((await instalador.estado('latex')).estado).toBe('no-instalada');
+    await instalador.instalar('latex');
+    expect(fetch).toHaveBeenCalledOnce();
+    expect((await instalador.estado('latex')).estado).toBe('instalada');
+  });
+  it('8: pausar durante el guardado anterior al motor impide arrancarlo', async () => {
+    const { instalador, almacen, motor } = armar();
+    const guardar = almacen.guardarHerramienta.bind(almacen);
+    vi.spyOn(almacen, 'guardarHerramienta').mockImplementation(async (id, estado) => {
+      await guardar(id, estado);
+      if ((estado as { bytes: number }).bytes === 450) instalador.pausar();
+    });
+    await expect(instalador.instalar('latex')).rejects.toMatchObject({ codigo: 'pausado' });
+    expect(motor.iniciar).not.toHaveBeenCalled();
+  });
+
+  it('9: entrega un flujo al caché antes de terminar de leer la respuesta', async () => {
+    const leidos = new Map<string, number>();
+    const { instalador, caches } = armar({
+      alLeer: (nombre, bytes) => {
+        leidos.set(nombre, bytes);
+      },
+    });
+    const cache = (await caches.open(cacheBusytex(VERSION))) as unknown as CacheFalsa;
+    cache.put.mockImplementation(async (clave, respuesta) => {
+      const nombre = String(clave).split('/').at(-1)!;
+      const esperados = HERRAMIENTA.archivos.find((a) => a.nombre === nombre)!.bytes;
+      expect(leidos.get(nombre) ?? 0).toBeLessThan(esperados);
+      const bytes = await respuesta.arrayBuffer();
+      cache.entradas.set(String(clave), new Response(bytes));
+    });
+    await instalador.instalar('latex');
+    expect(cache.entradas.size).toBe(3);
+  });
   it('descarga los archivos a folio-busytex-<versión>, arranca el motor, avanza sin retroceder y termina en 100 %', async () => {
     const { instalador, caches, motor, red } = armar();
     const avances: ProgresoInstalacion[] = [];
@@ -202,9 +267,9 @@ describe('Instalador', () => {
     expect(instalador.ocupado).toBe(false);
   });
 
-  it('un archivo que llega con otro tamaño se rechaza como error de red y no se guarda', async () => {
+  it('2: un archivo que llega con otro tamaño se rechaza como error de versión y no se guarda', async () => {
     const { instalador, caches } = armar({ tamano: (n) => (n === 'uno.js' ? 99 : 0) });
-    await expect(instalador.instalar('latex')).rejects.toMatchObject({ codigo: 'red' });
+    await expect(instalador.instalar('latex')).rejects.toMatchObject({ codigo: 'version' });
     expect(caches.caches.get(cacheBusytex(VERSION))?.entradas.size ?? 0).toBe(0);
   });
 

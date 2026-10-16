@@ -7,8 +7,8 @@ export const BUSYTEX_BASE = './busytex';
 /** Único paquete de datos de TeX Live que Folio carga (D23); el resto llega por el espejo (D8). */
 export const CATALOGO_BASICO = ['texlive-basic.js'];
 
-/** Espejo estático de TeX Live (`GET <espejo>/<formato>/<archivo>`); sin definir, no se consulta ningún espejo. */
-export const ESPEJO_URL: string | undefined = import.meta.env.VITE_ESPEJO_URL || undefined;
+/** Espejo estático de TeX Live; por omisión se publica junto a la app en `./espejo/`. */
+export const ESPEJO_URL: string = import.meta.env.VITE_ESPEJO_URL || './espejo';
 
 /**
  * Formato precompilado de pdfLaTeX dentro de los activos de BusyTeX (ruta en el sistema de archivos del WASM).

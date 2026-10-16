@@ -386,7 +386,12 @@ nombre = "Proyecto de ejemplo"
 # --- PWA, instalación por herramientas y descargas (sesión 07) ---
 # Los tamaños nunca se escriben a mano: {megas} sale de src/herramientas/tamanos.gen.json (medido por `npm run activos`).
 
+[pwa]
+error_carga = "No se pudo cargar Folio. Recarga la página para volver a intentarlo."
+recargar = "Recargar"
+
 [pwa.actualizacion]
+recargar = "Folio se actualizó en otra pestaña. Recarga para continuar."
 aviso = "Hay una versión nueva de Folio"
 boton = "Actualizar"
 aria = "Actualización disponible"
@@ -402,6 +407,7 @@ proximamente = "Próximamente"
 app_escritorio = "App de escritorio"
 instalar = "Instalar"
 quitar = "Quitar"
+error_quitar = "No se pudo quitar LaTeX. Cierra las otras pestañas de Folio y vuelve a intentarlo."
 reintentar = "Reintentar"
 seleccionar = "Usar {nombre}"
 estado.no_instalada = "No instalada"
@@ -447,6 +453,10 @@ reanudar = "Reanudar"
 cancelar = "Cancelar"
 lista = "Compilador listo. Ya puedes compilar en este equipo sin conexión."
 error.red = "Se perdió la conexión durante la descarga. Revisa tu red y vuelve a intentarlo; lo que ya se descargó se conserva."
+error.version = "La versión del compilador cambió. Actualiza Folio antes de descargar unos {megas} MB. Los archivos de versiones anteriores se conservan si ya estaban en este equipo."
+anuncio.inicio = "Se inició la descarga del compilador de LaTeX."
+anuncio.pausa = "La descarga del compilador de LaTeX está en pausa."
+anuncio.fin = "Terminó la descarga del compilador de LaTeX."
 error.espacio = "No hay espacio suficiente en este equipo para guardar el compilador. Libera espacio y vuelve a intentarlo."
 error.otro = "No se pudo descargar el compilador. Vuelve a intentarlo; si sigue fallando, avisa en el repositorio del proyecto."
 confirmar.datos_moviles = "Estás usando datos móviles y «Solo con Wi-Fi» está activado. Esta descarga usa unos {megas} MB de tu plan."
@@ -463,6 +473,7 @@ solo_wifi.ayuda = "Si usas datos móviles, Folio te pregunta antes de descargar 
 enlace = "Ajustes"
 
 [bienvenida]
+error_guardar = "No se pudo guardar tu elección. Vuelve a intentarlo."
 titulo = "Te damos la bienvenida. ¿Qué vas a usar?"
 intro = "Folio descarga solo lo que elijas y lo guarda en este equipo para que funcione sin conexión. Puedes agregar o quitar herramientas después, en Ajustes."
 unidad.titulo = "Tu unidad académica"

@@ -4,11 +4,13 @@
   import { CATALOGO, megasDeHerramienta, textosDe, type Herramienta } from '../../herramientas/catalogo';
   import type { TiendaHerramientas } from '../../herramientas/tienda.svelte';
   import { t } from '../../textos/t';
+  import { tick } from 'svelte';
   import PanelDescarga from '../avisos/PanelDescarga.svelte';
 
   let { tienda }: { tienda: TiendaHerramientas } = $props();
 
   let confirmandoQuitar = $state(false);
+  let falloQuitar = $state(false);
   const megas = megasDeHerramienta('latex');
   const usadoMb = $derived(tienda.espacioUsado ? Math.round(tienda.espacioUsado.usado / 1e6) : undefined);
   const enNavegador = CATALOGO.filter((h) => h.disponibilidad !== 'escritorio');
@@ -26,7 +28,22 @@
 
   async function quitar() {
     confirmandoQuitar = false;
-    await tienda.quitar('latex');
+    falloQuitar = false;
+    try {
+      await tienda.quitar('latex');
+    } catch (error) {
+      console.error('Folio: fallo al quitar LaTeX', error);
+      falloQuitar = true;
+    }
+  }
+  function enfocar(nodo: HTMLElement) {
+    const anterior = document.activeElement as HTMLElement | null;
+    nodo.querySelector('button')?.focus();
+    return {
+      destroy() {
+        void tick().then(() => anterior?.isConnected && anterior.focus());
+      },
+    };
   }
 </script>
 
@@ -68,8 +85,11 @@
               >{t('herramientas.quitar')}</button
             >
           {:else if tienda.latex.estado !== 'descargando' && !tienda.pregunta}
-            <button type="button" class="boton boton-primario" onclick={() => void tienda.solicitar()}
-              >{t('herramientas.instalar')}</button
+            <button
+              type="button"
+              class="boton boton-primario"
+              data-solicitar-descarga
+              onclick={() => void tienda.solicitar()}>{t('herramientas.instalar')}</button
             >
           {/if}
         {/if}
@@ -78,7 +98,7 @@
   </ul>
 
   {#if confirmandoQuitar}
-    <div class="panel" role="alertdialog" aria-labelledby="quitar-aviso">
+    <div class="panel" role="alertdialog" aria-labelledby="quitar-aviso" use:enfocar>
       <p id="quitar-aviso">{t('herramientas.quitar_aviso', { nombre: textosDe('latex').nombre, megas })}</p>
       <div class="acciones">
         <button type="button" class="boton boton-primario" onclick={() => void quitar()}
@@ -91,6 +111,7 @@
     </div>
   {/if}
 
+  {#if falloQuitar}<p role="alert">{t('herramientas.error_quitar')}</p>{/if}
   <PanelDescarga {tienda} />
 
   <h3>{t('herramientas.solo_escritorio')}</h3>

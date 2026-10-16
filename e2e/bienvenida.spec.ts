@@ -63,7 +63,7 @@ test.describe('bienvenida', () => {
     // ipn-comun/datos/almacen.json: `folio.` es el único prefijo de Folio; `ipn.` va en sessionStorage.
     for (const clave of claves) expect(clave.startsWith('folio.'), clave).toBe(true);
     const cachesFolio = await page.evaluate(() => caches.keys());
-    for (const n of cachesFolio) expect(/^(folio-|workbox-)/.test(n), n).toBe(true);
+    for (const n of cachesFolio) expect(/^folio-/.test(n), n).toBe(true);
   });
 
   for (const esquema of ['light', 'dark'] as const) {
@@ -151,6 +151,48 @@ test.describe('bienvenida', () => {
     expect(busytex).toEqual([]);
   });
 
+  test('16: pregunta de red enfoca el botón y devuelve el foco al cerrar', async ({ page }) => {
+    await simularRed(page, { type: 'cellular' });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Descargar después' }).click();
+    const abrir = page.getByRole('button', { name: /Descargar ahora/ });
+    await abrir.click();
+    await expect(page.getByRole('button', { name: 'Descargar de todos modos' })).toBeFocused();
+    await page.getByRole('button', { name: 'Ahora no' }).click();
+    await expect(abrir).toBeFocused();
+  });
+
+  test('17: un guardado fallido permite reintentar la bienvenida', async ({ page }) => {
+    await page.addInitScript(() => {
+      const original = IDBObjectStore.prototype.put;
+      let fallar = true;
+      IDBObjectStore.prototype.put = function (valor, clave) {
+        if (this.name === 'ajustes' && clave === 'unidad' && fallar) {
+          fallar = false;
+          throw new DOMException('prueba de cuota', 'QuotaExceededError');
+        }
+        return original.call(this, valor, clave!);
+      };
+    });
+    await page.goto('/');
+    const despues = page.getByRole('button', { name: 'Descargar después' });
+    await despues.click();
+    await expect(page.getByRole('alert')).toContainText('No se pudo guardar');
+    await expect(despues).toBeEnabled();
+    await despues.click();
+    await expect(page.getByRole('button', { name: 'Crear un proyecto de ejemplo' })).toBeVisible();
+  });
+
+  test('7: abrir el proyecto sin LaTeX no arranca ni descarga el Motor', async ({ page }) => {
+    const pedidos = vigilarBusytex(page);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Descargar después' }).click();
+    await page.getByRole('button', { name: 'Crear un proyecto de ejemplo' }).click();
+    await expect(page.locator('.vista:not([hidden]) .cm-content')).toBeVisible();
+    expect(pedidos).toEqual([]);
+    await expect(page.getByRole('button', { name: /^Compilar$/ })).toHaveCount(0);
+  });
+
   test('Ajustes › Herramientas: «Solo con Wi-Fi» viene activado, se puede apagar y se recuerda', async ({
     page,
   }) => {
@@ -180,6 +222,24 @@ test.describe('instalación de LaTeX en la aplicación', () => {
   test.skip(!hayActivos, 'No hay activos de BusyTeX en public/busytex/ (corre npm run activos).');
   test.describe.configure({ timeout: 240_000 });
 
+  test('2: datos incompatibles con su cargador muestran error de versión', async ({ page }, info) => {
+    test.skip(info.project.name !== 'escritorio', 'Solo escritorio.');
+    await simularRed(page, { type: 'wifi' });
+    await page.route('**/busytex/texlive-basic.data', (ruta) =>
+      ruta.fulfill({
+        status: 200,
+        contentType: 'application/octet-stream',
+        body: Buffer.from([0]),
+      }),
+    );
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Descargar ahora' }).click();
+    await expect(page.getByRole('alert')).toContainText('La versión del compilador cambió', {
+      timeout: 60_000,
+    });
+    await expect(page.getByRole('alert')).not.toContainText('Se perdió la conexión');
+  });
+
   test('(b) instalar con Wi-Fi: progreso real, espacio usado, sin conexión la app abre y quitar libera todo', async ({
     page,
     context,
@@ -187,6 +247,9 @@ test.describe('instalación de LaTeX en la aplicación', () => {
     test.skip(info.project.name !== 'escritorio', 'El motor pesa ~128 MB: solo escritorio.');
     await simularRed(page, { type: 'wifi' });
     await page.goto('/');
+    const anuncios = page.locator('p.anuncio[role="status"]');
+    await expect(anuncios).toHaveText('');
+    await anuncios.evaluate((nodo) => nodo.setAttribute('data-misma-region', 'si'));
     await page.getByRole('button', { name: 'Descargar ahora' }).click();
 
     // Aparece el panel con la barra de avance (Pausar disponible) y termina en «Compilador listo».
@@ -194,11 +257,14 @@ test.describe('instalación de LaTeX en la aplicación', () => {
     await expect(panel).toBeVisible({ timeout: 30_000 });
     await expect(page.getByRole('progressbar', { name: 'Avance de la descarga' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Pausar' })).toBeVisible();
+    await expect(anuncios).toHaveText('Se inició la descarga del compilador de LaTeX.');
     await expect(
       page.getByText('Compilador listo. Ya puedes compilar en este equipo sin conexión.'),
     ).toBeVisible({
       timeout: 200_000,
     });
+    await expect(anuncios).toHaveText('Terminó la descarga del compilador de LaTeX.');
+    await expect(anuncios).toHaveAttribute('data-misma-region', 'si');
 
     const cachesFolio = await page.evaluate(async () => {
       const salida: Record<string, string[]> = {};
@@ -228,15 +294,31 @@ test.describe('instalación de LaTeX en la aplicación', () => {
     await page.getByRole('button', { name: 'Crear un proyecto de ejemplo' }).click();
     await page.waitForURL(/#\/proyecto\//);
     await page.goto('/#/ajustes');
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolver) => {
+          const abrir = indexedDB.open('folio-EM_PRELOAD_CACHE');
+          abrir.onsuccess = () => {
+            (window as Window & { bloqueo07?: IDBDatabase }).bloqueo07 = abrir.result;
+            resolver();
+          };
+        }),
+    );
     await page.getByRole('button', { name: 'Quitar' }).click();
     await expect(page.getByRole('alertdialog')).toContainText(`libera unos ${TAMANOS.latex.megas} MB`);
+    await expect(page.getByRole('alertdialog').getByRole('button', { name: 'Quitar' })).toBeFocused();
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Quitar' }).click();
+    await expect(page.getByRole('alert')).toContainText('Cierra las otras pestañas');
+    await expect(fila).toContainText('Instalada');
+    await page.evaluate(() => (window as Window & { bloqueo07?: IDBDatabase }).bloqueo07?.close());
+    await page.getByRole('button', { name: 'Quitar' }).click();
     await page.getByRole('alertdialog').getByRole('button', { name: 'Quitar' }).click();
     await expect(fila).toContainText('No instalada');
     expect(
       await page.evaluate(() => caches.keys().then((k) => k.filter((n) => n.startsWith('folio-busytex-')))),
     ).toEqual([]);
     expect(await page.evaluate(() => indexedDB.databases().then((b) => b.map((x) => x.name)))).not.toContain(
-      'EM_PRELOAD_CACHE',
+      'folio-EM_PRELOAD_CACHE',
     );
     await page.goto('/#/');
     await expect(page.getByRole('link', { name: 'Proyecto de ejemplo' })).toBeVisible();

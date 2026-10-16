@@ -30,15 +30,18 @@
     <PanelDescarga {tienda} />
   </section>
 {:else if terminoAhora}
-  <p class="listo" role="status">{t('descarga.lista')}</p>
+  <p class="listo">{t('descarga.lista')}</p>
 {:else if !tienda.instalada && !pospuesto}
   <section class="aviso" aria-labelledby="aviso-descarga-titulo">
     <h2 id="aviso-descarga-titulo">{t('descarga.aviso.titulo')}</h2>
     <p>{t('descarga.aviso.cuerpo', { megas })}</p>
     <p class="nota">{t('descarga.aviso.datos_moviles')}</p>
     <div class="acciones">
-      <button type="button" class="boton boton-primario" onclick={() => void tienda.solicitar()}
-        >{t('descarga.aviso.ahora', { megas })}</button
+      <button
+        type="button"
+        class="boton boton-primario"
+        data-solicitar-descarga
+        onclick={() => void tienda.solicitar()}>{t('descarga.aviso.ahora', { megas })}</button
       >
       <button type="button" class="boton" onclick={() => (pospuesto = true)}
         >{t('descarga.aviso.esperar')}</button

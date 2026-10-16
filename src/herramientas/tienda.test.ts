@@ -26,6 +26,32 @@ function armar(conexion: InfoConexion | undefined) {
 }
 
 describe('tienda de herramientas', () => {
+  it.each(['pausada', 'error'])(
+    '6: reanudar desde %s vuelve a preguntar con datos móviles',
+    async (estado) => {
+      const { tienda, instalador } = armar({ type: 'cellular' });
+      await tienda.cargar();
+      tienda.pausada = estado === 'pausada';
+      tienda.latex = { ...ESTADO_INICIAL, estado: estado === 'pausada' ? 'descargando' : 'error' };
+      await tienda.reanudar();
+      expect(tienda.pregunta).toBe('datos-moviles');
+      expect(instalador.instalar).not.toHaveBeenCalled();
+    },
+  );
+
+  it('13: mantiene el bloqueo hasta terminar la lectura del estado', async () => {
+    const { tienda, instalador } = armar({ type: 'wifi' });
+    await tienda.cargar();
+    let resolver!: (valor: typeof ESTADO_INICIAL) => void;
+    instalador.estado.mockImplementationOnce(() => new Promise((r) => (resolver = r)));
+    const primera = tienda.solicitar();
+    await vi.waitFor(() => expect(resolver).toBeTypeOf('function'));
+    const segunda = tienda.iniciar();
+    expect(instalador.instalar).toHaveBeenCalledOnce();
+    resolver({ ...ESTADO_INICIAL, estado: 'instalada' });
+    await Promise.all([primera, segunda]);
+    expect(tienda.instalada).toBe(true);
+  });
   it('«Solo con Wi-Fi» viene activado por omisión (D15)', async () => {
     const { tienda } = armar({ type: 'wifi' });
     await tienda.cargar();

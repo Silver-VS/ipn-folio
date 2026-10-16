@@ -20,12 +20,30 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { generar as medirTamanos } from './tamanos.mjs';
 
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const DESTINO = join(RAIZ, 'public', 'busytex');
 const CACHE = join(RAIZ, '.cache-activos');
+
+/** Aísla IndexedDB por producto y valida el paquete contra el UUID SHA-256 incluido en su cargador. */
+export function adaptarCargador(texto) {
+  if (texto.includes('"folio-EM_PRELOAD_CACHE"') && texto.includes('folio-version:')) return texto;
+  if (!texto.includes('var DB_NAME = "EM_PRELOAD_CACHE";') || !texto.includes('return packageData.buffer;'))
+    throw new Error('Cambió el cargador de Emscripten: revisar aislamiento y validación antes de publicar.');
+  return texto
+    .replace('var DB_NAME = "EM_PRELOAD_CACHE";', 'var DB_NAME = "folio-EM_PRELOAD_CACHE";')
+    .replace(
+      'return packageData.buffer;',
+      `
+        const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', packageData.buffer)), b => b.toString(16).padStart(2, '0')).join('');
+        if (loaded !== packageSize || 'sha256-' + hash !== metadata['package_uuid']) {
+          throw new Error('folio-version: texlive-basic.js y texlive-basic.data no coinciden');
+        }
+        return packageData.buffer;`,
+    );
+}
 
 /** Archivos que se copian a public/busytex/ (busytex_worker.js es solo de referencia: Folio no lo usa). */
 export const ARCHIVOS = [
@@ -85,7 +103,9 @@ async function principal() {
     const desde = join(origen, nombre);
     if (!existsSync(desde)) throw new Error(`Falta ${nombre} en ${origen}`);
     const hasta = join(DESTINO, nombre);
-    copyFileSync(desde, hasta);
+    if (desde !== hasta) copyFileSync(desde, hasta);
+    if (nombre === 'texlive-basic.js')
+      writeFileSync(hasta, adaptarCargador(readFileSync(desde, 'utf8')), 'utf8');
     registro.push({ nombre, bytes: statSync(hasta).size, sha256: await sha256(hasta) });
   }
   const paquete = JSON.parse(
@@ -100,7 +120,8 @@ async function principal() {
   medirTamanos();
 }
 
-principal().catch((e) => {
-  console.error(e.message);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href)
+  principal().catch((e) => {
+    console.error(e.message);
+    process.exit(1);
+  });

@@ -17,6 +17,7 @@
   let unidad = $state('');
   let docente = $state(false);
   let guardando = $state(false);
+  let fallo = $state(false);
   const instalables = CATALOGO.filter((h) => h.disponibilidad === 'instalable');
   const proximas = CATALOGO.filter((h) => h.disponibilidad === 'proximamente');
   const escritorio = CATALOGO.filter((h) => h.disponibilidad === 'escritorio');
@@ -28,12 +29,20 @@
 
   async function terminar(descargarAhora: boolean) {
     guardando = true;
-    await guardarBienvenida(almacen, {
-      unidad: unidad || UNIDAD_OTRA,
-      rol: docente ? 'docente' : 'estudiante',
-    });
-    alTerminar();
-    if (descargarAhora && elegidas['latex']) void tienda.solicitar();
+    fallo = false;
+    try {
+      await guardarBienvenida(almacen, {
+        unidad: unidad || UNIDAD_OTRA,
+        rol: docente ? 'docente' : 'estudiante',
+      });
+      alTerminar();
+      if (descargarAhora && elegidas['latex']) void tienda.solicitar();
+    } catch (error) {
+      console.error('Folio: fallo al guardar la bienvenida', error);
+      fallo = true;
+    } finally {
+      guardando = false;
+    }
   }
 </script>
 
@@ -136,6 +145,7 @@
   </div>
 
   <div class="acciones">
+    {#if fallo}<p role="alert">{t('bienvenida.error_guardar')}</p>{/if}
     <button
       type="button"
       class="boton boton-primario"

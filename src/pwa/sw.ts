@@ -7,7 +7,7 @@
 //    que kpathsea recuerda).
 //  - `version.json` (petición de hora de la papelera, D29), `login.microsoftonline.com` y `graph.microsoft.com`:
 //    el service worker no los toca; van siempre a la red.
-import { clientsClaim } from 'workbox-core';
+import { clientsClaim, setCacheNameDetails } from 'workbox-core';
 import {
   cleanupOutdatedCaches,
   createHandlerBoundToURL,
@@ -16,13 +16,12 @@ import {
 } from 'workbox-precaching';
 import type { PrecacheEntry } from 'workbox-precaching';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { ARCHIVOS_EN_CACHE, CACHE_ESPEJO, PREFIJO_BUSYTEX, RUTA_HORA, cacheBusytex } from './nombres';
+import { ESPEJO_URL } from '../compilacion/config';
+import { ARCHIVOS_EN_CACHE, CACHE_ESPEJO, RUTA_HORA, cacheBusytex } from './nombres';
 
 declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: Array<PrecacheEntry | string> };
 
-const ESPEJO: string | undefined = import.meta.env.VITE_ESPEJO_URL
-  ? String(import.meta.env.VITE_ESPEJO_URL).replace(/\/$/, '') + '/'
-  : undefined;
+const ESPEJO = new URL(ESPEJO_URL.replace(/\/$/, '') + '/', self.location.href).href;
 const SERVICIOS_MICROSOFT = ['login.microsoftonline.com', 'graph.microsoft.com'];
 
 /** Peticiones que el service worker deja pasar sin tocar (la 10 usa Microsoft; la 11, la hora). */
@@ -30,6 +29,7 @@ const dejarPasar = (url: URL): boolean =>
   url.pathname.endsWith(`/${RUTA_HORA}`) ||
   SERVICIOS_MICROSOFT.some((host) => url.hostname === host || url.hostname.endsWith(`.${host}`));
 
+setCacheNameDetails({ prefix: 'folio' });
 cleanupOutdatedCaches();
 // Los archivos del cascarón llevan su hash en el nombre: cualquier «?consulta» (utm, ?espejo=…) abre la misma página.
 precacheAndRoute(self.__WB_MANIFEST, { ignoreURLParametersMatching: [/.*/] });
@@ -39,7 +39,11 @@ precacheAndRoute(self.__WB_MANIFEST, { ignoreURLParametersMatching: [/.*/] });
 if (getCacheKeyForURL('index.html')) {
   registerRoute(
     new NavigationRoute(createHandlerBoundToURL('index.html'), {
-      denylist: [/\/busytex\//, /\/popout\.html$/, /\/version\.json$/],
+      allowlist: [
+        new RegExp(
+          `^${new URL('.', self.location.href).pathname.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:index\\.html)?(?:\\?.*)?$`,
+        ),
+      ],
     }),
   );
 }
@@ -81,17 +85,7 @@ self.addEventListener('message', (evento) => {
   if ((evento.data as { tipo?: string } | null)?.tipo === 'activar') void self.skipWaiting();
 });
 
-self.addEventListener('activate', (evento) => {
-  const vigente = cacheBusytex();
-  evento.waitUntil(
-    caches
-      .keys()
-      .then((nombres) =>
-        Promise.all(
-          nombres.filter((n) => n.startsWith(PREFIJO_BUSYTEX) && n !== vigente).map((n) => caches.delete(n)),
-        ),
-      ),
-  );
-});
+// Las versiones anteriores siguen disponibles para pestañas abiertas y equipos sin conexión.
+// Solo «Quitar» elimina los activos de BusyTeX.
 
 clientsClaim();

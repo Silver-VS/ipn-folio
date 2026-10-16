@@ -20,6 +20,13 @@ async function esperarControl(page: Page): Promise<void> {
 const nombresDeCaches = (page: Page) => page.evaluate(() => caches.keys());
 
 test.describe('PWA', () => {
+  test('5: navegar a una licencia conserva el aviso legal y no abre el cascarón', async ({ page }) => {
+    await page.goto('/');
+    await esperarControl(page);
+    await page.goto('/licencias/OFL.txt');
+    await expect(page.locator('body')).toContainText('SIL OPEN FONT LICENSE');
+    await expect(page.getByRole('heading', { name: 'IPN Folio' })).toHaveCount(0);
+  });
   test('el manifiesto es instalable: nombre, es-MX, standalone e íconos (con maskable)', async ({
     page,
     request,
@@ -55,12 +62,12 @@ test.describe('PWA', () => {
     await esperarControl(page);
     await omitirBienvenida(page);
     const nombres = await nombresDeCaches(page);
-    expect(nombres.some((n) => n.startsWith('workbox-precache'))).toBe(true);
+    expect(nombres.some((n) => n.startsWith('folio-precache'))).toBe(true);
     // Criterio 3: hasta que se elige «Documentos LaTeX» no se pide ni se guarda ningún archivo de BusyTeX.
     expect(nombres.filter((n) => n.startsWith('folio-busytex-'))).toEqual([]);
     expect(peticiones.filter((u) => u.includes('/busytex/'))).toEqual([]);
     // Todas las cachés de Folio usan el prefijo registrado (criterio 4b); las de Workbox son del precaché.
-    for (const n of nombres) expect(/^(folio-|workbox-)/.test(n), n).toBe(true);
+    for (const n of nombres) expect(/^folio-/.test(n), n).toBe(true);
   });
 
   test('con el service worker activo, la hora de la papelera (HEAD ./version.json) va a la red y trae Date', async ({
@@ -106,7 +113,7 @@ test.describe('PWA', () => {
     const urls = await page.evaluate(async () => {
       const salida: string[] = [];
       for (const nombre of await caches.keys()) {
-        if (!nombre.startsWith('workbox-precache')) continue;
+        if (!nombre.startsWith('folio-precache')) continue;
         for (const r of await (await caches.open(nombre)).keys()) salida.push(new URL(r.url).pathname);
       }
       return salida;
@@ -177,5 +184,29 @@ test.describe('PWA', () => {
     if (datos.type === 'wifi' || datos.type === 'ethernet') return; // descargaría; no es el caso de estos navegadores
     // Sin tipo de red (Safari/WebKit, Firefox y Chromium de escritorio) o con datos móviles: no descarga sin preguntar.
     await expect(page.getByRole('alertdialog')).toBeVisible();
+  });
+});
+
+test.describe('recuperación de carga', () => {
+  test.use({ serviceWorkers: 'block' });
+
+  test('1: un fragmento de proyecto ausente ofrece recargar', async ({ page }) => {
+    await page.route('**/assets/Proyecto-*.js', (ruta) => ruta.abort());
+    await page.goto('/#/proyecto/prueba');
+    await expect(page.getByRole('alert')).toContainText('No se pudo cargar Folio');
+    await expect(page.getByRole('button', { name: 'Recargar', exact: true })).toBeVisible();
+  });
+
+  test('17: un fallo al cargar la tienda ofrece recargar', async ({ page }) => {
+    await page.addInitScript(() => {
+      const original = IDBObjectStore.prototype.get;
+      IDBObjectStore.prototype.get = function (clave) {
+        if (this.name === 'ajustes') throw new DOMException('prueba de lectura', 'UnknownError');
+        return original.call(this, clave);
+      };
+    });
+    await page.goto('/');
+    await expect(page.getByRole('alert')).toContainText('No se pudo cargar Folio');
+    await expect(page.getByRole('button', { name: 'Recargar', exact: true })).toBeVisible();
   });
 });

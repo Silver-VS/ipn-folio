@@ -95,6 +95,12 @@ export class TiendaHerramientas {
         this.progreso = null;
       })
       .catch((e: unknown) => {
+        if (!(e instanceof ErrorInstalacion) || (e.codigo !== 'pausado' && e.codigo !== 'cancelado'))
+          console.error('Folio: fallo de instalación', {
+            herramienta: id,
+            version: this.latex.version,
+            error: e,
+          });
         if (e instanceof ErrorInstalacion) {
           if (e.codigo === 'pausado') this.pausada = true;
           else if (e.codigo === 'cancelado') this.progreso = null;
@@ -102,9 +108,12 @@ export class TiendaHerramientas {
         } else this.error = 'otro';
       })
       .finally(async () => {
-        this.enCurso = null;
-        this.latex = await this.d.instalador.estado(id);
-        await this.medirEspacio();
+        try {
+          this.latex = await this.d.instalador.estado(id);
+          await this.medirEspacio();
+        } finally {
+          this.enCurso = null;
+        }
       });
     return this.enCurso;
   }
@@ -114,7 +123,7 @@ export class TiendaHerramientas {
   }
 
   reanudar(): Promise<void> {
-    return this.iniciar();
+    return this.solicitar();
   }
 
   async cancelar(id: IdHerramienta = 'latex'): Promise<void> {

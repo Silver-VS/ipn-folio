@@ -2,11 +2,11 @@
 <script lang="ts">
   import { t } from '../../textos/t';
 
-  let { activar }: { activar: () => void } = $props();
+  let { activar, recargar = false }: { activar: () => void; recargar?: boolean } = $props();
 </script>
 
-<div class="aviso" role="status" aria-label={t('pwa.actualizacion.aria')}>
-  <span>{t('pwa.actualizacion.aviso')}</span>
+<div class="aviso" aria-label={t('pwa.actualizacion.aria')}>
+  <span>{recargar ? t('pwa.actualizacion.recargar') : t('pwa.actualizacion.aviso')}</span>
   <button type="button" class="boton boton-primario" onclick={activar}>{t('pwa.actualizacion.boton')}</button>
 </div>
 

@@ -5,7 +5,7 @@ import type { IdHerramienta } from './catalogo';
 
 export type EstadoInstalacion = 'no-instalada' | 'descargando' | 'instalada' | 'error';
 
-export type CodigoErrorInstalacion = 'red' | 'espacio' | 'otro';
+export type CodigoErrorInstalacion = 'red' | 'version' | 'espacio' | 'otro';
 
 export interface EstadoHerramienta {
   estado: EstadoInstalacion;
@@ -29,7 +29,9 @@ export function normalizar(valor: unknown): EstadoHerramienta {
     estado: v.estado as EstadoInstalacion,
     bytes: typeof v.bytes === 'number' && v.bytes >= 0 ? v.bytes : 0,
     version: typeof v.version === 'string' ? v.version : '',
-    ...(v.error === 'red' || v.error === 'espacio' || v.error === 'otro' ? { error: v.error } : {}),
+    ...(v.error === 'red' || v.error === 'version' || v.error === 'espacio' || v.error === 'otro'
+      ? { error: v.error }
+      : {}),
   };
 }
 

@@ -4,7 +4,7 @@
 // `texlive-basic.data` en IndexedDB. Pausar y reanudar trabajan por archivo (lo ya guardado se conserva); cancelar
 // y quitar borran lo guardado. Todo lo que toca el navegador entra por `DependenciasInstalador`, para probarlo con falsos.
 import type { Almacen } from '../almacen';
-import { CACHE_ESPEJO, PREFIJO_BUSYTEX, cacheBusytex } from '../pwa/nombres';
+import { BD_PAQUETES_EMSCRIPTEN, CACHE_ESPEJO, PREFIJO_BUSYTEX, cacheBusytex } from '../pwa/nombres';
 import { herramienta as buscar, type Herramienta, type IdHerramienta } from './catalogo';
 import {
   ESTADO_INICIAL,
@@ -87,6 +87,13 @@ export class Instalador {
     return `${this.d.base}/${nombre}`;
   }
 
+  private async cargadorVigente(nombre: string, respuesta: Response): Promise<boolean> {
+    if (nombre !== 'texlive-basic.js') return true;
+    const texto = await respuesta.text();
+    // La versión de BusyTeX no cambia al adaptar el cargador: renovar también las instalaciones anteriores.
+    return texto.includes(BD_PAQUETES_EMSCRIPTEN) && texto.includes('folio-version:');
+  }
+
   /** ¿Hay una instalación en curso en esta instancia? */
   get ocupado(): boolean {
     return this.control !== null;
@@ -101,7 +108,7 @@ export class Instalador {
       const hay = await this.almacenCaches.match(this.url(a.nombre), {
         cacheName: cacheBusytex(this.d.version),
       });
-      if (!hay) {
+      if (!hay || !(await this.cargadorVigente(a.nombre, hay))) {
         const perdido = { ...ESTADO_INICIAL };
         await guardarEstado(this.d.almacen, id, perdido);
         return perdido;
@@ -128,15 +135,22 @@ export class Instalador {
     let guardados = 0;
     try {
       const libre = await this.d.espacioLibre?.();
+      senal.throwIfAborted();
       if (libre !== undefined && libre < total * 1.05)
         throw new ErrorInstalacion('espacio', 'cuota insuficiente');
       await guardarEstado(this.d.almacen, id, { estado: 'descargando', bytes: 0, version: this.d.version });
+      senal.throwIfAborted();
 
       const cache = await this.almacenCaches.open(cacheBusytex(this.d.version));
+      senal.throwIfAborted();
       for (const a of enCache) {
         if (senal.aborted) throw razon(senal);
         const direccion = this.url(a.nombre);
-        if (await cache.match(direccion)) {
+        const guardada = await cache.match(direccion);
+        senal.throwIfAborted();
+        const vigente = guardada && (await this.cargadorVigente(a.nombre, guardada));
+        senal.throwIfAborted();
+        if (vigente) {
           guardados += a.bytes;
           alProgreso({ cargados: guardados, total, fase: 'archivos', archivo: a.nombre });
           continue;
@@ -144,6 +158,7 @@ export class Instalador {
         await this.descargarAlCache(cache, direccion, a.bytes, senal, (bytes) =>
           alProgreso({ cargados: guardados + bytes, total, fase: 'archivos', archivo: a.nombre }),
         );
+        senal.throwIfAborted();
         guardados += a.bytes;
         alProgreso({ cargados: guardados, total, fase: 'archivos', archivo: a.nombre });
       }
@@ -152,18 +167,19 @@ export class Instalador {
         bytes: guardados,
         version: this.d.version,
       });
+      senal.throwIfAborted();
 
       if (bytesDatos > 0) {
         const alAbortar = () => this.d.cancelarMotor();
         senal.addEventListener('abort', alAbortar, { once: true });
         try {
+          const salida = new Promise<never>((_, rechazar) =>
+            senal.addEventListener('abort', () => rechazar(razon(senal)), { once: true }),
+          );
           const arranque = this.d.iniciarMotor((cargados, totalMotor) => {
             const fraccion = totalMotor > 0 ? Math.min(1, cargados / totalMotor) : 0;
             alProgreso({ cargados: guardados + Math.round(fraccion * bytesDatos), total, fase: 'paquetes' });
           });
-          const salida = new Promise<never>((_, rechazar) =>
-            senal.addEventListener('abort', () => rechazar(razon(senal)), { once: true }),
-          );
           salida.catch(() => undefined);
           arranque.catch(() => undefined);
           await Promise.race([arranque, salida]);
@@ -173,8 +189,10 @@ export class Instalador {
       }
       if (senal.aborted) throw razon(senal);
       await guardarEstado(this.d.almacen, id, { estado: 'instalada', bytes: total, version: this.d.version });
+      senal.throwIfAborted();
       alProgreso({ cargados: total, total, fase: 'paquetes' });
       await this.d.persistir?.();
+      senal.throwIfAborted();
     } catch (e) {
       const error = this.traducir(e, senal);
       if (error.codigo === 'cancelado') {
@@ -216,11 +234,13 @@ export class Instalador {
   }
 
   private async borrar(id: IdHerramienta): Promise<void> {
+    this.d.cancelarMotor();
+    // Si otra pestaña bloquea IndexedDB, conservar cachés y estado permite reintentar.
+    await this.d.borrarPaquetes();
     const caches = this.almacenCaches;
     for (const nombre of await caches.keys()) {
       if (nombre.startsWith(PREFIJO_BUSYTEX) || nombre === CACHE_ESPEJO) await caches.delete(nombre);
     }
-    await this.d.borrarPaquetes();
     await guardarEstado(this.d.almacen, id, { ...ESTADO_INICIAL });
   }
 
@@ -241,34 +261,44 @@ export class Instalador {
   ): Promise<void> {
     const hacer = this.d.fetch ?? globalThis.fetch.bind(globalThis);
     const respuesta = await hacer(direccion, { signal: senal, cache: 'no-store' });
+    senal.throwIfAborted();
     if (!respuesta.ok) throw new ErrorInstalacion('red', `${respuesta.status} ${direccion}`);
-    const trozos: Uint8Array<ArrayBuffer>[] = [];
     let bytes = 0;
-    if (respuesta.body) {
-      const lector = respuesta.body.getReader();
-      for (;;) {
-        const { done, value } = await lector.read();
-        if (done) break;
-        trozos.push(value as Uint8Array<ArrayBuffer>);
-        bytes += value.byteLength;
+    let ultimo = 0;
+    const comprobar = () => {
+      senal.throwIfAborted();
+      if (bytes !== esperados)
+        throw new ErrorInstalacion(
+          'version',
+          `${direccion}: llegaron ${bytes} bytes y se esperaban ${esperados}`,
+        );
+    };
+    const contador = new TransformStream<Uint8Array, Uint8Array>({
+      transform(trozo, control) {
+        senal.throwIfAborted();
+        bytes += trozo.byteLength;
+        if (bytes > esperados) comprobar();
+        const ahora = performance.now();
+        if (ahora - ultimo >= 250) {
+          alAvanzar(bytes);
+          ultimo = ahora;
+        }
+        control.enqueue(trozo);
+      },
+      flush() {
+        comprobar();
         alAvanzar(bytes);
-      }
-    } else {
-      const todo = new Uint8Array(await respuesta.arrayBuffer());
-      trozos.push(todo as Uint8Array<ArrayBuffer>);
-      bytes = todo.byteLength;
-      alAvanzar(bytes);
-    }
-    if (bytes !== esperados) {
-      throw new ErrorInstalacion('red', `${direccion}: llegaron ${bytes} bytes y se esperaban ${esperados}`);
-    }
+      },
+    });
+    if (!respuesta.body) throw new ErrorInstalacion('version', `${direccion}: respuesta sin cuerpo`);
     const tipo = respuesta.headers.get('Content-Type') ?? 'application/octet-stream';
     await cache.put(
       direccion,
-      new Response(new Blob(trozos), {
+      new Response(respuesta.body.pipeThrough(contador, { signal: senal }), {
         status: 200,
-        headers: { 'Content-Type': tipo, 'Content-Length': String(bytes) },
+        headers: { 'Content-Type': tipo },
       }),
     );
+    senal.throwIfAborted();
   }
 }
